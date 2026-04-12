@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const rawName = Bun.argv[2]?.trim();
@@ -69,11 +69,46 @@ export const ${moduleName}Module = new Elysia({ prefix: '/api' }).get('/${module
     [`dto/${moduleName}.dto.ts`]: `import { z } from 'zod';
 
 export const ${moduleName}QuerySchema = z.object({});
-`
+`,
 };
 
 for (const [fileName, content] of Object.entries(files)) {
     writeFileSync(join(moduleDir, fileName), content, 'utf8');
 }
+
+const appIndexPath = join(process.cwd(), 'src', 'app', 'index.ts');
+const diPluginPath = join(process.cwd(), 'src', 'app', 'plugins', 'di.ts');
+
+const ensureLine = (content: string, line: string) => {
+    if (content.includes(line)) return content;
+    return `${line}\n${content}`;
+};
+
+const insertAfter = (content: string, anchor: string, insertion: string) => {
+    if (content.includes(insertion.trim())) return content;
+    return content.replace(anchor, `${anchor}\n${insertion}`);
+};
+
+const appendBeforeTail = (content: string, tail: string, insertion: string) => {
+    if (content.includes(insertion.trim())) return content;
+    return content.replace(tail, `${insertion}\n${tail}`);
+};
+
+const moduleImportLine = `import { ${moduleName}Module } from '../modules/${moduleName}';`;
+let appIndex = readFileSync(appIndexPath, 'utf8');
+appIndex = insertAfter(appIndex, "import { articleModule } from '../modules/article';", moduleImportLine);
+appIndex = appendBeforeTail(appIndex, '.use(articleModule);', `    .use(${moduleName}Module)`);
+writeFileSync(appIndexPath, appIndex, 'utf8');
+
+const repositoryImportLine = `import { ${pascalName}Repository } from '../../modules/${moduleName}';`;
+let diPlugin = readFileSync(diPluginPath, 'utf8');
+diPlugin = ensureLine(diPlugin, repositoryImportLine);
+diPlugin = insertAfter(diPlugin, 'const articleRepository = new ArticleRepository();', `const ${moduleName}Repository = new ${pascalName}Repository();`);
+diPlugin = appendBeforeTail(
+    diPlugin,
+    "        {\n            identifier: 'userService',\n            instance: userService,\n        },",
+    `        {\n            identifier: '${moduleName}Repository',\n            instance: ${moduleName}Repository,\n        },`,
+);
+writeFileSync(diPluginPath, diPlugin, 'utf8');
 
 console.log(`Module created: src/modules/${moduleName}`);

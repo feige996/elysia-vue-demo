@@ -20,11 +20,11 @@ export const userModule = new Elysia({ prefix: '/api' })
         set.status = response.status;
         return response.payload;
     })
-    .get('/users/page', async (ctx) => {
+    .get('/users/all', async (ctx) => {
         const { query, set } = ctx;
         const { userService, userRepository } = ctx as typeof ctx & { userService: UserService; userRepository: UserRepository };
         const controller = createUserController(userService, userRepository);
-        const response = await controller.listPage(query, ctx.request);
+        const response = await controller.listAll(query, ctx.request);
         set.status = response.status;
         return response.payload;
     })

@@ -69,7 +69,7 @@ export const createArticleController = (articleRepository: ArticleRepository) =>
         }
         const updated = await articleRepository.update(parsedId.data.id, parsedBody.data);
         if (!updated) {
-            return failByKey(requestId, ErrorKey.VALIDATION_ERROR, 'Article not found');
+            return failByKey(requestId, ErrorKey.NOT_FOUND, 'Article not found');
         }
         return {
             status: 200,
@@ -84,7 +84,7 @@ export const createArticleController = (articleRepository: ArticleRepository) =>
         }
         const removed = await articleRepository.deleteById(parsedId.data.id);
         if (!removed) {
-            return failByKey(requestId, ErrorKey.VALIDATION_ERROR, 'Article not found');
+            return failByKey(requestId, ErrorKey.NOT_FOUND, 'Article not found');
         }
         return {
             status: 200,

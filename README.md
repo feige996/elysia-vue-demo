@@ -65,6 +65,7 @@ DATABASE_URL=postgres://user:password@localhost:5432/demo bun run --cwd api dev
 - 结构迁移使用 Drizzle Kit（配置文件：`api/drizzle.config.js`）
 - 首次运行前请先执行迁移命令
 - 服务启动会执行数据库健康检查：`production` 失败即退出，非生产环境会记录告警并继续启动
+- 开发环境可使用 `db:push` 快速同步结构，生产环境建议只使用 `db:generate + db:migrate`
 
 常用数据库脚本：
 
@@ -74,6 +75,11 @@ bun run --cwd api db:migrate
 bun run --cwd api db:push
 bun run --cwd api db:studio
 ```
+
+接口文档：
+
+- OpenAPI JSON：`/openapi.json`
+- Swagger UI：`/docs`
 
 模块脚手架：
 
@@ -166,5 +172,15 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 ## 接口示例
 
 - `POST /api/auth/login`：登录
-- `GET /api/users`：用户列表（需 `Authorization: Bearer demo-token`）
-- `GET /api/articles`：文章列表
+- `GET /api/users`：用户分页列表（需 `Authorization: Bearer demo-token`）
+- `GET /api/users/all`：用户全量列表（需 `Authorization: Bearer demo-token`）
+- `POST /api/users`：新增用户（需鉴权）
+- `PUT /api/users/:id`：更新用户（需鉴权）
+- `DELETE /api/users/:id`：删除单个用户（需鉴权）
+- `DELETE /api/users`：批量删除用户（需鉴权）
+- `GET /api/articles`：文章分页列表
+- `GET /api/articles/all`：文章全量列表
+- `POST /api/articles`：新增文章（需鉴权）
+- `PUT /api/articles/:id`：更新文章（需鉴权）
+- `DELETE /api/articles/:id`：删除单个文章（需鉴权）
+- `DELETE /api/articles`：批量删除文章（需鉴权）

@@ -24,7 +24,7 @@ export const createUserController = (userService: UserService, userRepository: U
             payload: ok(requestId, loginResult, 'Login success'),
         };
     },
-    list: async (query: Record<string, string | undefined>, request: Request) => {
+    listAll: async (query: Record<string, string | undefined>, request: Request) => {
         const { requestId } = ensureRequestContext(request);
         const parsedQuery = listQuerySchema.safeParse(query);
         const users = await userService.getUsers(parsedQuery.success ? parsedQuery.data.keyword : undefined, requestId);
@@ -33,7 +33,7 @@ export const createUserController = (userService: UserService, userRepository: U
             payload: ok(requestId, users, 'OK'),
         };
     },
-    listPage: async (query: Record<string, string | undefined>, request: Request) => {
+    list: async (query: Record<string, string | undefined>, request: Request) => {
         const { requestId } = ensureRequestContext(request);
         const parsedQuery = pageQuerySchema.safeParse(query);
         if (!parsedQuery.success) {
@@ -61,6 +61,10 @@ export const createUserController = (userService: UserService, userRepository: U
         if (!parsedBody.success) {
             return failByKey(requestId, ErrorKey.VALIDATION_ERROR, parsedBody.error.issues[0]?.message ?? 'Invalid user payload');
         }
+        const existing = await userRepository.findByAccount(parsedBody.data.account);
+        if (existing) {
+            return failByKey(requestId, ErrorKey.CONFLICT, 'User account already exists');
+        }
         const created = await userRepository.create(parsedBody.data);
         return {
             status: 201,
@@ -79,7 +83,7 @@ export const createUserController = (userService: UserService, userRepository: U
         }
         const updated = await userRepository.update(parsedId.data.id, parsedBody.data);
         if (!updated) {
-            return failByKey(requestId, ErrorKey.VALIDATION_ERROR, 'User not found');
+            return failByKey(requestId, ErrorKey.NOT_FOUND, 'User not found');
         }
         return {
             status: 200,
@@ -94,7 +98,7 @@ export const createUserController = (userService: UserService, userRepository: U
         }
         const removed = await userRepository.deleteById(parsedId.data.id);
         if (!removed) {
-            return failByKey(requestId, ErrorKey.VALIDATION_ERROR, 'User not found');
+            return failByKey(requestId, ErrorKey.NOT_FOUND, 'User not found');
         }
         return {
             status: 200,

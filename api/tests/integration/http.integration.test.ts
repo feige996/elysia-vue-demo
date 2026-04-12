@@ -37,6 +37,9 @@ const userService = {
 };
 
 const userRepository = {
+    async findByAccount(account: string) {
+        return users.find((user) => user.account === account);
+    },
     async findPage(page: number, pageSize: number, keyword?: string) {
         const source = !keyword ? users : users.filter((user) => user.account.includes(keyword) || user.name.includes(keyword));
         const offset = (page - 1) * pageSize;
@@ -194,11 +197,14 @@ describe('HTTP integration', () => {
                 },
             }),
         );
-        const usersPayload = (await usersResponse.json()) as { code: number; data?: unknown[] };
+        const usersPayload = (await usersResponse.json()) as {
+            code: number;
+            data?: { list: unknown[]; total: number; page: number; pageSize: number };
+        };
 
         expect(usersResponse.status).toBe(200);
         expect(usersPayload.code).toBe(0);
-        expect(Array.isArray(usersPayload.data)).toBeTrue();
+        expect(Array.isArray(usersPayload.data?.list)).toBeTrue();
     });
 
     it('returns standardized unauthorized response', async () => {
@@ -222,7 +228,7 @@ describe('HTTP integration', () => {
         const createUserResponse = await sendJson('http://localhost/api/users', 'POST', { account: 'bob', name: 'Bob', role: 'editor' }, authHeaders);
         expect(createUserResponse.status).toBe(201);
 
-        const usersPageResponse = await app.handle(new Request('http://localhost/api/users/page?page=1&pageSize=20', { headers: authHeaders }));
+        const usersPageResponse = await app.handle(new Request('http://localhost/api/users?page=1&pageSize=20', { headers: authHeaders }));
         const usersPagePayload = (await usersPageResponse.json()) as { data?: { list: Array<{ id: number; account: string }> } };
         const createdUser = usersPagePayload.data?.list.find((item) => item.account === 'bob');
         expect(createdUser?.account).toBe('bob');

@@ -16,7 +16,7 @@ jobs:
             WEB_PORT: 5173
         services:
             postgres:
-                image: postgres:latest
+                image: postgres:16-alpine
                 env:
                     POSTGRES_USER: postgres
                     POSTGRES_PASSWORD: postgres
@@ -40,8 +40,8 @@ jobs:
             - name: Install dependencies
               run: bun install --frozen-lockfile
 
-            - name: Sync database schema
-              run: bun run --cwd api db:push
+            - name: Run database migrations
+              run: bun run --cwd api db:migrate
 
             - name: Check database health
               run: bun run --cwd api db:check
