@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { env } from '../config/env';
+import { isRefreshTokenRevoked, markRefreshTokenRevoked } from './refresh-token-store';
 
 const TOKEN_PREFIX = 'Bearer ';
 
@@ -16,8 +17,6 @@ type TokenPayload = {
     iat: number;
     exp: number;
 };
-
-const revokedRefreshTokenIds = new Set<string>();
 
 const extractBearerToken = (authorizationHeader: string | null) => {
     if (!authorizationHeader) return null;
@@ -47,20 +46,19 @@ const issueToken = async (role: AuthorizedRole, type: TokenType, expiresInSecond
         type,
         jti: randomUUID(),
         iat: now,
-        exp: now + expiresInSeconds
+        exp: now + expiresInSeconds,
     });
 };
 
 export const issueAccessToken = async (role: AuthorizedRole, signJwt: JwtSignFn) => issueToken(role, 'access', env.JWT_EXPIRES_IN_SECONDS, signJwt);
 
-export const issueRefreshToken = async (role: AuthorizedRole, signJwt: JwtSignFn) =>
-    issueToken(role, 'refresh', env.JWT_REFRESH_EXPIRES_IN_SECONDS, signJwt);
+export const issueRefreshToken = async (role: AuthorizedRole, signJwt: JwtSignFn) => issueToken(role, 'refresh', env.JWT_REFRESH_EXPIRES_IN_SECONDS, signJwt);
 
 export const revokeRefreshToken = async (refreshToken: string, verifyJwt: JwtVerifyFn) => {
     const verified = await verifyJwt(refreshToken);
     const payload = parseTokenPayload(verified);
     if (!payload || payload.type !== 'refresh') return false;
-    revokedRefreshTokenIds.add(payload.jti);
+    await markRefreshTokenRevoked(payload.jti, payload.exp);
     return true;
 };
 
@@ -68,8 +66,8 @@ export const consumeRefreshToken = async (refreshToken: string, verifyJwt: JwtVe
     const verified = await verifyJwt(refreshToken);
     const payload = parseTokenPayload(verified);
     if (!payload || payload.type !== 'refresh') return null;
-    if (revokedRefreshTokenIds.has(payload.jti)) return null;
-    revokedRefreshTokenIds.add(payload.jti);
+    if (await isRefreshTokenRevoked(payload.jti)) return null;
+    await markRefreshTokenRevoked(payload.jti, payload.exp);
     return payload.role;
 };
 
