@@ -59,6 +59,8 @@ DATABASE_URL=postgres://user:password@localhost:5432/demo bun run --cwd api dev
 说明：
 
 - 必须提供 `DATABASE_URL`
+- 后端端口使用 `API_PORT`（默认 `3000`）
+- 前端端口使用 `WEB_PORT`（默认 `5173`）
 - 数据库访问使用 Drizzle ORM
 - 结构迁移使用 Drizzle Kit（配置文件：`api/drizzle.config.js`）
 - 首次运行前请先执行迁移命令
@@ -70,6 +72,17 @@ bun run --cwd api db:generate
 bun run --cwd api db:migrate
 bun run --cwd api db:push
 bun run --cwd api db:studio
+```
+
+推荐本地启动顺序：
+
+```bash
+# 1) 健康检查
+bun run --cwd api db:check
+# 2) 首次写入种子数据
+bun run --cwd api db:seed
+# 3) 启动后端开发服务
+bun run --cwd api dev
 ```
 
 ## 日志模式
