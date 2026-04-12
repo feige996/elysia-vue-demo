@@ -1,0 +1,17 @@
+{
+  "name": "alova-elysia-demo",
+  "private": true,
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently \"bun run --cwd api dev\" \"bun run --cwd web dev\"",
+    "build": "bun run --cwd api build && bun run --cwd web build",
+    "start": "bun run --cwd api start",
+    "typecheck": "bun run --cwd api typecheck && bun run --cwd web typecheck"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

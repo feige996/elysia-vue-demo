@@ -1,0 +1,21 @@
+{
+    "name": "alova-elysia-demo-api",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "bun --watch src/index.ts",
+        "build": "bun build src/index.ts --target bun --outdir dist",
+        "start": "bun dist/index.js",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@elysiajs/cors": "^1.4.1",
+        "elysia": "^1.4.10",
+        "elysia-di": "^1.0.7",
+        "zod": "^4.1.12"
+    },
+    "devDependencies": {
+        "@types/bun": "^1.3.0",
+        "typescript": "^5.9.3"
+    }
+}
