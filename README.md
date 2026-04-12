@@ -68,6 +68,7 @@ DB_CLIENT=mysql DATABASE_URL=mysql://user:password@localhost:3306/demo bun run -
 - 未设置 `DB_CLIENT` 时默认使用 `memory`
 - 当 `DB_CLIENT` 为 `postgres` 或 `mysql` 时必须提供 `DATABASE_URL`
 - SQL 模式启动时会自动创建 `users` 和 `articles` 表并填充基础种子数据
+- 数据库适配层采用工厂 + 分实现拆分，代码位于 `api/src/infra/db`（`factory.ts` + `adapters/*`）
 
 ## 日志模式
 
