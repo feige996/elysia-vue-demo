@@ -9,6 +9,11 @@
 
 - Bun >= 1.3
 
+后端环境变量文件：
+
+- `api/.env`：开发环境
+- `api/.env.test`：测试环境
+
 ## 快速开始
 
 在项目根目录执行：
@@ -66,7 +71,12 @@ DB_CLIENT=mysql DATABASE_URL=mysql://user:password@localhost:3306/demo bun run -
 
 ## 日志模式
 
-后端日志统一使用 `pino`，支持 `LOG_LEVEL`。
+后端日志统一使用 `pino`，支持 `LOG_LEVEL` 与按天落盘配置。
+
+默认行为：
+
+- 本地开发（`NODE_ENV` 非 `production`）：输出到控制台
+- 生产环境（`NODE_ENV=production`）：默认落盘到按天文件（例如 `logs/app-2026-04-12.log`）
 
 使用方式：
 
@@ -74,7 +84,21 @@ DB_CLIENT=mysql DATABASE_URL=mysql://user:password@localhost:3306/demo bun run -
 bun run --cwd api dev
 # 或者指定日志级别，不写默认 `info`
 LOG_LEVEL=debug bun run --cwd api dev
+# 生产环境默认按天写文件
+NODE_ENV=production bun run --cwd api start
+# 显式指定按天模板（推荐）
+NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd api start
 ```
+
+核心变量：
+
+- `NODE_ENV`：`development | test | production`
+- `LOG_LEVEL`：`trace | debug | info | warn | error | fatal`
+- `LOG_FILE_PATH`：日志文件路径模板，支持 `{date}` 占位符
+- `LOG_FILE_DIR`：未设置 `LOG_FILE_PATH` 时的日志目录（默认 `logs`）
+- `LOG_FILE_PREFIX`：未设置 `LOG_FILE_PATH` 时的日志文件前缀（默认 `app`）
+- `DB_CLIENT`：`memory | postgres | mysql`
+- `DATABASE_URL`：当 `DB_CLIENT` 为 `postgres/mysql` 时使用
 
 ## 示例账号
 
