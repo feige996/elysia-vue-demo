@@ -6,7 +6,10 @@
         "dev": "bun --watch src/index.ts",
         "build": "bun build src/index.ts --target bun --outdir dist",
         "start": "bun dist/index.js",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "test": "bun test",
+        "test:unit": "bun test tests/unit",
+        "test:integration": "bun test tests/integration"
     },
     "dependencies": {
         "@elysiajs/cors": "^1.4.1",

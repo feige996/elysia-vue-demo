@@ -1,5 +1,7 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
+import { ok } from "../shared/http";
+import { ensureRequestContext } from "../shared/request-context";
 
 const articleQuerySchema = z.object({
   page: z.coerce.number().min(1).default(1),
@@ -14,22 +16,23 @@ const articles = [
 
 export const articleModule = new Elysia({ prefix: "/api" }).get(
   "/articles",
-  ({ query }) => {
+  ({ query, request }) => {
+    const { requestId } = ensureRequestContext(request);
     const parsedQuery = articleQuerySchema.safeParse(query);
     const page = parsedQuery.success ? parsedQuery.data.page : 1;
     const pageSize = parsedQuery.success ? parsedQuery.data.pageSize : 10;
     const startIndex = (page - 1) * pageSize;
     const result = articles.slice(startIndex, startIndex + pageSize);
 
-    return {
-      code: 0,
-      message: "OK",
-      data: {
+    return ok(
+      requestId,
+      {
         list: result,
         total: articles.length,
         page,
         pageSize
-      }
-    };
+      },
+      "OK"
+    );
   }
 );

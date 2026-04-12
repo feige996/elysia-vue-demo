@@ -7,16 +7,26 @@ export class UserService {
     private readonly logService: LogService
   ) {}
 
-  getUsers(keyword?: string) {
-    this.logService.info(`Query users with keyword: ${keyword ?? "all"}`);
+  getUsers(keyword?: string, requestId?: string) {
+    this.logService.info("query_users", {
+      requestId,
+      keyword: keyword ?? "all"
+    });
     return this.userRepository.findAll(keyword);
   }
 
-  login(account: string, password: string) {
+  login(account: string, password: string, requestId?: string) {
     const user = this.userRepository.findByAccount(account);
-    if (!user) return null;
+    if (!user) {
+      this.logService.info("login_failed_user_not_found", { requestId, account });
+      return null;
+    }
     const expectedPassword = `${account}123`;
-    if (password !== expectedPassword) return null;
+    if (password !== expectedPassword) {
+      this.logService.info("login_failed_invalid_password", { requestId, account });
+      return null;
+    }
+    this.logService.info("login_success", { requestId, account });
     return {
       token: "demo-token",
       user

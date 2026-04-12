@@ -7,6 +7,8 @@ import { userModule } from './modules/user';
 import { UserRepository } from './repositories/user.repository';
 import { LogService } from './services/log.service';
 import { UserService } from './services/user.service';
+import { ok } from './shared/http';
+import { ensureRequestContext } from './shared/request-context';
 
 const logService = new LogService();
 const userRepository = new UserRepository();
@@ -42,10 +44,7 @@ export const app = new Elysia()
     .use(loggerMiddleware)
     .use(errorMiddleware)
     .use(authMiddleware)
-    .get('/health', () => ({
-        code: 0,
-        message: 'ok',
-    }))
+    .get('/health', ({ request }) => ok(ensureRequestContext(request).requestId, { status: 'ok' }, 'ok'))
     .use(userModule)
     .use(articleModule);
 

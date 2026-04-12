@@ -1,11 +1,23 @@
 export class LogService {
-  info(message: string) {
-    const timestamp = new Date().toISOString();
-    console.log(`[INFO] ${timestamp} ${message}`);
+  info(message: string, meta?: Record<string, unknown>) {
+    console.log(
+      JSON.stringify({
+        level: "info",
+        message,
+        ...(meta ?? {}),
+        timestamp: new Date().toISOString()
+      })
+    );
   }
 
-  error(message: string) {
-    const timestamp = new Date().toISOString();
-    console.error(`[ERROR] ${timestamp} ${message}`);
+  error(message: string, meta?: Record<string, unknown>) {
+    console.error(
+      JSON.stringify({
+        level: "error",
+        message,
+        ...(meta ?? {}),
+        timestamp: new Date().toISOString()
+      })
+    );
   }
 }
