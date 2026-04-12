@@ -1,11 +1,5 @@
-import type { DatabaseAdapter } from '../infra/db/database-adapter';
-
-export type UserEntity = {
-    id: number;
-    account: string;
-    name: string;
-    role: 'admin' | 'editor';
-};
+import type { DatabaseAdapter } from '../../infra/db/database-adapter';
+import type { UserEntity } from '../../shared/types/entities';
 
 export class UserRepository {
     constructor(private readonly databaseAdapter: DatabaseAdapter) {}

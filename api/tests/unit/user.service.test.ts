@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'bun:test';
 import { createDatabaseAdapter } from '../../src/infra/db/database-adapter';
-import { UserRepository } from '../../src/repositories/user.repository';
-import { LogService } from '../../src/services/log.service';
-import { UserService } from '../../src/services/user.service';
+import { UserRepository } from '../../src/modules/user/user.repository';
+import { UserService } from '../../src/modules/user/user.service';
+import { LogService } from '../../src/shared/logger/log.service';
 
 class TestLogService extends LogService {
     public readonly logs: Array<{ message: string; meta?: Record<string, unknown> }> = [];

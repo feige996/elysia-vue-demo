@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { app } from '../../src/index';
-import { AppCode } from '../../src/shared/http';
+import { app } from '../../src/app/index';
+import { AppCode } from '../../src/shared/types/http';
 
 const sendJson = async (url: string, method: string, body?: unknown, headers?: Record<string, string>) =>
     app.handle(

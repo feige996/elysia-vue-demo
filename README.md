@@ -75,11 +75,20 @@ DB_CLIENT=mysql DATABASE_URL=mysql://user:password@localhost:3306/demo bun run -
 .
 ├── api
 │   ├── src
-│   │   ├── index.ts
-│   │   ├── middleware
+│   │   ├── app
+│   │   │   ├── index.ts
+│   │   │   ├── middleware
+│   │   │   └── plugins
+│   │   ├── infra
+│   │   │   └── db
 │   │   ├── modules
-│   │   ├── repositories
-│   │   └── services
+│   │   │   ├── user
+│   │   │   └── article
+│   │   ├── shared
+│   │   │   ├── auth
+│   │   │   ├── logger
+│   │   │   └── types
+│   │   └── index.ts
 │   ├── package.json
 │   └── tsconfig.json
 ├── web

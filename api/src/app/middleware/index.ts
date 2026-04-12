@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia';
-import { AppCode, fail } from '../shared/http';
-import { ensureRequestContext } from '../shared/request-context';
+import { isAuthorizedToken } from '../../shared/auth/token-auth';
+import { AppCode, fail } from '../../shared/types/http';
+import { ensureRequestContext } from '../../shared/types/request-context';
 
 const publicPaths = new Set(['/api/auth/login', '/api/articles', '/health']);
 
@@ -15,8 +16,8 @@ export const loggerMiddleware = new Elysia({ name: 'logger-middleware' })
                 requestId,
                 method: request.method,
                 path,
-                timestamp: new Date().toISOString(),
-            }),
+                timestamp: new Date().toISOString()
+            })
         );
     })
     .onAfterHandle(({ request, set }) => {
@@ -33,8 +34,8 @@ export const loggerMiddleware = new Elysia({ name: 'logger-middleware' })
                 path,
                 status,
                 durationMs,
-                timestamp: new Date().toISOString(),
-            }),
+                timestamp: new Date().toISOString()
+            })
         );
     });
 
@@ -42,9 +43,7 @@ export const authMiddleware = new Elysia({ name: 'auth-middleware' }).onRequest(
     const path = new URL(request.url).pathname;
     if (publicPaths.has(path)) return;
 
-    const authorization = request.headers.get('authorization');
-    const isAuthorized = authorization === 'Bearer demo-token';
-    if (isAuthorized) return;
+    if (isAuthorizedToken(request.headers.get('authorization'))) return;
 
     set.status = 401;
     const { requestId } = ensureRequestContext(request);
@@ -66,8 +65,8 @@ export const errorMiddleware = new Elysia({ name: 'error-middleware' }).onError(
             status: 500,
             errorCode: code,
             errorMessage,
-            timestamp: new Date().toISOString(),
-        }),
+            timestamp: new Date().toISOString()
+        })
     );
     set.status = 500;
     return fail(requestId, AppCode.INTERNAL_ERROR, errorMessage);
