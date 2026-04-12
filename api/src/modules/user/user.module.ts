@@ -1,5 +1,5 @@
 import { Elysia } from 'elysia';
-import { issueAuthToken } from '../../shared/auth/token-auth';
+import { consumeRefreshToken, issueAccessToken, issueRefreshToken, revokeRefreshToken } from '../../shared/auth/token-auth';
 import type { UserService } from './user.service';
 import { createUserController } from './user.controller';
 import type { UserRepository } from './user.repository';
@@ -10,10 +10,57 @@ export const userModule = new Elysia({ prefix: '/api' })
         const { userService, userRepository, jwt } = ctx as typeof ctx & {
             userService: UserService;
             userRepository: UserRepository;
-            jwt: { sign: (payload: Record<string, unknown>) => Promise<string> };
+            jwt: { sign: (payload: Record<string, unknown>) => Promise<string>; verify: (token: string) => Promise<unknown> };
         };
-        const controller = createUserController(userService, userRepository, async (role) => issueAuthToken(role, async (payload) => jwt.sign(payload)));
+        const controller = createUserController(
+            userService,
+            userRepository,
+            async (role) => ({
+                accessToken: await issueAccessToken(role, async (payload) => jwt.sign(payload)),
+                refreshToken: await issueRefreshToken(role, async (payload) => jwt.sign(payload))
+            }),
+            async (refreshToken) => consumeRefreshToken(refreshToken, async (token) => jwt.verify(token)),
+            async (refreshToken) => revokeRefreshToken(refreshToken, async (token) => jwt.verify(token))
+        );
         const response = await controller.login(body, ctx.request);
+        set.status = response.status;
+        return response.payload;
+    })
+    .post('/auth/refresh', async (ctx) => {
+        const { body, set } = ctx;
+        const { userService, userRepository, jwt } = ctx as typeof ctx & {
+            userService: UserService;
+            userRepository: UserRepository;
+            jwt: { sign: (payload: Record<string, unknown>) => Promise<string>; verify: (token: string) => Promise<unknown> };
+        };
+        const controller = createUserController(
+            userService,
+            userRepository,
+            async (role) => ({
+                accessToken: await issueAccessToken(role, async (payload) => jwt.sign(payload)),
+                refreshToken: await issueRefreshToken(role, async (payload) => jwt.sign(payload))
+            }),
+            async (refreshToken) => consumeRefreshToken(refreshToken, async (token) => jwt.verify(token))
+        );
+        const response = await controller.refresh(body, ctx.request);
+        set.status = response.status;
+        return response.payload;
+    })
+    .post('/auth/logout', async (ctx) => {
+        const { body, set } = ctx;
+        const { userService, userRepository, jwt } = ctx as typeof ctx & {
+            userService: UserService;
+            userRepository: UserRepository;
+            jwt: { verify: (token: string) => Promise<unknown> };
+        };
+        const controller = createUserController(
+            userService,
+            userRepository,
+            undefined,
+            undefined,
+            async (refreshToken) => revokeRefreshToken(refreshToken, async (token) => jwt.verify(token))
+        );
+        const response = await controller.logout(body, ctx.request);
         set.status = response.status;
         return response.payload;
     })

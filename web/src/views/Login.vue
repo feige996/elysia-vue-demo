@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 import { z } from 'zod';
-import { loginMethod, requestState, setAccessToken, type LoginPayload, type LoginResult } from '../api/request';
+import { loginMethod, requestState, setAccessToken, setRefreshToken, type LoginPayload, type LoginResult } from '../api/request';
 
 const emit = defineEmits<{
     loginSuccess: [payload: LoginResult];
@@ -38,7 +38,8 @@ const submitLogin = async () => {
             account: parsed.data.account,
             password: parsed.data.password,
         });
-        setAccessToken(response.data.token);
+        setAccessToken(response.data.accessToken);
+        setRefreshToken(response.data.refreshToken);
         emit('loginSuccess', response.data);
     } catch (error) {
         errorMessage.text = error instanceof Error ? error.message : 'Login failed';

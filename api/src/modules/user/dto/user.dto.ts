@@ -34,3 +34,11 @@ export const idParamSchema = z.object({
 export const batchDeleteSchema = z.object({
     ids: z.array(z.coerce.number().int().min(1)).min(1),
 });
+
+export const refreshTokenSchema = z.object({
+    refreshToken: z.string().min(1),
+});
+
+export const logoutSchema = z.object({
+    refreshToken: z.string().min(1),
+});

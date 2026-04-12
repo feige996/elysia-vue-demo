@@ -16,7 +16,8 @@
         "db:studio": "drizzle-kit studio",
         "db:seed": "bun src/infra/db/client.ts seed",
         "db:check": "bun src/infra/db/client.ts check",
-        "module:create": "bun scripts/create-module.ts"
+        "module:create": "bun scripts/create-module.ts",
+        "openapi:generate": "bun scripts/generate-openapi.ts"
     },
     "dependencies": {
         "@elysiajs/cors": "^1.4.1",
@@ -24,6 +25,7 @@
         "drizzle-orm": "^0.44.6",
         "elysia": "^1.4.10",
         "elysia-di": "^1.0.7",
+        "elysia-rate-limit": "^4.5.1",
         "pino": "^9.9.4",
         "postgres": "^3.4.7",
         "zod": "^4.1.12"

@@ -14,6 +14,8 @@ jobs:
             DATABASE_URL: postgres://postgres:postgres@localhost:5432/elysia_demo
             API_PORT: 3000
             WEB_PORT: 5173
+            JWT_SECRET: ci-jwt-secret
+            JWT_REFRESH_EXPIRES_IN_SECONDS: 604800
         services:
             postgres:
                 image: postgres:16-alpine
@@ -52,6 +54,15 @@ jobs:
                   if [ -n "$(git status --porcelain -- api/drizzle)" ]; then
                       echo "Drizzle migration drift detected. Please commit generated migration files."
                       git status --short -- api/drizzle
+                      exit 1
+                  fi
+
+            - name: Check OpenAPI drift
+              run: |
+                  bun run --cwd api openapi:generate
+                  if [ -n "$(git status --porcelain -- api/openapi.generated.json)" ]; then
+                      echo "OpenAPI drift detected. Please commit api/openapi.generated.json"
+                      git status --short -- api/openapi.generated.json
                       exit 1
                   fi
 

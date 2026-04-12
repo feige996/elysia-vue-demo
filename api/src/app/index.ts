@@ -8,7 +8,7 @@ import { logService } from '../shared/logger/log.service';
 import { userModule } from '../modules/user';
 import { ok } from '../shared/types/http';
 import { ensureRequestContext } from '../shared/types/request-context';
-import { authMiddleware, errorMiddleware, loggerMiddleware } from './middleware';
+import { authMiddleware, errorMiddleware, loggerMiddleware, rateLimitMiddleware } from './middleware';
 import { diPlugin } from './plugins/di';
 
 const errorExamples = {
@@ -110,6 +110,13 @@ const openApiSpec = {
                 },
                 required: ['account', 'password'],
             },
+            RefreshTokenRequest: {
+                type: 'object',
+                properties: {
+                    refreshToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh.signature' }
+                },
+                required: ['refreshToken']
+            },
             User: {
                 type: 'object',
                 properties: {
@@ -203,7 +210,8 @@ const openApiSpec = {
                     message: 'Login success',
                     requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719',
                     data: {
-                        token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xxx.yyy',
+                        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.access.signature',
+                        refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh.signature',
                         user: { id: 1, account: 'admin', name: 'Admin', role: 'admin' },
                     },
                 },
@@ -305,6 +313,32 @@ const openApiSpec = {
                     401: errorResponse(401, 'Invalid credentials'),
                 },
             },
+        },
+        '/api/auth/refresh': {
+            post: {
+                summary: 'Refresh access token',
+                requestBody: {
+                    required: true,
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/RefreshTokenRequest' } } }
+                },
+                responses: {
+                    200: successResponse('Token refreshed', 'LoginSuccessExample'),
+                    401: errorResponse(401, 'Invalid refresh token')
+                }
+            }
+        },
+        '/api/auth/logout': {
+            post: {
+                summary: 'Revoke refresh token',
+                requestBody: {
+                    required: true,
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/RefreshTokenRequest' } } }
+                },
+                responses: {
+                    200: successResponse('Logout success', 'DeletedSuccessExample'),
+                    401: errorResponse(401, 'Invalid refresh token')
+                }
+            }
         },
         '/api/users': {
             get: {
@@ -469,6 +503,7 @@ export const app = new Elysia()
         }),
     )
     .use(diPlugin)
+    .use(rateLimitMiddleware)
     .use(loggerMiddleware)
     .use(errorMiddleware)
     .use(authMiddleware)

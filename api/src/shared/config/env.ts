@@ -10,6 +10,9 @@ const envSchema = z.object({
     LOG_FILE_PREFIX: z.string().default('app'),
     JWT_SECRET: z.string().min(1, 'JWT_SECRET is required'),
     JWT_EXPIRES_IN_SECONDS: z.coerce.number().int().positive().default(3600),
+    JWT_REFRESH_EXPIRES_IN_SECONDS: z.coerce.number().int().positive().default(604800),
+    RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
+    RATE_LIMIT_DURATION: z.coerce.number().int().positive().default(60000),
 });
 
 export const env = envSchema.parse(process.env);

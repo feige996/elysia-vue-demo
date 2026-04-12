@@ -6,6 +6,7 @@ import type { AppType } from "../../../api/src";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 const TOKEN_KEY = "access_token";
+const REFRESH_TOKEN_KEY = "refresh_token";
 
 export type BackendAppType = AppType;
 
@@ -29,7 +30,8 @@ export type LoginPayload = {
 };
 
 export type LoginResult = {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
   user: User;
 };
 
@@ -65,7 +67,7 @@ export const loginMethod = (payload: LoginPayload) =>
   alovaInstance.Post<ApiResponse<LoginResult>>("/auth/login", payload);
 
 export const getUsersMethod = (keyword?: string) =>
-  alovaInstance.Get<ApiResponse<User[]>>("/users", {
+  alovaInstance.Get<ApiResponse<User[]>>("/users/all", {
     params: keyword ? { keyword } : undefined
   });
 
@@ -73,6 +75,14 @@ export const setAccessToken = (token: string) => {
   localStorage.setItem(TOKEN_KEY, token);
 };
 
+export const setRefreshToken = (token: string) => {
+  localStorage.setItem(REFRESH_TOKEN_KEY, token);
+};
+
 export const clearAccessToken = () => {
   localStorage.removeItem(TOKEN_KEY);
+};
+
+export const clearRefreshToken = () => {
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
 };

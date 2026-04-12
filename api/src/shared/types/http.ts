@@ -7,6 +7,7 @@ export const AppCode = {
     NOT_FOUND: 404000,
     CONFLICT: 409000,
     INVALID_CREDENTIALS: 401001,
+    RATE_LIMITED: 429000,
     INTERNAL_ERROR: 500000,
 } as const;
 
@@ -20,6 +21,7 @@ export const ErrorKey: Record<ErrorCodeKey, ErrorCodeKey> = {
     NOT_FOUND: 'NOT_FOUND',
     CONFLICT: 'CONFLICT',
     INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+    RATE_LIMITED: 'RATE_LIMITED',
     INTERNAL_ERROR: 'INTERNAL_ERROR',
 };
 
@@ -58,6 +60,7 @@ export const ErrorCatalog: Record<ErrorCodeKey, { code: AppCodeValue; status: nu
     NOT_FOUND: { code: AppCode.NOT_FOUND, status: 404, message: 'Not found' },
     CONFLICT: { code: AppCode.CONFLICT, status: 409, message: 'Conflict' },
     INVALID_CREDENTIALS: { code: AppCode.INVALID_CREDENTIALS, status: 401, message: 'Invalid account or password' },
+    RATE_LIMITED: { code: AppCode.RATE_LIMITED, status: 429, message: 'Too many requests, please try again later' },
     INTERNAL_ERROR: { code: AppCode.INTERNAL_ERROR, status: 500, message: 'Internal Server Error' },
 };
 

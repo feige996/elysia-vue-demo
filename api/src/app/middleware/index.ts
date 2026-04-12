@@ -1,12 +1,14 @@
 import { Elysia } from 'elysia';
+import { rateLimit } from 'elysia-rate-limit';
 import { getAuthorizedRole } from '../../shared/auth/token-auth';
+import { env } from '../../shared/config/env';
 import { logService } from '../../shared/logger/log.service';
 import { ErrorKey, failByKey } from '../../shared/types/http';
 import { ensureRequestContext } from '../../shared/types/request-context';
 
 const isPublicRoute = (method: string, path: string) => {
     if (path === '/health' || path === '/openapi.json' || path === '/docs') return true;
-    if (method === 'POST' && path === '/api/auth/login') return true;
+    if (method === 'POST' && (path === '/api/auth/login' || path === '/api/auth/refresh' || path === '/api/auth/logout')) return true;
     if (method === 'GET' && (path === '/api/articles' || path === '/api/articles/all')) return true;
     return false;
 };
@@ -74,4 +76,17 @@ export const errorMiddleware = new Elysia({ name: 'error-middleware' }).onError(
     const internalError = failByKey(requestId, ErrorKey.INTERNAL_ERROR, errorMessage);
     set.status = internalError.status;
     return internalError.payload;
+});
+
+export const rateLimitMiddleware = rateLimit({
+    max: env.RATE_LIMIT_MAX,
+    duration: env.RATE_LIMIT_DURATION,
+    errorResponse: (() => {
+        const requestId = crypto.randomUUID();
+        const response = failByKey(requestId, ErrorKey.RATE_LIMITED);
+        return new Response(JSON.stringify(response.payload), {
+            status: 429,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    })(),
 });

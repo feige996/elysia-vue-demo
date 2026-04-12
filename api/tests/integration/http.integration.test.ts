@@ -186,20 +186,21 @@ describe('HTTP integration', () => {
         });
         const loginPayload = (await loginResponse.json()) as {
             code: number;
-            data?: { token: string };
+            data?: { accessToken: string; refreshToken: string };
             requestId?: string;
         };
 
         expect(loginResponse.status).toBe(200);
         expect(loginPayload.code).toBe(0);
-        expect(typeof loginPayload.data?.token).toBe('string');
-        expect((loginPayload.data?.token ?? '').split('.').length).toBe(3);
+        expect(typeof loginPayload.data?.accessToken).toBe('string');
+        expect(typeof loginPayload.data?.refreshToken).toBe('string');
+        expect((loginPayload.data?.accessToken ?? '').split('.').length).toBe(3);
         expect(typeof loginPayload.requestId).toBe('string');
 
         const usersResponse = await app.handle(
             new Request('http://localhost/api/users', {
                 headers: {
-                    authorization: `Bearer ${loginPayload.data?.token ?? ''}`,
+                    authorization: `Bearer ${loginPayload.data?.accessToken ?? ''}`,
                 },
             }),
         );
@@ -227,16 +228,40 @@ describe('HTTP integration', () => {
             account: 'editor',
             password: 'editor123',
         });
-        const loginPayload = (await loginResponse.json()) as { data?: { token: string } };
+        const loginPayload = (await loginResponse.json()) as { data?: { accessToken: string; refreshToken: string } };
         const response = await sendJson(
             'http://localhost/api/users',
             'POST',
             { account: 'tom', name: 'Tom', role: 'editor' },
-            { authorization: `Bearer ${loginPayload.data?.token ?? ''}` },
+            { authorization: `Bearer ${loginPayload.data?.accessToken ?? ''}` },
         );
         const payload = (await response.json()) as { code: number };
         expect(response.status).toBe(403);
         expect(payload.code).toBe(AppCode.FORBIDDEN);
+    });
+
+    it('supports refresh token rotation and logout', async () => {
+        const loginResponse = await sendJson('http://localhost/api/auth/login', 'POST', {
+            account: 'admin',
+            password: 'admin123'
+        });
+        const loginPayload = (await loginResponse.json()) as { data?: { accessToken: string; refreshToken: string } };
+        const refreshResponse = await sendJson('http://localhost/api/auth/refresh', 'POST', {
+            refreshToken: loginPayload.data?.refreshToken ?? ''
+        });
+        const refreshPayload = (await refreshResponse.json()) as { data?: { accessToken: string; refreshToken: string } };
+        expect(refreshResponse.status).toBe(200);
+        expect(typeof refreshPayload.data?.accessToken).toBe('string');
+
+        const oldRefreshReuseResponse = await sendJson('http://localhost/api/auth/refresh', 'POST', {
+            refreshToken: loginPayload.data?.refreshToken ?? ''
+        });
+        expect(oldRefreshReuseResponse.status).toBe(401);
+
+        const logoutResponse = await sendJson('http://localhost/api/auth/logout', 'POST', {
+            refreshToken: refreshPayload.data?.refreshToken ?? ''
+        });
+        expect(logoutResponse.status).toBe(200);
     });
 
     it('supports user and article CRUD endpoints', async () => {
@@ -244,8 +269,8 @@ describe('HTTP integration', () => {
             account: 'admin',
             password: 'admin123',
         });
-        const loginPayload = (await loginResponse.json()) as { data?: { token: string } };
-        const token = loginPayload.data?.token ?? '';
+        const loginPayload = (await loginResponse.json()) as { data?: { accessToken: string; refreshToken: string } };
+        const token = loginPayload.data?.accessToken ?? '';
         const authHeaders = { authorization: `Bearer ${token}` };
 
         const createUserResponse = await sendJson('http://localhost/api/users', 'POST', { account: 'bob', name: 'Bob', role: 'editor' }, authHeaders);

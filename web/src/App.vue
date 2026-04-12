@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import Login from './views/Login.vue';
 import UserList from './views/UserList.vue';
-import { clearAccessToken, type LoginResult } from './api/request';
+import { clearAccessToken, clearRefreshToken, type LoginResult } from './api/request';
 
 const profile = ref<LoginResult['user'] | null>(null);
 
@@ -14,6 +14,7 @@ const onLoginSuccess = (payload: LoginResult) => {
 
 const logout = () => {
     clearAccessToken();
+    clearRefreshToken();
     profile.value = null;
 };
 </script>

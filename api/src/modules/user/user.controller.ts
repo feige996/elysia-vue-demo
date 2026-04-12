@@ -2,12 +2,18 @@ import type { UserService } from './user.service';
 import type { AuthorizedRole } from '../../shared/auth/token-auth';
 import { ErrorKey, failByKey, ok } from '../../shared/types/http';
 import { ensureRequestContext } from '../../shared/types/request-context';
-import { batchDeleteSchema, createUserSchema, idParamSchema, listQuerySchema, loginSchema, pageQuerySchema, updateUserSchema } from './dto/user.dto';
+import { batchDeleteSchema, createUserSchema, idParamSchema, listQuerySchema, loginSchema, logoutSchema, pageQuerySchema, refreshTokenSchema, updateUserSchema } from './dto/user.dto';
 import type { UserRepository } from './user.repository';
 import type { UserEntity } from '../../shared/types/entities';
 import type { PaginatedData } from '../../shared/types/http';
 
-export const createUserController = (userService: UserService, userRepository: UserRepository, issueToken?: (role: AuthorizedRole) => Promise<string>) => ({
+export const createUserController = (
+    userService: UserService,
+    userRepository: UserRepository,
+    issueTokens?: (role: AuthorizedRole) => Promise<{ accessToken: string; refreshToken: string }>,
+    consumeRefreshToken?: (refreshToken: string) => Promise<AuthorizedRole | null>,
+    revokeRefreshToken?: (refreshToken: string) => Promise<boolean>
+) => ({
     login: async (body: unknown, request: Request) => {
         const { requestId } = ensureRequestContext(request);
         const parsedBody = loginSchema.safeParse(body);
@@ -19,14 +25,14 @@ export const createUserController = (userService: UserService, userRepository: U
         if (!user) {
             return failByKey(requestId, ErrorKey.INVALID_CREDENTIALS);
         }
-        if (!issueToken) {
+        if (!issueTokens) {
             return failByKey(requestId, ErrorKey.INTERNAL_ERROR, 'Auth token issuer is not configured');
         }
-        const token = await issueToken(user.role);
+        const tokens = await issueTokens(user.role);
 
         return {
             status: 200,
-            payload: ok(requestId, { token, user }, 'Login success'),
+            payload: ok(requestId, { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, user }, 'Login success'),
         };
     },
     listAll: async (query: Record<string, string | undefined>, request: Request) => {
@@ -122,4 +128,41 @@ export const createUserController = (userService: UserService, userRepository: U
             payload: ok(requestId, { deleted: deletedCount }, 'Deleted'),
         };
     },
+    refresh: async (body: unknown, request: Request) => {
+        const { requestId } = ensureRequestContext(request);
+        const parsedBody = refreshTokenSchema.safeParse(body);
+        if (!parsedBody.success) {
+            return failByKey(requestId, ErrorKey.VALIDATION_ERROR, parsedBody.error.issues[0]?.message ?? 'Invalid refresh token payload');
+        }
+        if (!consumeRefreshToken || !issueTokens) {
+            return failByKey(requestId, ErrorKey.INTERNAL_ERROR, 'Refresh token handler is not configured');
+        }
+        const role = await consumeRefreshToken(parsedBody.data.refreshToken);
+        if (!role) {
+            return failByKey(requestId, ErrorKey.UNAUTHORIZED, 'Invalid refresh token');
+        }
+        const tokens = await issueTokens(role);
+        return {
+            status: 200,
+            payload: ok(requestId, { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }, 'Token refreshed')
+        };
+    },
+    logout: async (body: unknown, request: Request) => {
+        const { requestId } = ensureRequestContext(request);
+        const parsedBody = logoutSchema.safeParse(body);
+        if (!parsedBody.success) {
+            return failByKey(requestId, ErrorKey.VALIDATION_ERROR, parsedBody.error.issues[0]?.message ?? 'Invalid refresh token payload');
+        }
+        if (!revokeRefreshToken) {
+            return failByKey(requestId, ErrorKey.INTERNAL_ERROR, 'Refresh token handler is not configured');
+        }
+        const revoked = await revokeRefreshToken(parsedBody.data.refreshToken);
+        if (!revoked) {
+            return failByKey(requestId, ErrorKey.UNAUTHORIZED, 'Invalid refresh token');
+        }
+        return {
+            status: 200,
+            payload: ok(requestId, { revoked: true }, 'Logout success')
+        };
+    }
 });

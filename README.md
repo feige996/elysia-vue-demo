@@ -80,6 +80,7 @@ bun run --cwd api db:studio
 
 - OpenAPI JSON：`/openapi.json`
 - Swagger UI：`/docs`
+- 基于 Zod 自动生成 OpenAPI 文件：`bun run --cwd api openapi:generate`（输出 `api/openapi.generated.json`）
 
 模块脚手架：
 
@@ -128,7 +129,8 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 - `LOG_FILE_PREFIX`：未设置 `LOG_FILE_PATH` 时的日志文件前缀（默认 `app`）
 - `DATABASE_URL`：PostgreSQL 连接串
 - `JWT_SECRET`：JWT 签名密钥（必填）
-- `JWT_EXPIRES_IN_SECONDS`：JWT 过期秒数（默认 `3600`）
+- `JWT_EXPIRES_IN_SECONDS`：access token 过期秒数（默认 `3600`）
+- `JWT_REFRESH_EXPIRES_IN_SECONDS`：refresh token 过期秒数（默认 `604800`）
 
 ## 示例账号
 
@@ -175,7 +177,9 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 
 ## 接口示例
 
-- `POST /api/auth/login`：登录
+- `POST /api/auth/login`：登录（返回 accessToken + refreshToken）
+- `POST /api/auth/refresh`：刷新 access token（refresh token 轮转）
+- `POST /api/auth/logout`：撤销 refresh token
 - `GET /api/users`：用户分页列表（需携带 JWT 且角色为 admin）
 - `GET /api/users/all`：用户全量列表（需携带 JWT 且角色为 admin）
 - `POST /api/users`：新增用户（需鉴权）
@@ -193,5 +197,20 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 JWT 启用示例：
 
 ```bash
-JWT_SECRET=replace-me-with-strong-secret bun run --cwd api dev
+JWT_SECRET=replace-me-with-strong-secret JWT_REFRESH_EXPIRES_IN_SECONDS=604800 bun run --cwd api dev
+```
+
+## Docker 部署
+
+根目录一键启动：
+
+```bash
+docker compose up -d --build
+```
+
+首次启动后执行：
+
+```bash
+docker compose exec api bun run db:migrate
+docker compose exec api bun run db:seed
 ```
