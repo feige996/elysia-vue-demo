@@ -20,10 +20,38 @@ const errorExamples = {
     500: { code: 500000, message: 'Internal Server Error', requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719' },
 } as const;
 
-const successResponse = (description: string) => ({
+const errorExampleRef = {
+    400: '#/components/examples/ValidationErrorExample',
+    401: '#/components/examples/UnauthorizedErrorExample',
+    403: '#/components/examples/ForbiddenErrorExample',
+    404: '#/components/examples/NotFoundErrorExample',
+    409: '#/components/examples/ConflictErrorExample',
+    500: '#/components/examples/InternalErrorExample',
+} as const;
+
+const successExampleRef = {
+    HealthSuccessExample: '#/components/examples/HealthSuccessExample',
+    LoginSuccessExample: '#/components/examples/LoginSuccessExample',
+    UsersPageSuccessExample: '#/components/examples/UsersPageSuccessExample',
+    UsersAllSuccessExample: '#/components/examples/UsersAllSuccessExample',
+    UserCreatedSuccessExample: '#/components/examples/UserCreatedSuccessExample',
+    UserUpdatedSuccessExample: '#/components/examples/UserUpdatedSuccessExample',
+    DeletedSuccessExample: '#/components/examples/DeletedSuccessExample',
+    ArticlesPageSuccessExample: '#/components/examples/ArticlesPageSuccessExample',
+    ArticlesAllSuccessExample: '#/components/examples/ArticlesAllSuccessExample',
+    ArticleCreatedSuccessExample: '#/components/examples/ArticleCreatedSuccessExample',
+    ArticleUpdatedSuccessExample: '#/components/examples/ArticleUpdatedSuccessExample',
+} as const;
+
+const successResponse = (description: string, exampleKey: keyof typeof successExampleRef) => ({
     description,
     content: {
-        'application/json': { schema: { $ref: '#/components/schemas/ApiSuccess' } },
+        'application/json': {
+            schema: { $ref: '#/components/schemas/ApiSuccess' },
+            examples: {
+                default: { $ref: successExampleRef[exampleKey] },
+            },
+        },
     },
 });
 
@@ -33,7 +61,7 @@ const errorResponse = (status: keyof typeof errorExamples, description: string) 
         'application/json': {
             schema: { $ref: '#/components/schemas/ApiError' },
             examples: {
-                default: { value: errorExamples[status] },
+                default: { $ref: errorExampleRef[status] },
             },
         },
     },
@@ -167,9 +195,104 @@ const openApiSpec = {
                 required: ['ids'],
             },
         },
+        examples: {
+            HealthSuccessExample: { value: { code: 0, message: 'ok', requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719', data: { status: 'ok' } } },
+            LoginSuccessExample: {
+                value: {
+                    code: 0,
+                    message: 'Login success',
+                    requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719',
+                    data: {
+                        token: 'admin-token',
+                        user: { id: 1, account: 'admin', name: 'Admin', role: 'admin' },
+                    },
+                },
+            },
+            UsersPageSuccessExample: {
+                value: {
+                    code: 0,
+                    message: 'OK',
+                    requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719',
+                    data: {
+                        list: [{ id: 1, account: 'admin', name: 'Admin', role: 'admin' }],
+                        total: 3,
+                        page: 1,
+                        pageSize: 10,
+                    },
+                },
+            },
+            UsersAllSuccessExample: {
+                value: {
+                    code: 0,
+                    message: 'OK',
+                    requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719',
+                    data: [{ id: 1, account: 'admin', name: 'Admin', role: 'admin' }],
+                },
+            },
+            UserCreatedSuccessExample: {
+                value: {
+                    code: 0,
+                    message: 'Created',
+                    requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719',
+                    data: { id: 4, account: 'tom', name: 'Tom', role: 'editor' },
+                },
+            },
+            UserUpdatedSuccessExample: {
+                value: {
+                    code: 0,
+                    message: 'Updated',
+                    requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719',
+                    data: { id: 4, account: 'tom', name: 'Tom Updated', role: 'editor' },
+                },
+            },
+            DeletedSuccessExample: { value: { code: 0, message: 'Deleted', requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719', data: { deleted: 1 } } },
+            ArticlesPageSuccessExample: {
+                value: {
+                    code: 0,
+                    message: 'OK',
+                    requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719',
+                    data: {
+                        list: [{ id: 1, title: 'Elysia + Bun 快速启动', author: 'Admin' }],
+                        total: 3,
+                        page: 1,
+                        pageSize: 10,
+                    },
+                },
+            },
+            ArticlesAllSuccessExample: {
+                value: {
+                    code: 0,
+                    message: 'OK',
+                    requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719',
+                    data: [{ id: 1, title: 'Elysia + Bun 快速启动', author: 'Admin' }],
+                },
+            },
+            ArticleCreatedSuccessExample: {
+                value: {
+                    code: 0,
+                    message: 'Created',
+                    requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719',
+                    data: { id: 4, title: 'New Article', author: 'Tom' },
+                },
+            },
+            ArticleUpdatedSuccessExample: {
+                value: {
+                    code: 0,
+                    message: 'Updated',
+                    requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719',
+                    data: { id: 4, title: 'Updated Title', author: 'Tom' },
+                },
+            },
+            ValidationErrorExample: { value: errorExamples[400] },
+            UnauthorizedErrorExample: { value: errorExamples[401] },
+            ForbiddenErrorExample: { value: errorExamples[403] },
+            NotFoundErrorExample: { value: errorExamples[404] },
+            ConflictErrorExample: { value: errorExamples[409] },
+            InternalErrorExample: { value: errorExamples[500] },
+        },
     },
     paths: {
-        '/health': { get: { summary: 'Health check', responses: { 200: successResponse('OK') } } },
+        '/health': { get: { summary: 'Health check', responses: { 200: successResponse('OK', 'HealthSuccessExample') } } },
         '/api/auth/login': {
             post: {
                 summary: 'Login',
@@ -178,7 +301,7 @@ const openApiSpec = {
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/LoginRequest' } } },
                 },
                 responses: {
-                    200: successResponse('Login success'),
+                    200: successResponse('Login success', 'LoginSuccessExample'),
                     401: errorResponse(401, 'Invalid credentials'),
                 },
             },
@@ -192,7 +315,11 @@ const openApiSpec = {
                     { name: 'pageSize', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 50, default: 10 } },
                     { name: 'keyword', in: 'query', schema: { type: 'string' } },
                 ],
-                responses: { 200: successResponse('Paged user list'), 401: errorResponse(401, 'Unauthorized'), 403: errorResponse(403, 'Forbidden') },
+                responses: {
+                    200: successResponse('Paged user list', 'UsersPageSuccessExample'),
+                    401: errorResponse(401, 'Unauthorized'),
+                    403: errorResponse(403, 'Forbidden'),
+                },
             },
             post: {
                 summary: 'Create user',
@@ -202,7 +329,7 @@ const openApiSpec = {
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/UserCreateRequest' } } },
                 },
                 responses: {
-                    201: successResponse('Created'),
+                    201: successResponse('Created', 'UserCreatedSuccessExample'),
                     409: errorResponse(409, 'Conflict'),
                     401: errorResponse(401, 'Unauthorized'),
                     403: errorResponse(403, 'Forbidden'),
@@ -216,7 +343,7 @@ const openApiSpec = {
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/BatchDeleteRequest' } } },
                 },
                 responses: {
-                    200: successResponse('Deleted'),
+                    200: successResponse('Deleted', 'DeletedSuccessExample'),
                     400: errorResponse(400, 'Invalid payload'),
                     401: errorResponse(401, 'Unauthorized'),
                     403: errorResponse(403, 'Forbidden'),
@@ -227,7 +354,11 @@ const openApiSpec = {
             get: {
                 summary: 'List all users',
                 security: [{ bearerAuth: [] }],
-                responses: { 200: successResponse('User list'), 401: errorResponse(401, 'Unauthorized'), 403: errorResponse(403, 'Forbidden') },
+                responses: {
+                    200: successResponse('User list', 'UsersAllSuccessExample'),
+                    401: errorResponse(401, 'Unauthorized'),
+                    403: errorResponse(403, 'Forbidden'),
+                },
             },
         },
         '/api/users/{id}': {
@@ -237,7 +368,7 @@ const openApiSpec = {
                 parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/UserUpdateRequest' } } } },
                 responses: {
-                    200: successResponse('Updated'),
+                    200: successResponse('Updated', 'UserUpdatedSuccessExample'),
                     404: errorResponse(404, 'Not found'),
                     401: errorResponse(401, 'Unauthorized'),
                     403: errorResponse(403, 'Forbidden'),
@@ -248,7 +379,7 @@ const openApiSpec = {
                 security: [{ bearerAuth: [] }],
                 parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
                 responses: {
-                    200: successResponse('Deleted'),
+                    200: successResponse('Deleted', 'DeletedSuccessExample'),
                     404: errorResponse(404, 'Not found'),
                     401: errorResponse(401, 'Unauthorized'),
                     403: errorResponse(403, 'Forbidden'),
@@ -263,7 +394,7 @@ const openApiSpec = {
                     { name: 'pageSize', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 50, default: 10 } },
                     { name: 'keyword', in: 'query', schema: { type: 'string' } },
                 ],
-                responses: { 200: successResponse('Paged article list') },
+                responses: { 200: successResponse('Paged article list', 'ArticlesPageSuccessExample') },
             },
             post: {
                 summary: 'Create article',
@@ -272,7 +403,11 @@ const openApiSpec = {
                     required: true,
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/ArticleCreateRequest' } } },
                 },
-                responses: { 201: successResponse('Created'), 401: errorResponse(401, 'Unauthorized'), 403: errorResponse(403, 'Forbidden') },
+                responses: {
+                    201: successResponse('Created', 'ArticleCreatedSuccessExample'),
+                    401: errorResponse(401, 'Unauthorized'),
+                    403: errorResponse(403, 'Forbidden'),
+                },
             },
             delete: {
                 summary: 'Batch delete articles',
@@ -282,14 +417,14 @@ const openApiSpec = {
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/BatchDeleteRequest' } } },
                 },
                 responses: {
-                    200: successResponse('Deleted'),
+                    200: successResponse('Deleted', 'DeletedSuccessExample'),
                     400: errorResponse(400, 'Invalid payload'),
                     401: errorResponse(401, 'Unauthorized'),
                     403: errorResponse(403, 'Forbidden'),
                 },
             },
         },
-        '/api/articles/all': { get: { summary: 'List all articles', responses: { 200: successResponse('Article list') } } },
+        '/api/articles/all': { get: { summary: 'List all articles', responses: { 200: successResponse('Article list', 'ArticlesAllSuccessExample') } } },
         '/api/articles/{id}': {
             put: {
                 summary: 'Update article by id',
@@ -297,7 +432,7 @@ const openApiSpec = {
                 parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/ArticleUpdateRequest' } } } },
                 responses: {
-                    200: successResponse('Updated'),
+                    200: successResponse('Updated', 'ArticleUpdatedSuccessExample'),
                     404: errorResponse(404, 'Not found'),
                     401: errorResponse(401, 'Unauthorized'),
                     403: errorResponse(403, 'Forbidden'),
@@ -308,7 +443,7 @@ const openApiSpec = {
                 security: [{ bearerAuth: [] }],
                 parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
                 responses: {
-                    200: successResponse('Deleted'),
+                    200: successResponse('Deleted', 'DeletedSuccessExample'),
                     404: errorResponse(404, 'Not found'),
                     401: errorResponse(401, 'Unauthorized'),
                     403: errorResponse(403, 'Forbidden'),
