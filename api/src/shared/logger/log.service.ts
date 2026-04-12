@@ -1,13 +1,14 @@
 import pino, { type Logger as PinoLogger } from 'pino';
 import { mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+import { env } from '../config/env';
 
 type LogMeta = Record<string, unknown>;
 
 export class LogService {
     constructor(
         private readonly pinoLogger: PinoLogger = pino({
-            level: process.env.LOG_LEVEL ?? 'info',
+            level: env.LOG_LEVEL,
         }),
     ) {}
 
@@ -43,19 +44,19 @@ export class LogService {
 }
 
 export const createLogService = () => {
-    const level = process.env.LOG_LEVEL ?? 'info';
-    const isProduction = process.env.NODE_ENV === 'production';
+    const level = env.LOG_LEVEL;
+    const isProduction = env.NODE_ENV === 'production';
 
     const logger = isProduction
         ? (() => {
               const dateTag = new Date().toISOString().slice(0, 10);
               const logFilePath = (() => {
-                  const configuredPath = process.env.LOG_FILE_PATH;
+                  const configuredPath = env.LOG_FILE_PATH;
                   if (configuredPath) {
                       return resolve(process.cwd(), configuredPath.replace('{date}', dateTag));
                   }
-                  const logFileDirectory = resolve(process.cwd(), process.env.LOG_FILE_DIR ?? 'logs');
-                  const logFilePrefix = process.env.LOG_FILE_PREFIX ?? 'app';
+                  const logFileDirectory = resolve(process.cwd(), env.LOG_FILE_DIR);
+                  const logFilePrefix = env.LOG_FILE_PREFIX;
                   return join(logFileDirectory, `${logFilePrefix}-${dateTag}.log`);
               })();
               mkdirSync(dirname(logFilePath), { recursive: true });

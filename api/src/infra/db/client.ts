@@ -1,15 +1,11 @@
 import { count } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { env } from '../../shared/config/env';
 import { defaultArticles, defaultUsers } from './seed-data';
 import { articlesTable, usersTable } from './schema';
 
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
-    throw new Error('DATABASE_URL is required');
-}
-
-const sqlClient = postgres(databaseUrl, { prepare: false });
+const sqlClient = postgres(env.DATABASE_URL, { prepare: false });
 export const db = drizzle(sqlClient);
 
 export const seedDatabase = async () => {

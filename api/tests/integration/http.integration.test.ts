@@ -25,7 +25,7 @@ const userService = {
         if (!user) return null;
         if (password !== `${account}123`) return null;
         return {
-            token: 'demo-token',
+            token: user.role === 'admin' ? 'admin-token' : 'editor-token',
             user,
         };
     },
@@ -187,7 +187,7 @@ describe('HTTP integration', () => {
 
         expect(loginResponse.status).toBe(200);
         expect(loginPayload.code).toBe(0);
-        expect(loginPayload.data?.token).toBe('demo-token');
+        expect(loginPayload.data?.token).toBe('admin-token');
         expect(typeof loginPayload.requestId).toBe('string');
 
         const usersResponse = await app.handle(
@@ -214,6 +214,23 @@ describe('HTTP integration', () => {
         expect(response.status).toBe(401);
         expect(payload.code).toBe(AppCode.UNAUTHORIZED);
         expect(typeof payload.requestId).toBe('string');
+    });
+
+    it('returns forbidden when editor accesses admin routes', async () => {
+        const loginResponse = await sendJson('http://localhost/api/auth/login', 'POST', {
+            account: 'editor',
+            password: 'editor123',
+        });
+        const loginPayload = (await loginResponse.json()) as { data?: { token: string } };
+        const response = await sendJson(
+            'http://localhost/api/users',
+            'POST',
+            { account: 'tom', name: 'Tom', role: 'editor' },
+            { authorization: `Bearer ${loginPayload.data?.token ?? ''}` },
+        );
+        const payload = (await response.json()) as { code: number };
+        expect(response.status).toBe(403);
+        expect(payload.code).toBe(AppCode.FORBIDDEN);
     });
 
     it('supports user and article CRUD endpoints', async () => {

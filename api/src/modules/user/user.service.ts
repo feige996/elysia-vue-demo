@@ -1,16 +1,17 @@
 import type { LogService } from '../../shared/logger/log.service';
+import { env } from '../../shared/config/env';
 import type { UserRepository } from './user.repository';
 
 export class UserService {
     constructor(
         private readonly userRepository: UserRepository,
-        private readonly logService: LogService
+        private readonly logService: LogService,
     ) {}
 
     async getUsers(keyword?: string, requestId?: string) {
         this.logService.info('query_users', {
             requestId,
-            keyword: keyword ?? 'all'
+            keyword: keyword ?? 'all',
         });
         return this.userRepository.findAll(keyword);
     }
@@ -27,9 +28,10 @@ export class UserService {
             return null;
         }
         this.logService.info('login_success', { requestId, account });
+        const token = user.role === 'admin' ? env.AUTH_ADMIN_TOKEN : env.AUTH_EDITOR_TOKEN;
         return {
-            token: 'demo-token',
-            user
+            token,
+            user,
         };
     }
 }

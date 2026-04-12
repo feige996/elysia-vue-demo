@@ -127,11 +127,15 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 - `LOG_FILE_DIR`：未设置 `LOG_FILE_PATH` 时的日志目录（默认 `logs`）
 - `LOG_FILE_PREFIX`：未设置 `LOG_FILE_PATH` 时的日志文件前缀（默认 `app`）
 - `DATABASE_URL`：PostgreSQL 连接串
+- `AUTH_ADMIN_TOKEN`：管理员 token（默认 `admin-token`）
+- `AUTH_EDITOR_TOKEN`：编辑者 token（默认 `editor-token`）
 
 ## 示例账号
 
 - account: `admin`
 - password: `admin123`
+- account: `editor`
+- password: `editor123`
 
 ## 项目结构
 
@@ -172,8 +176,8 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 ## 接口示例
 
 - `POST /api/auth/login`：登录
-- `GET /api/users`：用户分页列表（需 `Authorization: Bearer demo-token`）
-- `GET /api/users/all`：用户全量列表（需 `Authorization: Bearer demo-token`）
+- `GET /api/users`：用户分页列表（需管理员 token）
+- `GET /api/users/all`：用户全量列表（需管理员 token）
 - `POST /api/users`：新增用户（需鉴权）
 - `PUT /api/users/:id`：更新用户（需鉴权）
 - `DELETE /api/users/:id`：删除单个用户（需鉴权）
@@ -184,3 +188,4 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 - `PUT /api/articles/:id`：更新文章（需鉴权）
 - `DELETE /api/articles/:id`：删除单个文章（需鉴权）
 - `DELETE /api/articles`：批量删除文章（需鉴权）
+- 角色策略：`admin` 可访问所有受保护接口；`editor` 仅可访问非管理员接口
