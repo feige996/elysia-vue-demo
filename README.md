@@ -64,6 +64,18 @@ DB_CLIENT=mysql DATABASE_URL=mysql://user:password@localhost:3306/demo bun run -
 - 当 `DB_CLIENT` 为 `postgres` 或 `mysql` 时必须提供 `DATABASE_URL`
 - SQL 模式启动时会自动创建 `users` 和 `articles` 表并填充基础种子数据
 
+## 日志模式
+
+后端日志统一使用 `pino`，支持 `LOG_LEVEL`。
+
+使用方式：
+
+```bash
+bun run --cwd api dev
+# 或者指定日志级别，不写默认 `info`
+LOG_LEVEL=debug bun run --cwd api dev
+```
+
 ## 示例账号
 
 - account: `admin`

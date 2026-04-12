@@ -2,9 +2,9 @@ import { di } from 'elysia-di';
 import { createDatabaseAdapter } from '../../infra/db/database-adapter';
 import { ArticleRepository } from '../../modules/article';
 import { UserRepository, UserService } from '../../modules/user';
-import { LogService } from '../../shared/logger/log.service';
+import { createLogService } from '../../shared/logger/log.service';
 
-const logService = new LogService();
+const logService = createLogService();
 const databaseAdapter = createDatabaseAdapter();
 const userRepository = new UserRepository(databaseAdapter);
 const articleRepository = new ArticleRepository(databaseAdapter);
