@@ -5,7 +5,7 @@ import { userModule } from '../modules/user';
 import { ok } from '../shared/types/http';
 import { ensureRequestContext } from '../shared/types/request-context';
 import { authMiddleware, errorMiddleware, loggerMiddleware } from './middleware';
-import { diPlugin } from './plugins/di';
+import { diPlugin, logService } from './plugins/di';
 
 export const app = new Elysia()
     .use(
@@ -27,7 +27,9 @@ export const app = new Elysia()
 export type AppType = typeof app;
 
 if (import.meta.main) {
-    app.listen(3000);
-    console.log('Database is running with postgres');
-    console.log('API server is running at http://localhost:3000');
+    const parsedPort = Number.parseInt(process.env.API_PORT ?? '', 10);
+    const port = Number.isFinite(parsedPort) && parsedPort > 0 ? parsedPort : 3000;
+    app.listen(port);
+    logService.info('Database is running with postgres');
+    logService.info('API server is running', { url: `http://localhost:${port}` });
 }

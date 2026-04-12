@@ -3,7 +3,7 @@ import { ArticleRepository } from '../../modules/article';
 import { UserRepository, UserService } from '../../modules/user';
 import { createLogService } from '../../shared/logger/log.service';
 
-const logService = createLogService();
+export const logService = createLogService();
 const userRepository = new UserRepository();
 const articleRepository = new ArticleRepository();
 const userService = new UserService(userRepository, logService);
