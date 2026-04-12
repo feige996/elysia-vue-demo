@@ -35,7 +35,7 @@ describe('UserService', () => {
         const result = await userService.login('admin', 'admin123', 'req-1');
 
         expect(result).not.toBeNull();
-        expect(result?.token).toBe('admin-token');
+        expect(result?.role).toBe('admin');
         expect(logService.logs.some((log) => log.message === 'login_success')).toBeTrue();
     });
 

@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
+import { jwt } from '@elysiajs/jwt';
 import { articleModule } from '../modules/article';
 import { checkDatabaseHealth } from '../infra/db/client';
 import { env } from '../shared/config/env';
@@ -9,6 +10,34 @@ import { ok } from '../shared/types/http';
 import { ensureRequestContext } from '../shared/types/request-context';
 import { authMiddleware, errorMiddleware, loggerMiddleware } from './middleware';
 import { diPlugin } from './plugins/di';
+
+const errorExamples = {
+    400: { code: 400100, message: 'Validation failed', requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719' },
+    401: { code: 401000, message: 'Unauthorized', requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719' },
+    403: { code: 403000, message: 'Forbidden', requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719' },
+    404: { code: 404000, message: 'Not found', requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719' },
+    409: { code: 409000, message: 'Conflict', requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719' },
+    500: { code: 500000, message: 'Internal Server Error', requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719' },
+} as const;
+
+const successResponse = (description: string) => ({
+    description,
+    content: {
+        'application/json': { schema: { $ref: '#/components/schemas/ApiSuccess' } },
+    },
+});
+
+const errorResponse = (status: keyof typeof errorExamples, description: string) => ({
+    description,
+    content: {
+        'application/json': {
+            schema: { $ref: '#/components/schemas/ApiError' },
+            examples: {
+                default: { value: errorExamples[status] },
+            },
+        },
+    },
+});
 
 const openApiSpec = {
     openapi: '3.0.3',
@@ -140,7 +169,7 @@ const openApiSpec = {
         },
     },
     paths: {
-        '/health': { get: { summary: 'Health check', responses: { 200: { description: 'OK' } } } },
+        '/health': { get: { summary: 'Health check', responses: { 200: successResponse('OK') } } },
         '/api/auth/login': {
             post: {
                 summary: 'Login',
@@ -149,8 +178,8 @@ const openApiSpec = {
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/LoginRequest' } } },
                 },
                 responses: {
-                    200: { description: 'Login success' },
-                    401: { description: 'Invalid credentials', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiError' } } } },
+                    200: successResponse('Login success'),
+                    401: errorResponse(401, 'Invalid credentials'),
                 },
             },
         },
@@ -163,7 +192,7 @@ const openApiSpec = {
                     { name: 'pageSize', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 50, default: 10 } },
                     { name: 'keyword', in: 'query', schema: { type: 'string' } },
                 ],
-                responses: { 200: { description: 'Paged user list' }, 401: { description: 'Unauthorized' }, 403: { description: 'Forbidden' } },
+                responses: { 200: successResponse('Paged user list'), 401: errorResponse(401, 'Unauthorized'), 403: errorResponse(403, 'Forbidden') },
             },
             post: {
                 summary: 'Create user',
@@ -172,7 +201,12 @@ const openApiSpec = {
                     required: true,
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/UserCreateRequest' } } },
                 },
-                responses: { 201: { description: 'Created' }, 409: { description: 'Conflict' } },
+                responses: {
+                    201: successResponse('Created'),
+                    409: errorResponse(409, 'Conflict'),
+                    401: errorResponse(401, 'Unauthorized'),
+                    403: errorResponse(403, 'Forbidden'),
+                },
             },
             delete: {
                 summary: 'Batch delete users',
@@ -181,23 +215,44 @@ const openApiSpec = {
                     required: true,
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/BatchDeleteRequest' } } },
                 },
-                responses: { 200: { description: 'Deleted' } },
+                responses: {
+                    200: successResponse('Deleted'),
+                    400: errorResponse(400, 'Invalid payload'),
+                    401: errorResponse(401, 'Unauthorized'),
+                    403: errorResponse(403, 'Forbidden'),
+                },
             },
         },
-        '/api/users/all': { get: { summary: 'List all users', security: [{ bearerAuth: [] }], responses: { 200: { description: 'User list' } } } },
+        '/api/users/all': {
+            get: {
+                summary: 'List all users',
+                security: [{ bearerAuth: [] }],
+                responses: { 200: successResponse('User list'), 401: errorResponse(401, 'Unauthorized'), 403: errorResponse(403, 'Forbidden') },
+            },
+        },
         '/api/users/{id}': {
             put: {
                 summary: 'Update user by id',
                 security: [{ bearerAuth: [] }],
                 parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/UserUpdateRequest' } } } },
-                responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } },
+                responses: {
+                    200: successResponse('Updated'),
+                    404: errorResponse(404, 'Not found'),
+                    401: errorResponse(401, 'Unauthorized'),
+                    403: errorResponse(403, 'Forbidden'),
+                },
             },
             delete: {
                 summary: 'Delete user by id',
                 security: [{ bearerAuth: [] }],
                 parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
-                responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' } },
+                responses: {
+                    200: successResponse('Deleted'),
+                    404: errorResponse(404, 'Not found'),
+                    401: errorResponse(401, 'Unauthorized'),
+                    403: errorResponse(403, 'Forbidden'),
+                },
             },
         },
         '/api/articles': {
@@ -208,7 +263,7 @@ const openApiSpec = {
                     { name: 'pageSize', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 50, default: 10 } },
                     { name: 'keyword', in: 'query', schema: { type: 'string' } },
                 ],
-                responses: { 200: { description: 'Paged article list' } },
+                responses: { 200: successResponse('Paged article list') },
             },
             post: {
                 summary: 'Create article',
@@ -217,7 +272,7 @@ const openApiSpec = {
                     required: true,
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/ArticleCreateRequest' } } },
                 },
-                responses: { 201: { description: 'Created' } },
+                responses: { 201: successResponse('Created'), 401: errorResponse(401, 'Unauthorized'), 403: errorResponse(403, 'Forbidden') },
             },
             delete: {
                 summary: 'Batch delete articles',
@@ -226,23 +281,38 @@ const openApiSpec = {
                     required: true,
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/BatchDeleteRequest' } } },
                 },
-                responses: { 200: { description: 'Deleted' } },
+                responses: {
+                    200: successResponse('Deleted'),
+                    400: errorResponse(400, 'Invalid payload'),
+                    401: errorResponse(401, 'Unauthorized'),
+                    403: errorResponse(403, 'Forbidden'),
+                },
             },
         },
-        '/api/articles/all': { get: { summary: 'List all articles', responses: { 200: { description: 'Article list' } } } },
+        '/api/articles/all': { get: { summary: 'List all articles', responses: { 200: successResponse('Article list') } } },
         '/api/articles/{id}': {
             put: {
                 summary: 'Update article by id',
                 security: [{ bearerAuth: [] }],
                 parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/ArticleUpdateRequest' } } } },
-                responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } },
+                responses: {
+                    200: successResponse('Updated'),
+                    404: errorResponse(404, 'Not found'),
+                    401: errorResponse(401, 'Unauthorized'),
+                    403: errorResponse(403, 'Forbidden'),
+                },
             },
             delete: {
                 summary: 'Delete article by id',
                 security: [{ bearerAuth: [] }],
                 parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
-                responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' } },
+                responses: {
+                    200: successResponse('Deleted'),
+                    404: errorResponse(404, 'Not found'),
+                    401: errorResponse(401, 'Unauthorized'),
+                    403: errorResponse(403, 'Forbidden'),
+                },
             },
         },
     },
@@ -255,6 +325,12 @@ export const app = new Elysia()
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
             allowedHeaders: ['Content-Type', 'Authorization'],
             credentials: true,
+        }),
+    )
+    .use(
+        jwt({
+            name: 'jwt',
+            secret: env.JWT_SECRET ?? env.AUTH_ADMIN_TOKEN,
         }),
     )
     .use(diPlugin)

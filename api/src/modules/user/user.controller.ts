@@ -1,4 +1,6 @@
 import type { UserService } from './user.service';
+import type { AuthorizedRole } from '../../shared/auth/token-auth';
+import { issueAuthToken } from '../../shared/auth/token-auth';
 import { ErrorKey, failByKey, ok } from '../../shared/types/http';
 import { ensureRequestContext } from '../../shared/types/request-context';
 import { batchDeleteSchema, createUserSchema, idParamSchema, listQuerySchema, loginSchema, pageQuerySchema, updateUserSchema } from './dto/user.dto';
@@ -6,7 +8,7 @@ import type { UserRepository } from './user.repository';
 import type { UserEntity } from '../../shared/types/entities';
 import type { PaginatedData } from '../../shared/types/http';
 
-export const createUserController = (userService: UserService, userRepository: UserRepository) => ({
+export const createUserController = (userService: UserService, userRepository: UserRepository, issueToken?: (role: AuthorizedRole) => Promise<string>) => ({
     login: async (body: unknown, request: Request) => {
         const { requestId } = ensureRequestContext(request);
         const parsedBody = loginSchema.safeParse(body);
@@ -14,14 +16,15 @@ export const createUserController = (userService: UserService, userRepository: U
             return failByKey(requestId, ErrorKey.VALIDATION_ERROR, parsedBody.error.issues[0]?.message ?? 'Invalid login payload');
         }
 
-        const loginResult = await userService.login(parsedBody.data.account, parsedBody.data.password, requestId);
-        if (!loginResult) {
+        const user = await userService.login(parsedBody.data.account, parsedBody.data.password, requestId);
+        if (!user) {
             return failByKey(requestId, ErrorKey.INVALID_CREDENTIALS);
         }
+        const token = issueToken ? await issueToken(user.role) : await issueAuthToken(user.role);
 
         return {
             status: 200,
-            payload: ok(requestId, loginResult, 'Login success'),
+            payload: ok(requestId, { token, user }, 'Login success'),
         };
     },
     listAll: async (query: Record<string, string | undefined>, request: Request) => {

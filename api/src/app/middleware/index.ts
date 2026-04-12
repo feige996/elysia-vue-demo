@@ -35,11 +35,12 @@ export const loggerMiddleware = new Elysia({ name: 'logger-middleware' })
         });
     });
 
-export const authMiddleware = new Elysia({ name: 'auth-middleware' }).onRequest(async ({ request, set }) => {
+export const authMiddleware = new Elysia({ name: 'auth-middleware' }).onRequest(async (ctx) => {
+    const { request, set, jwt } = ctx as typeof ctx & { jwt: { verify: (token: string) => Promise<unknown> } };
     const path = new URL(request.url).pathname;
     const method = request.method.toUpperCase();
     if (isPublicRoute(method, path)) return;
-    const role = await getAuthorizedRole(request.headers.get('authorization'));
+    const role = await getAuthorizedRole(request.headers.get('authorization'), async (token) => jwt.verify(token));
     if (!role) {
         const { requestId } = ensureRequestContext(request);
         const unauthorized = failByKey(requestId, ErrorKey.UNAUTHORIZED);

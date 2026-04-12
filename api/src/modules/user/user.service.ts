@@ -1,5 +1,4 @@
 import type { LogService } from '../../shared/logger/log.service';
-import { issueAuthToken } from '../../shared/auth/token-auth';
 import type { UserRepository } from './user.repository';
 
 export class UserService {
@@ -28,10 +27,6 @@ export class UserService {
             return null;
         }
         this.logService.info('login_success', { requestId, account });
-        const token = await issueAuthToken(user.role);
-        return {
-            token,
-            user,
-        };
+        return user;
     }
 }

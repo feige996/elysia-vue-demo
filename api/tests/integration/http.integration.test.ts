@@ -24,10 +24,7 @@ const userService = {
         const user = users.find((item) => item.account === account);
         if (!user) return null;
         if (password !== `${account}123`) return null;
-        return {
-            token: user.role === 'admin' ? 'admin-token' : 'editor-token',
-            user,
-        };
+        return user;
     },
     async getUsers(keyword?: string) {
         if (!keyword) return users;

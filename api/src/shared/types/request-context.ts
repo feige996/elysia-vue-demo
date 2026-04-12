@@ -11,7 +11,7 @@ export const ensureRequestContext = (request: Request): RequestContext => {
 
     const createdContext: RequestContext = {
         requestId: request.headers.get('x-request-id') ?? crypto.randomUUID(),
-        requestStartedAt: Date.now()
+        requestStartedAt: Date.now(),
     };
     requestContextMap.set(request, createdContext);
     return createdContext;
