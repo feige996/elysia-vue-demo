@@ -15,11 +15,15 @@ export class LogService {
         this.write('info', message, meta);
     }
 
+    warn(message: string, meta?: Record<string, unknown>) {
+        this.write('warn', message, meta);
+    }
+
     error(message: string, meta?: Record<string, unknown>) {
         this.write('error', message, meta);
     }
 
-    private write(level: 'info' | 'error', message: string, meta?: LogMeta) {
+    private write(level: 'info' | 'warn' | 'error', message: string, meta?: LogMeta) {
         const payload = {
             message,
             ...(meta ?? {}),
@@ -28,6 +32,10 @@ export class LogService {
 
         if (level === 'info') {
             this.pinoLogger.info(payload);
+            return;
+        }
+        if (level === 'warn') {
+            this.pinoLogger.warn(payload);
             return;
         }
         this.pinoLogger.error(payload);
@@ -57,3 +65,5 @@ export const createLogService = () => {
 
     return new LogService(logger);
 };
+
+export const logService = createLogService();

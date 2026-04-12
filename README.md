@@ -64,6 +64,7 @@ DATABASE_URL=postgres://user:password@localhost:5432/demo bun run --cwd api dev
 - 数据库访问使用 Drizzle ORM
 - 结构迁移使用 Drizzle Kit（配置文件：`api/drizzle.config.js`）
 - 首次运行前请先执行迁移命令
+- 服务启动会执行数据库健康检查：`production` 失败即退出，非生产环境会记录告警并继续启动
 
 常用数据库脚本：
 

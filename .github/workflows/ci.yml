@@ -1,32 +1,65 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - main
-      - master
-  pull_request:
+    push:
+        branches:
+            - main
+            - master
+    pull_request:
 
 jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    validate:
+        runs-on: ubuntu-latest
+        env:
+            DATABASE_URL: postgres://postgres:postgres@localhost:5432/elysia_demo
+            API_PORT: 3000
+            WEB_PORT: 5173
+        services:
+            postgres:
+                image: postgres:latest
+                env:
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_DB: elysia_demo
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U postgres -d elysia_demo"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+            - name: Install dependencies
+              run: bun install --frozen-lockfile
 
-      - name: Typecheck
-        run: bun run typecheck
+            - name: Sync database schema
+              run: bun run --cwd api db:push
 
-      - name: Unit test
-        run: bun run test:unit
+            - name: Check database health
+              run: bun run --cwd api db:check
 
-      - name: Integration test
-        run: bun run test:integration
+            - name: Check migration drift
+              run: |
+                  bun run --cwd api db:generate
+                  if [ -n "$(git status --porcelain -- api/drizzle)" ]; then
+                      echo "Drizzle migration drift detected. Please commit generated migration files."
+                      git status --short -- api/drizzle
+                      exit 1
+                  fi
+
+            - name: Typecheck
+              run: bun run typecheck
+
+            - name: Unit test
+              run: bun run test:unit
+
+            - name: Integration test
+              run: bun run test:integration

@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia';
 import { isAuthorizedToken } from '../../shared/auth/token-auth';
+import { logService } from '../../shared/logger/log.service';
 import { AppCode, fail } from '../../shared/types/http';
 import { ensureRequestContext } from '../../shared/types/request-context';
 
@@ -9,34 +10,21 @@ export const loggerMiddleware = new Elysia({ name: 'logger-middleware' })
     .onRequest(({ request }) => {
         const { requestId } = ensureRequestContext(request);
         const path = new URL(request.url).pathname;
-        console.log(
-            JSON.stringify({
-                level: 'info',
-                event: 'request_received',
-                requestId,
-                method: request.method,
-                path,
-                timestamp: new Date().toISOString()
-            })
-        );
+        logService.info('request_received', { event: 'request_received', requestId, method: request.method, path });
     })
     .onAfterHandle(({ request, set }) => {
         const { requestId, requestStartedAt } = ensureRequestContext(request);
         const path = new URL(request.url).pathname;
         const status = typeof set.status === 'number' ? set.status : 200;
         const durationMs = Date.now() - requestStartedAt;
-        console.log(
-            JSON.stringify({
-                level: 'info',
-                event: 'request_completed',
-                requestId,
-                method: request.method,
-                path,
-                status,
-                durationMs,
-                timestamp: new Date().toISOString()
-            })
-        );
+        logService.info('request_completed', {
+            event: 'request_completed',
+            requestId,
+            method: request.method,
+            path,
+            status,
+            durationMs
+        });
     });
 
 export const authMiddleware = new Elysia({ name: 'auth-middleware' }).onRequest(({ request, set }) => {
@@ -55,19 +43,15 @@ export const errorMiddleware = new Elysia({ name: 'error-middleware' }).onError(
     const { requestId } = ensureRequestContext(request);
     const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
     const path = new URL(request.url).pathname;
-    console.error(
-        JSON.stringify({
-            level: 'error',
-            event: 'request_failed',
-            requestId,
-            method: request.method,
-            path,
-            status: 500,
-            errorCode: code,
-            errorMessage,
-            timestamp: new Date().toISOString()
-        })
-    );
+    logService.error('request_failed', {
+        event: 'request_failed',
+        requestId,
+        method: request.method,
+        path,
+        status: 500,
+        errorCode: code,
+        errorMessage
+    });
     set.status = 500;
     return fail(requestId, AppCode.INTERNAL_ERROR, errorMessage);
 });
