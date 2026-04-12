@@ -1,10 +1,9 @@
 import { asc, count } from 'drizzle-orm';
-import { db, ensureDbInitialized } from '../../infra/db/client';
+import { db } from '../../infra/db/client';
 import { articlesTable } from '../../infra/db/schema';
 
 export class ArticleRepository {
     async findPage(page: number, pageSize: number) {
-        await ensureDbInitialized();
         const offset = (page - 1) * pageSize;
         const rows = await db
             .select({

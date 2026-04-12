@@ -12,9 +12,7 @@ if (!databaseUrl) {
 const sqlClient = postgres(databaseUrl, { prepare: false });
 export const db = drizzle(sqlClient);
 
-let initializePromise: Promise<void> | null = null;
-
-const bootstrap = async () => {
+export const seedDatabase = async () => {
     const existingUsers = await db.select({ total: count() }).from(usersTable);
     if (Number(existingUsers[0]?.total ?? 0) === 0) {
         await db.insert(usersTable).values(defaultUsers).onConflictDoNothing({ target: usersTable.account });
@@ -26,9 +24,23 @@ const bootstrap = async () => {
     }
 };
 
-export const ensureDbInitialized = () => {
-    if (!initializePromise) {
-        initializePromise = bootstrap();
-    }
-    return initializePromise;
+export const checkDatabaseHealth = async () => {
+    await db.select({ total: count() }).from(usersTable);
+    await db.select({ total: count() }).from(articlesTable);
 };
+
+if (import.meta.main) {
+    const action = Bun.argv[2];
+    if (action === 'seed') {
+        await seedDatabase();
+        console.log('Database seed completed');
+        process.exit(0);
+    }
+    if (action === 'check') {
+        await checkDatabaseHealth();
+        console.log('Database health check passed');
+        process.exit(0);
+    }
+    console.error('Unknown action, use: seed | check');
+    process.exit(1);
+}

@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { articleModule } from '../modules/article';
+import { checkDatabaseHealth } from '../infra/db/client';
 import { userModule } from '../modules/user';
 import { ok } from '../shared/types/http';
 import { ensureRequestContext } from '../shared/types/request-context';
@@ -27,9 +28,18 @@ export const app = new Elysia()
 export type AppType = typeof app;
 
 if (import.meta.main) {
-    const parsedPort = Number.parseInt(process.env.API_PORT ?? '', 10);
-    const port = Number.isFinite(parsedPort) && parsedPort > 0 ? parsedPort : 3000;
-    app.listen(port);
-    logService.info('Database is running with postgres');
-    logService.info('API server is running', { url: `http://localhost:${port}` });
+    const startServer = async () => {
+        const parsedPort = Number.parseInt(process.env.API_PORT ?? '', 10);
+        const port = Number.isFinite(parsedPort) && parsedPort > 0 ? parsedPort : 3000;
+        await checkDatabaseHealth();
+        app.listen(port);
+        logService.info('Database health check passed');
+        logService.info('API server is running', { url: `http://localhost:${port}` });
+    };
+
+    startServer().catch((error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        logService.error('Database health check failed', { error: message });
+        process.exit(1);
+    });
 }

@@ -1,5 +1,5 @@
 import { asc, eq, ilike, or } from 'drizzle-orm';
-import { db, ensureDbInitialized } from '../../infra/db/client';
+import { db } from '../../infra/db/client';
 import { usersTable } from '../../infra/db/schema';
 import type { UserEntity } from '../../shared/types/entities';
 
@@ -9,19 +9,18 @@ const toUserEntity = (row: { id: number; account: string; name: string; role: st
     id: row.id,
     account: row.account,
     name: row.name,
-    role: toUserRole(row.role)
+    role: toUserRole(row.role),
 });
 
 export class UserRepository {
     async findAll(keyword?: string) {
-        await ensureDbInitialized();
         if (!keyword) {
             const rows = await db
                 .select({
                     id: usersTable.id,
                     account: usersTable.account,
                     name: usersTable.name,
-                    role: usersTable.role
+                    role: usersTable.role,
                 })
                 .from(usersTable)
                 .orderBy(asc(usersTable.id));
@@ -33,7 +32,7 @@ export class UserRepository {
                 id: usersTable.id,
                 account: usersTable.account,
                 name: usersTable.name,
-                role: usersTable.role
+                role: usersTable.role,
             })
             .from(usersTable)
             .where(or(ilike(usersTable.account, text), ilike(usersTable.name, text)))
@@ -42,13 +41,12 @@ export class UserRepository {
     }
 
     async findByAccount(account: string) {
-        await ensureDbInitialized();
         const rows = await db
             .select({
                 id: usersTable.id,
                 account: usersTable.account,
                 name: usersTable.name,
-                role: usersTable.role
+                role: usersTable.role,
             })
             .from(usersTable)
             .where(eq(usersTable.account, account))
