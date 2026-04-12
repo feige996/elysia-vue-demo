@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'bun:test';
 import { Elysia } from 'elysia';
 import { di } from 'elysia-di';
+import { jwt } from '@elysiajs/jwt';
 import { authMiddleware, errorMiddleware, loggerMiddleware } from '../../src/app/middleware';
 import { articleModule } from '../../src/modules/article';
 import { userModule } from '../../src/modules/user';
+import { env } from '../../src/shared/config/env';
 import { ok, AppCode } from '../../src/shared/types/http';
 import { ensureRequestContext } from '../../src/shared/types/request-context';
 
@@ -142,6 +144,12 @@ const app = new Elysia()
             ],
         }),
     )
+    .use(
+        jwt({
+            name: 'jwt',
+            secret: env.JWT_SECRET,
+        }),
+    )
     .use(loggerMiddleware)
     .use(errorMiddleware)
     .use(authMiddleware)
@@ -184,7 +192,8 @@ describe('HTTP integration', () => {
 
         expect(loginResponse.status).toBe(200);
         expect(loginPayload.code).toBe(0);
-        expect(loginPayload.data?.token).toBe('admin-token');
+        expect(typeof loginPayload.data?.token).toBe('string');
+        expect((loginPayload.data?.token ?? '').split('.').length).toBe(3);
         expect(typeof loginPayload.requestId).toBe('string');
 
         const usersResponse = await app.handle(

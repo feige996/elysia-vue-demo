@@ -79,7 +79,7 @@ const openApiSpec = {
             bearerAuth: {
                 type: 'http',
                 scheme: 'bearer',
-                bearerFormat: env.AUTH_MODE === 'jwt' ? 'JWT' : 'Token',
+                bearerFormat: 'JWT',
             },
         },
         schemas: {
@@ -203,7 +203,7 @@ const openApiSpec = {
                     message: 'Login success',
                     requestId: '4f47e2c6-137f-45dd-a9f9-e4f61c9ab719',
                     data: {
-                        token: 'admin-token',
+                        token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xxx.yyy',
                         user: { id: 1, account: 'admin', name: 'Admin', role: 'admin' },
                     },
                 },
@@ -465,7 +465,7 @@ export const app = new Elysia()
     .use(
         jwt({
             name: 'jwt',
-            secret: env.JWT_SECRET ?? env.AUTH_ADMIN_TOKEN,
+            secret: env.JWT_SECRET,
         }),
     )
     .use(diPlugin)

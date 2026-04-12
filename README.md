@@ -127,10 +127,7 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 - `LOG_FILE_DIR`：未设置 `LOG_FILE_PATH` 时的日志目录（默认 `logs`）
 - `LOG_FILE_PREFIX`：未设置 `LOG_FILE_PATH` 时的日志文件前缀（默认 `app`）
 - `DATABASE_URL`：PostgreSQL 连接串
-- `AUTH_MODE`：`static | jwt`（默认 `static`）
-- `AUTH_ADMIN_TOKEN`：管理员 token（默认 `admin-token`）
-- `AUTH_EDITOR_TOKEN`：编辑者 token（默认 `editor-token`）
-- `JWT_SECRET`：JWT 模式下签名密钥（`AUTH_MODE=jwt` 时必填）
+- `JWT_SECRET`：JWT 签名密钥（必填）
 - `JWT_EXPIRES_IN_SECONDS`：JWT 过期秒数（默认 `3600`）
 
 ## 示例账号
@@ -179,8 +176,8 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 ## 接口示例
 
 - `POST /api/auth/login`：登录
-- `GET /api/users`：用户分页列表（需管理员 token）
-- `GET /api/users/all`：用户全量列表（需管理员 token）
+- `GET /api/users`：用户分页列表（需携带 JWT 且角色为 admin）
+- `GET /api/users/all`：用户全量列表（需携带 JWT 且角色为 admin）
 - `POST /api/users`：新增用户（需鉴权）
 - `PUT /api/users/:id`：更新用户（需鉴权）
 - `DELETE /api/users/:id`：删除单个用户（需鉴权）
@@ -196,5 +193,5 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 JWT 启用示例：
 
 ```bash
-AUTH_MODE=jwt JWT_SECRET=replace-me-with-strong-secret bun run --cwd api dev
+JWT_SECRET=replace-me-with-strong-secret bun run --cwd api dev
 ```

@@ -1,6 +1,5 @@
 import type { UserService } from './user.service';
 import type { AuthorizedRole } from '../../shared/auth/token-auth';
-import { issueAuthToken } from '../../shared/auth/token-auth';
 import { ErrorKey, failByKey, ok } from '../../shared/types/http';
 import { ensureRequestContext } from '../../shared/types/request-context';
 import { batchDeleteSchema, createUserSchema, idParamSchema, listQuerySchema, loginSchema, pageQuerySchema, updateUserSchema } from './dto/user.dto';
@@ -20,7 +19,10 @@ export const createUserController = (userService: UserService, userRepository: U
         if (!user) {
             return failByKey(requestId, ErrorKey.INVALID_CREDENTIALS);
         }
-        const token = issueToken ? await issueToken(user.role) : await issueAuthToken(user.role);
+        if (!issueToken) {
+            return failByKey(requestId, ErrorKey.INTERNAL_ERROR, 'Auth token issuer is not configured');
+        }
+        const token = await issueToken(user.role);
 
         return {
             status: 200,
