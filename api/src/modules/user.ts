@@ -14,7 +14,7 @@ const listQuerySchema = z.object({
 });
 
 export const userModule = new Elysia({ prefix: '/api' })
-    .post('/auth/login', (ctx) => {
+    .post('/auth/login', async (ctx) => {
         const { body, set, request } = ctx;
         const { requestId } = ensureRequestContext(request);
         const { userService } = ctx as typeof ctx & { userService: UserService };
@@ -24,7 +24,7 @@ export const userModule = new Elysia({ prefix: '/api' })
             return fail(requestId, AppCode.VALIDATION_ERROR, parsedBody.error.issues[0]?.message ?? 'Invalid login payload');
         }
 
-        const loginResult = userService.login(parsedBody.data.account, parsedBody.data.password, requestId);
+        const loginResult = await userService.login(parsedBody.data.account, parsedBody.data.password, requestId);
         if (!loginResult) {
             set.status = 401;
             return fail(requestId, AppCode.INVALID_CREDENTIALS, 'Invalid account or password');
@@ -32,11 +32,11 @@ export const userModule = new Elysia({ prefix: '/api' })
 
         return ok(requestId, loginResult, 'Login success');
     })
-    .get('/users', (ctx) => {
+    .get('/users', async (ctx) => {
         const { query, request } = ctx;
         const { requestId } = ensureRequestContext(request);
         const { userService } = ctx as typeof ctx & { userService: UserService };
         const parsedQuery = listQuerySchema.safeParse(query);
-        const users = userService.getUsers(parsedQuery.success ? parsedQuery.data.keyword : undefined, requestId);
+        const users = await userService.getUsers(parsedQuery.success ? parsedQuery.data.keyword : undefined, requestId);
         return ok(requestId, users, 'OK');
     });

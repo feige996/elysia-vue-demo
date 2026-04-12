@@ -32,6 +32,7 @@ bun run dev
 bun run build
 bun run start
 bun run typecheck
+bun run test
 ```
 
 说明：
@@ -40,6 +41,28 @@ bun run typecheck
 - `build`：构建前后端产物
 - `start`：启动后端生产构建
 - `typecheck`：执行前后端类型检查
+- `test`：执行后端 unit + integration 测试
+
+## 数据库模式（同时支持 PostgreSQL / MySQL）
+
+后端支持三种运行模式：
+
+- `memory`：默认模式，无需数据库
+- `postgres`：连接 PostgreSQL
+- `mysql`：连接 MySQL
+
+使用方式（在启动前设置环境变量）：
+
+```bash
+DB_CLIENT=postgres DATABASE_URL=postgres://user:password@localhost:5432/demo bun run --cwd api dev
+DB_CLIENT=mysql DATABASE_URL=mysql://user:password@localhost:3306/demo bun run --cwd api dev
+```
+
+说明：
+
+- 未设置 `DB_CLIENT` 时默认使用 `memory`
+- 当 `DB_CLIENT` 为 `postgres` 或 `mysql` 时必须提供 `DATABASE_URL`
+- SQL 模式启动时会自动创建 `users` 和 `articles` 表并填充基础种子数据
 
 ## 示例账号
 

@@ -127,7 +127,15 @@ api/src
 - Step 4：新增 CI 工作流，执行 `bun install + typecheck + test`
 - Step 5：本地回归验证，确保类型检查与测试通过
 
-## 14. 一句话原则
+## 14. P2 实施步骤（当前已执行）
+
+- Step 1：接入数据库适配层，支持 `memory / postgres / mysql` 三种运行模式
+- Step 2：将 `user/article` 查询从内存数组切换到仓储 + 适配器访问路径
+- Step 3：在 SQL 模式下自动初始化基础表与种子数据（users/articles）
+- Step 4：保持服务层抽象稳定，路由仅通过 service/repository 访问数据
+- Step 5：完成 `typecheck + unit test + integration test` 验证
+
+## 15. 一句话原则
 
 `Elysia + Bun` 做大项目的关键不是“框架够不够重”，而是“工程规范是否提前建好”。  
 只要分层、契约、测试、观测、发布这五件事做扎实，就可以稳定支撑中大型业务。

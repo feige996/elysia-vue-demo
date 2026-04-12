@@ -1,9 +1,11 @@
 import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { di } from 'elysia-di';
+import { createDatabaseAdapter } from './infra/db/database-adapter';
 import { loggerMiddleware, authMiddleware, errorMiddleware } from './middleware';
 import { articleModule } from './modules/article';
 import { userModule } from './modules/user';
+import { ArticleRepository } from './repositories/article.repository';
 import { UserRepository } from './repositories/user.repository';
 import { LogService } from './services/log.service';
 import { UserService } from './services/user.service';
@@ -11,7 +13,9 @@ import { ok } from './shared/http';
 import { ensureRequestContext } from './shared/request-context';
 
 const logService = new LogService();
-const userRepository = new UserRepository();
+const databaseAdapter = createDatabaseAdapter();
+const userRepository = new UserRepository(databaseAdapter);
+const articleRepository = new ArticleRepository(databaseAdapter);
 const userService = new UserService(userRepository, logService);
 
 export const app = new Elysia()
@@ -38,6 +42,10 @@ export const app = new Elysia()
                     identifier: 'userService',
                     instance: userService,
                 },
+                {
+                    identifier: 'articleRepository',
+                    instance: articleRepository,
+                },
             ],
         }),
     )
@@ -52,5 +60,6 @@ export type AppType = typeof app;
 
 if (import.meta.main) {
     app.listen(3000);
+    console.log(`Database adapter is running with ${databaseAdapter.client}`);
     console.log('API server is running at http://localhost:3000');
 }

@@ -1,5 +1,6 @@
 import { Elysia } from "elysia";
 import { z } from "zod";
+import type { ArticleRepository } from "../repositories/article.repository";
 import { ok } from "../shared/http";
 import { ensureRequestContext } from "../shared/request-context";
 
@@ -8,27 +9,22 @@ const articleQuerySchema = z.object({
   pageSize: z.coerce.number().min(1).max(50).default(10)
 });
 
-const articles = [
-  { id: 1, title: "Elysia + Bun 快速启动", author: "Admin" },
-  { id: 2, title: "Vue3 + Alova 请求实践", author: "Editor" },
-  { id: 3, title: "前后端类型共享方案", author: "Admin" }
-];
-
 export const articleModule = new Elysia({ prefix: "/api" }).get(
   "/articles",
-  ({ query, request }) => {
+  async ctx => {
+    const { query, request } = ctx;
     const { requestId } = ensureRequestContext(request);
+    const { articleRepository } = ctx as typeof ctx & { articleRepository: ArticleRepository };
     const parsedQuery = articleQuerySchema.safeParse(query);
     const page = parsedQuery.success ? parsedQuery.data.page : 1;
     const pageSize = parsedQuery.success ? parsedQuery.data.pageSize : 10;
-    const startIndex = (page - 1) * pageSize;
-    const result = articles.slice(startIndex, startIndex + pageSize);
+    const result = await articleRepository.findPage(page, pageSize);
 
     return ok(
       requestId,
       {
-        list: result,
-        total: articles.length,
+        list: result.list,
+        total: result.total,
         page,
         pageSize
       },

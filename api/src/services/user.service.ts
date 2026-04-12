@@ -7,7 +7,7 @@ export class UserService {
     private readonly logService: LogService
   ) {}
 
-  getUsers(keyword?: string, requestId?: string) {
+  async getUsers(keyword?: string, requestId?: string) {
     this.logService.info("query_users", {
       requestId,
       keyword: keyword ?? "all"
@@ -15,8 +15,8 @@ export class UserService {
     return this.userRepository.findAll(keyword);
   }
 
-  login(account: string, password: string, requestId?: string) {
-    const user = this.userRepository.findByAccount(account);
+  async login(account: string, password: string, requestId?: string) {
+    const user = await this.userRepository.findByAccount(account);
     if (!user) {
       this.logService.info("login_failed_user_not_found", { requestId, account });
       return null;
