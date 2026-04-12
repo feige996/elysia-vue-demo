@@ -75,6 +75,12 @@ bun run --cwd api db:push
 bun run --cwd api db:studio
 ```
 
+模块脚手架：
+
+```bash
+bun run --cwd api module:create demo
+```
+
 推荐本地启动顺序：
 
 ```bash

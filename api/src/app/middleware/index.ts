@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia';
 import { isAuthorizedToken } from '../../shared/auth/token-auth';
 import { logService } from '../../shared/logger/log.service';
-import { AppCode, fail } from '../../shared/types/http';
+import { ErrorKey, failByKey } from '../../shared/types/http';
 import { ensureRequestContext } from '../../shared/types/request-context';
 
 const publicPaths = new Set(['/api/auth/login', '/api/articles', '/health']);
@@ -23,7 +23,7 @@ export const loggerMiddleware = new Elysia({ name: 'logger-middleware' })
             method: request.method,
             path,
             status,
-            durationMs
+            durationMs,
         });
     });
 
@@ -33,9 +33,10 @@ export const authMiddleware = new Elysia({ name: 'auth-middleware' }).onRequest(
 
     if (isAuthorizedToken(request.headers.get('authorization'))) return;
 
-    set.status = 401;
     const { requestId } = ensureRequestContext(request);
-    return fail(requestId, AppCode.UNAUTHORIZED, 'Unauthorized');
+    const unauthorized = failByKey(requestId, ErrorKey.UNAUTHORIZED);
+    set.status = unauthorized.status;
+    return unauthorized.payload;
 });
 
 export const errorMiddleware = new Elysia({ name: 'error-middleware' }).onError((ctx) => {
@@ -50,8 +51,9 @@ export const errorMiddleware = new Elysia({ name: 'error-middleware' }).onError(
         path,
         status: 500,
         errorCode: code,
-        errorMessage
+        errorMessage,
     });
-    set.status = 500;
-    return fail(requestId, AppCode.INTERNAL_ERROR, errorMessage);
+    const internalError = failByKey(requestId, ErrorKey.INTERNAL_ERROR, errorMessage);
+    set.status = internalError.status;
+    return internalError.payload;
 });

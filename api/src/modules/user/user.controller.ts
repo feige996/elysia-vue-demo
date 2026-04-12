@@ -1,5 +1,5 @@
 import type { UserService } from './user.service';
-import { AppCode, fail, ok } from '../../shared/types/http';
+import { ErrorKey, failByKey, ok } from '../../shared/types/http';
 import { ensureRequestContext } from '../../shared/types/request-context';
 import { listQuerySchema, loginSchema } from './dto/user.dto';
 
@@ -8,23 +8,17 @@ export const createUserController = (userService: UserService) => ({
         const { requestId } = ensureRequestContext(request);
         const parsedBody = loginSchema.safeParse(body);
         if (!parsedBody.success) {
-            return {
-                status: 400,
-                payload: fail(requestId, AppCode.VALIDATION_ERROR, parsedBody.error.issues[0]?.message ?? 'Invalid login payload')
-            };
+            return failByKey(requestId, ErrorKey.VALIDATION_ERROR, parsedBody.error.issues[0]?.message ?? 'Invalid login payload');
         }
 
         const loginResult = await userService.login(parsedBody.data.account, parsedBody.data.password, requestId);
         if (!loginResult) {
-            return {
-                status: 401,
-                payload: fail(requestId, AppCode.INVALID_CREDENTIALS, 'Invalid account or password')
-            };
+            return failByKey(requestId, ErrorKey.INVALID_CREDENTIALS);
         }
 
         return {
             status: 200,
-            payload: ok(requestId, loginResult, 'Login success')
+            payload: ok(requestId, loginResult, 'Login success'),
         };
     },
     list: async (query: Record<string, string | undefined>, request: Request) => {
@@ -33,7 +27,7 @@ export const createUserController = (userService: UserService) => ({
         const users = await userService.getUsers(parsedQuery.success ? parsedQuery.data.keyword : undefined, requestId);
         return {
             status: 200,
-            payload: ok(requestId, users, 'OK')
+            payload: ok(requestId, users, 'OK'),
         };
-    }
+    },
 });
