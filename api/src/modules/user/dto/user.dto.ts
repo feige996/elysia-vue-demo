@@ -8,3 +8,29 @@ export const loginSchema = z.object({
 export const listQuerySchema = z.object({
     keyword: z.string().optional()
 });
+
+export const pageQuerySchema = z.object({
+    keyword: z.string().optional(),
+    page: z.coerce.number().min(1).default(1),
+    pageSize: z.coerce.number().min(1).max(50).default(10)
+});
+
+export const createUserSchema = z.object({
+    account: z.string().min(1).max(64),
+    name: z.string().min(1).max(64),
+    role: z.enum(['admin', 'editor'])
+});
+
+export const updateUserSchema = z.object({
+    account: z.string().min(1).max(64).optional(),
+    name: z.string().min(1).max(64).optional(),
+    role: z.enum(['admin', 'editor']).optional()
+});
+
+export const idParamSchema = z.object({
+    id: z.coerce.number().int().min(1)
+});
+
+export const batchDeleteSchema = z.object({
+    ids: z.array(z.coerce.number().int().min(1)).min(1)
+});

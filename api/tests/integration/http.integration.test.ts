@@ -36,13 +36,90 @@ const userService = {
     },
 };
 
-const articleRepository = {
-    async findPage(page: number, pageSize: number) {
+const userRepository = {
+    async findPage(page: number, pageSize: number, keyword?: string) {
+        const source = !keyword ? users : users.filter((user) => user.account.includes(keyword) || user.name.includes(keyword));
         const offset = (page - 1) * pageSize;
         return {
-            list: articles.slice(offset, offset + pageSize),
-            total: articles.length,
+            list: source.slice(offset, offset + pageSize),
+            total: source.length,
         };
+    },
+    async create(input: { account: string; name: string; role: 'admin' | 'editor' }) {
+        const id = Math.max(...users.map((item) => item.id)) + 1;
+        const created = { id, ...input };
+        users.push(created);
+        return created;
+    },
+    async update(id: number, input: Partial<{ account: string; name: string; role: 'admin' | 'editor' }>) {
+        const target = users.find((item) => item.id === id);
+        if (!target) return undefined;
+        if (input.account !== undefined) target.account = input.account;
+        if (input.name !== undefined) target.name = input.name;
+        if (input.role !== undefined) target.role = input.role;
+        return target;
+    },
+    async deleteById(id: number) {
+        const index = users.findIndex((item) => item.id === id);
+        if (index < 0) return false;
+        users.splice(index, 1);
+        return true;
+    },
+    async deleteByIds(ids: number[]) {
+        let deleted = 0;
+        for (const id of ids) {
+            const index = users.findIndex((item) => item.id === id);
+            if (index >= 0) {
+                users.splice(index, 1);
+                deleted += 1;
+            }
+        }
+        return deleted;
+    },
+};
+
+const articleRepository = {
+    async findAll(keyword?: string) {
+        if (!keyword) return articles;
+        return articles.filter((item) => item.title.includes(keyword) || item.author.includes(keyword));
+    },
+    async findPage(page: number, pageSize: number, keyword?: string) {
+        const source = !keyword ? articles : articles.filter((item) => item.title.includes(keyword) || item.author.includes(keyword));
+        const offset = (page - 1) * pageSize;
+        return {
+            list: source.slice(offset, offset + pageSize),
+            total: source.length,
+        };
+    },
+    async create(input: { title: string; author: string }) {
+        const id = Math.max(...articles.map((item) => item.id)) + 1;
+        const created = { id, ...input };
+        articles.push(created);
+        return created;
+    },
+    async update(id: number, input: Partial<{ title: string; author: string }>) {
+        const target = articles.find((item) => item.id === id);
+        if (!target) return undefined;
+        if (input.title !== undefined) target.title = input.title;
+        if (input.author !== undefined) target.author = input.author;
+        return target;
+    },
+    async deleteById(id: number) {
+        const index = articles.findIndex((item) => item.id === id);
+        if (index < 0) return false;
+        articles.splice(index, 1);
+        return true;
+    },
+    async deleteByIds(ids: number[]) {
+        let deleted = 0;
+        for (const id of ids) {
+            const index = articles.findIndex((item) => item.id === id);
+            if (index >= 0) {
+                articles.splice(index, 1);
+                deleted += 1;
+            }
+        }
+        return deleted;
     },
 };
 
@@ -57,6 +134,10 @@ const app = new Elysia()
                 {
                     identifier: 'articleRepository',
                     instance: articleRepository,
+                },
+                {
+                    identifier: 'userRepository',
+                    instance: userRepository,
                 },
             ],
         }),
@@ -127,5 +208,42 @@ describe('HTTP integration', () => {
         expect(response.status).toBe(401);
         expect(payload.code).toBe(AppCode.UNAUTHORIZED);
         expect(typeof payload.requestId).toBe('string');
+    });
+
+    it('supports user and article CRUD endpoints', async () => {
+        const loginResponse = await sendJson('http://localhost/api/auth/login', 'POST', {
+            account: 'admin',
+            password: 'admin123',
+        });
+        const loginPayload = (await loginResponse.json()) as { data?: { token: string } };
+        const token = loginPayload.data?.token ?? '';
+        const authHeaders = { authorization: `Bearer ${token}` };
+
+        const createUserResponse = await sendJson('http://localhost/api/users', 'POST', { account: 'bob', name: 'Bob', role: 'editor' }, authHeaders);
+        expect(createUserResponse.status).toBe(201);
+
+        const usersPageResponse = await app.handle(new Request('http://localhost/api/users/page?page=1&pageSize=20', { headers: authHeaders }));
+        const usersPagePayload = (await usersPageResponse.json()) as { data?: { list: Array<{ id: number; account: string }> } };
+        const createdUser = usersPagePayload.data?.list.find((item) => item.account === 'bob');
+        expect(createdUser?.account).toBe('bob');
+
+        const updateUserResponse = await sendJson(`http://localhost/api/users/${createdUser?.id ?? 0}`, 'PUT', { name: 'Bobby' }, authHeaders);
+        expect(updateUserResponse.status).toBe(200);
+
+        const deleteUserResponse = await sendJson(`http://localhost/api/users/${createdUser?.id ?? 0}`, 'DELETE', undefined, authHeaders);
+        expect(deleteUserResponse.status).toBe(200);
+
+        const createArticleResponse = await sendJson('http://localhost/api/articles', 'POST', { title: 'New Article', author: 'Bob' }, authHeaders);
+        expect(createArticleResponse.status).toBe(201);
+
+        const allArticlesResponse = await app.handle(new Request('http://localhost/api/articles/all'));
+        const allArticlesPayload = (await allArticlesResponse.json()) as { data?: Array<{ id: number; title: string }> };
+        const createdArticle = allArticlesPayload.data?.find((item) => item.title === 'New Article');
+        expect(createdArticle?.title).toBe('New Article');
+
+        const batchDeleteResponse = await sendJson('http://localhost/api/articles', 'DELETE', { ids: [createdArticle?.id ?? 0] }, authHeaders);
+        const batchDeletePayload = (await batchDeleteResponse.json()) as { data?: { deleted: number } };
+        expect(batchDeleteResponse.status).toBe(200);
+        expect(batchDeletePayload.data?.deleted).toBe(1);
     });
 });

@@ -22,6 +22,13 @@ export type ApiResponse<T> = {
     data?: T;
 };
 
+export type PaginatedData<T> = {
+    list: T[];
+    total: number;
+    page: number;
+    pageSize: number;
+};
+
 export const ok = <T>(requestId: string, data: T, message = 'OK'): ApiResponse<T> => ({
     code: AppCode.SUCCESS,
     message,

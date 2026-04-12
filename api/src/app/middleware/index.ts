@@ -4,7 +4,7 @@ import { logService } from '../../shared/logger/log.service';
 import { ErrorKey, failByKey } from '../../shared/types/http';
 import { ensureRequestContext } from '../../shared/types/request-context';
 
-const publicPaths = new Set(['/api/auth/login', '/api/articles', '/health']);
+const publicPaths = new Set(['/api/auth/login', '/api/articles', '/api/articles/all', '/health']);
 
 export const loggerMiddleware = new Elysia({ name: 'logger-middleware' })
     .onRequest(({ request }) => {
