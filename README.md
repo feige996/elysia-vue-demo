@@ -127,8 +127,11 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 - `LOG_FILE_DIR`：未设置 `LOG_FILE_PATH` 时的日志目录（默认 `logs`）
 - `LOG_FILE_PREFIX`：未设置 `LOG_FILE_PATH` 时的日志文件前缀（默认 `app`）
 - `DATABASE_URL`：PostgreSQL 连接串
+- `AUTH_MODE`：`static | jwt`（默认 `static`）
 - `AUTH_ADMIN_TOKEN`：管理员 token（默认 `admin-token`）
 - `AUTH_EDITOR_TOKEN`：编辑者 token（默认 `editor-token`）
+- `JWT_SECRET`：JWT 模式下签名密钥（`AUTH_MODE=jwt` 时必填）
+- `JWT_EXPIRES_IN_SECONDS`：JWT 过期秒数（默认 `3600`）
 
 ## 示例账号
 
@@ -189,3 +192,9 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 - `DELETE /api/articles/:id`：删除单个文章（需鉴权）
 - `DELETE /api/articles`：批量删除文章（需鉴权）
 - 角色策略：`admin` 可访问所有受保护接口；`editor` 仅可访问非管理员接口
+
+JWT 启用示例：
+
+```bash
+AUTH_MODE=jwt JWT_SECRET=replace-me-with-strong-secret bun run --cwd api dev
+```

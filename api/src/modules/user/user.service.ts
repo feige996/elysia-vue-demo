@@ -1,5 +1,5 @@
 import type { LogService } from '../../shared/logger/log.service';
-import { env } from '../../shared/config/env';
+import { issueAuthToken } from '../../shared/auth/token-auth';
 import type { UserRepository } from './user.repository';
 
 export class UserService {
@@ -28,7 +28,7 @@ export class UserService {
             return null;
         }
         this.logService.info('login_success', { requestId, account });
-        const token = user.role === 'admin' ? env.AUTH_ADMIN_TOKEN : env.AUTH_EDITOR_TOKEN;
+        const token = await issueAuthToken(user.role);
         return {
             token,
             user,
