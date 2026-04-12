@@ -1,6 +1,72 @@
 import { describe, expect, it } from 'bun:test';
-import { app } from '../../src/app/index';
-import { AppCode } from '../../src/shared/types/http';
+import { Elysia } from 'elysia';
+import { di } from 'elysia-di';
+import { authMiddleware, errorMiddleware, loggerMiddleware } from '../../src/app/middleware';
+import { articleModule } from '../../src/modules/article';
+import { userModule } from '../../src/modules/user';
+import { ok, AppCode } from '../../src/shared/types/http';
+import { ensureRequestContext } from '../../src/shared/types/request-context';
+
+const users = [
+    { id: 1, account: 'admin', name: 'Admin', role: 'admin' as const },
+    { id: 2, account: 'editor', name: 'Editor', role: 'editor' as const },
+    { id: 3, account: 'alice', name: 'Alice', role: 'editor' as const },
+];
+
+const articles = [
+    { id: 1, title: 'Elysia + Bun 快速启动', author: 'Admin' },
+    { id: 2, title: 'Vue3 + Alova 请求实践', author: 'Editor' },
+    { id: 3, title: '前后端类型共享方案', author: 'Admin' },
+];
+
+const userService = {
+    async login(account: string, password: string) {
+        const user = users.find((item) => item.account === account);
+        if (!user) return null;
+        if (password !== `${account}123`) return null;
+        return {
+            token: 'demo-token',
+            user,
+        };
+    },
+    async getUsers(keyword?: string) {
+        if (!keyword) return users;
+        const normalizedKeyword = keyword.toLowerCase();
+        return users.filter((user) => user.account.toLowerCase().includes(normalizedKeyword) || user.name.toLowerCase().includes(normalizedKeyword));
+    },
+};
+
+const articleRepository = {
+    async findPage(page: number, pageSize: number) {
+        const offset = (page - 1) * pageSize;
+        return {
+            list: articles.slice(offset, offset + pageSize),
+            total: articles.length,
+        };
+    },
+};
+
+const app = new Elysia()
+    .use(
+        di({
+            instances: [
+                {
+                    identifier: 'userService',
+                    instance: userService,
+                },
+                {
+                    identifier: 'articleRepository',
+                    instance: articleRepository,
+                },
+            ],
+        }),
+    )
+    .use(loggerMiddleware)
+    .use(errorMiddleware)
+    .use(authMiddleware)
+    .get('/health', ({ request }) => ok(ensureRequestContext(request).requestId, { status: 'ok' }, 'ok'))
+    .use(userModule)
+    .use(articleModule);
 
 const sendJson = async (url: string, method: string, body?: unknown, headers?: Record<string, string>) =>
     app.handle(

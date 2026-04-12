@@ -11,8 +11,8 @@
 
 后端环境变量文件：
 
-- `api/.env`：开发环境
-- `api/.env.test`：测试环境
+- `api/.env`：本地默认环境
+- `api/.env.example`：环境变量示例模板
 
 ## 快速开始
 
@@ -48,27 +48,29 @@ bun run test
 - `typecheck`：执行前后端类型检查
 - `test`：执行后端 unit + integration 测试
 
-## 数据库模式（同时支持 PostgreSQL / MySQL）
-
-后端支持三种运行模式：
-
-- `memory`：默认模式，无需数据库
-- `postgres`：连接 PostgreSQL
-- `mysql`：连接 MySQL
+## 数据库模式（仅支持 PostgreSQL）
 
 使用方式（在启动前设置环境变量）：
 
 ```bash
-DB_CLIENT=postgres DATABASE_URL=postgres://user:password@localhost:5432/demo bun run --cwd api dev
-DB_CLIENT=mysql DATABASE_URL=mysql://user:password@localhost:3306/demo bun run --cwd api dev
+DATABASE_URL=postgres://user:password@localhost:5432/demo bun run --cwd api dev
 ```
 
 说明：
 
-- 未设置 `DB_CLIENT` 时默认使用 `memory`
-- 当 `DB_CLIENT` 为 `postgres` 或 `mysql` 时必须提供 `DATABASE_URL`
-- SQL 模式启动时会自动创建 `users` 和 `articles` 表并填充基础种子数据
-- 数据库适配层采用工厂 + 分实现拆分，代码位于 `api/src/infra/db`（`factory.ts` + `adapters/*`）
+- 必须提供 `DATABASE_URL`
+- 数据库访问使用 Drizzle ORM
+- 结构迁移使用 Drizzle Kit（配置文件：`api/drizzle.config.js`）
+- 首次运行前请先执行迁移命令
+
+常用数据库脚本：
+
+```bash
+bun run --cwd api db:generate
+bun run --cwd api db:migrate
+bun run --cwd api db:push
+bun run --cwd api db:studio
+```
 
 ## 日志模式
 
@@ -98,8 +100,7 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 - `LOG_FILE_PATH`：日志文件路径模板，支持 `{date}` 占位符
 - `LOG_FILE_DIR`：未设置 `LOG_FILE_PATH` 时的日志目录（默认 `logs`）
 - `LOG_FILE_PREFIX`：未设置 `LOG_FILE_PATH` 时的日志文件前缀（默认 `app`）
-- `DB_CLIENT`：`memory | postgres | mysql`
-- `DATABASE_URL`：当 `DB_CLIENT` 为 `postgres/mysql` 时使用
+- `DATABASE_URL`：PostgreSQL 连接串
 
 ## 示例账号
 

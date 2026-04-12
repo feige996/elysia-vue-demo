@@ -1,9 +1,26 @@
-import type { DatabaseAdapter } from '../../infra/db/database-adapter';
+import { asc, count } from 'drizzle-orm';
+import { db, ensureDbInitialized } from '../../infra/db/client';
+import { articlesTable } from '../../infra/db/schema';
 
 export class ArticleRepository {
-    constructor(private readonly databaseAdapter: DatabaseAdapter) {}
+    async findPage(page: number, pageSize: number) {
+        await ensureDbInitialized();
+        const offset = (page - 1) * pageSize;
+        const rows = await db
+            .select({
+                id: articlesTable.id,
+                title: articlesTable.title,
+                author: articlesTable.author,
+            })
+            .from(articlesTable)
+            .orderBy(asc(articlesTable.id))
+            .limit(pageSize)
+            .offset(offset);
 
-    findPage(page: number, pageSize: number) {
-        return this.databaseAdapter.findArticles(page, pageSize);
+        const totalRows = await db.select({ total: count() }).from(articlesTable);
+        return {
+            list: rows,
+            total: Number(totalRows[0]?.total ?? 0),
+        };
     }
 }

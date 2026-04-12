@@ -129,9 +129,9 @@ api/src
 
 ## 14. P2 实施步骤（当前已执行）
 
-- Step 1：接入数据库适配层，支持 `memory / postgres / mysql` 三种运行模式
-- Step 2：将 `user/article` 查询从内存数组切换到仓储 + 适配器访问路径
-- Step 3：在 SQL 模式下自动初始化基础表与种子数据（users/articles）
+- Step 1：接入数据库适配层并收敛为仅支持 `postgres`
+- Step 2：引入 `Drizzle ORM + Drizzle Kit`，建立 schema 与迁移工具链
+- Step 3：将 `user/article` 查询切换到仓储 + Postgres 适配器访问路径
 - Step 4：保持服务层抽象稳定，路由仅通过 service/repository 访问数据
 - Step 5：完成 `typecheck + unit test + integration test` 验证
 
