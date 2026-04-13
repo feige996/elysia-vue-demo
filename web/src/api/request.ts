@@ -1,17 +1,19 @@
 import type { AppType } from '../../../api/src';
 import { edenFetch } from '@elysiajs/eden';
 import { ref } from 'vue';
+import {
+  WEB_REFRESH_TOKEN_KEY,
+  WEB_TOKEN_KEY,
+} from '../../../shared/auth/storage-keys';
 import { createEdenRequestClient } from '../../../shared/request/eden';
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:6000';
-const TOKEN_KEY = 'access_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
 const edenClient = createEdenRequestClient(
   {
     apiBaseUrl: API_BASE_URL,
-    tokenKey: TOKEN_KEY,
-    refreshTokenKey: REFRESH_TOKEN_KEY,
+    tokenKey: WEB_TOKEN_KEY, // access_token
+    refreshTokenKey: WEB_REFRESH_TOKEN_KEY, // refresh_token
   },
   {
     createCaller: (origin) =>
