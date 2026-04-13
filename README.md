@@ -62,7 +62,7 @@ PG_HOST=localhost PG_PORT=5432 PG_USER=postgres PG_PASSWORD=postgres PG_DATABASE
 
 说明：
 
-- 必须提供 `DATABASE_URL` 或完整的 `PG_HOST/PG_PORT/PG_USER/PG_PASSWORD/PG_DATABASE`
+- 必须提供完整的 `PG_HOST/PG_PORT/PG_USER/PG_PASSWORD/PG_DATABASE`（兼容 `DATABASE_URL` 旧配置）
 - 后端端口使用 `API_PORT`（默认 `6000`）
 - 后台端口使用 `ADMIN_PORT`（默认 `7000`）
 - 前台端口使用 `WEB_PORT`（默认 `8000`）
@@ -132,8 +132,8 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 - `LOG_FILE_PATH`：日志文件路径模板，支持 `{date}` 占位符
 - `LOG_FILE_DIR`：未设置 `LOG_FILE_PATH` 时的日志目录（默认 `logs`）
 - `LOG_FILE_PREFIX`：未设置 `LOG_FILE_PATH` 时的日志文件前缀（默认 `app`）
-- `DATABASE_URL`：PostgreSQL 连接串（可选）
 - `PG_HOST/PG_PORT/PG_USER/PG_PASSWORD/PG_DATABASE`：PostgreSQL 拆分配置（推荐）
+- `DATABASE_URL`：PostgreSQL 连接串（兼容旧配置，可选）
 - `JWT_SECRET`：JWT 签名密钥（必填）
 - `JWT_EXPIRES_IN`：access token 过期时间（示例：`1h`）
 - `JWT_EXPIRES_IN_SECONDS`：access token 过期秒数（可选）

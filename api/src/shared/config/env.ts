@@ -61,19 +61,20 @@ const envSchema = z.object({
 
 const rawEnv = envSchema.parse(process.env);
 
-const databaseUrl =
-  rawEnv.DATABASE_URL ??
-  (rawEnv.PG_HOST &&
+const databaseUrlFromPgConfig =
+  rawEnv.PG_HOST &&
   rawEnv.PG_PORT &&
   rawEnv.PG_USER &&
   rawEnv.PG_PASSWORD !== undefined &&
   rawEnv.PG_DATABASE
     ? `postgres://${encodeURIComponent(rawEnv.PG_USER)}:${encodeURIComponent(rawEnv.PG_PASSWORD)}@${rawEnv.PG_HOST}:${rawEnv.PG_PORT}/${rawEnv.PG_DATABASE}`
-    : undefined);
+    : undefined;
+
+const databaseUrl = databaseUrlFromPgConfig ?? rawEnv.DATABASE_URL;
 
 if (!databaseUrl) {
   throw new Error(
-    'DATABASE_URL is required, or set PG_HOST/PG_PORT/PG_USER/PG_PASSWORD/PG_DATABASE'
+    'PG_HOST/PG_PORT/PG_USER/PG_PASSWORD/PG_DATABASE are required (or set DATABASE_URL for compatibility)'
   );
 }
 

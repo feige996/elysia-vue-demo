@@ -5,8 +5,11 @@ const ensureEnv = () => {
   process.env.NODE_ENV ??= 'development';
   process.env.API_PORT ??= '6000';
   process.env.JWT_SECRET ??= 'openapi-generate-only-secret';
-  process.env.DATABASE_URL ??=
-    'postgres://postgres:postgres@localhost:5432/elysia_demo';
+  process.env.PG_HOST ??= 'localhost';
+  process.env.PG_PORT ??= '5432';
+  process.env.PG_USER ??= 'postgres';
+  process.env.PG_PASSWORD ??= 'postgres';
+  process.env.PG_DATABASE ??= 'elysia_demo';
 };
 
 const generate = async () => {

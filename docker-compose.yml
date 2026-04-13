@@ -27,7 +27,11 @@ services:
       context: .
       dockerfile: api/Dockerfile
     environment:
-      DATABASE_URL: postgres://postgres:postgres@db:5432/elysia_demo
+      PG_HOST: db
+      PG_PORT: 5432
+      PG_USER: postgres
+      PG_PASSWORD: postgres
+      PG_DATABASE: elysia_demo
       API_PORT: 6000
       JWT_SECRET: compose-jwt-secret-change-me
       JWT_EXPIRES_IN_SECONDS: 3600
