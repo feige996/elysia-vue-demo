@@ -1,10 +1,10 @@
 # vue3-bun-elysia-demo
 
-一个开箱即用的全栈模板，技术栈为 `Vue3 + Elysia + Bun + AlovaJS`，采用三端分离目录：
+一个开箱即用的全栈模板，技术栈为 `Vue3 + Elysia + Bun + Eden`，采用三端分离目录：
 
 - `api`：后端项目（Elysia + Bun + TypeScript + elysia-di + Zod）
-- `admin`：后台项目（Vue3 + Vite + TypeScript + AlovaJS + Naive UI + Zod）
-- `web`：前端项目（Vue3 + Vite + TypeScript + AlovaJS + Zod）
+- `admin`：后台项目（Vue3 + Vite + TypeScript + Eden + Naive UI + Zod）
+- `web`：前端项目（Vue3 + Vite + TypeScript + Eden + Zod）
 
 ## 环境要求
 
@@ -142,6 +142,12 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 - `REDIS_HOST/REDIS_PORT`：Redis 拆分配置（推荐）
 - `VITE_API_BASE_URL`：web/admin 访问 API 的基础地址
 
+前端请求分层约定：
+
+- `web/src/api/request.ts`、`admin/src/api/request.ts`：统一请求内核（token、refresh、错误归一化）
+- `web/src/api/modules/*`、`admin/src/api/modules/*`：业务接口方法
+- 页面层只消费 modules，不直接编写请求细节
+
 ## 示例账号
 
 - account: `admin`
@@ -171,9 +177,24 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 │   │   └── index.ts
 │   ├── package.json
 │   └── tsconfig.json
+├── admin
+│   ├── src
+│   │   ├── api
+│   │   │   ├── request.ts
+│   │   │   └── modules
+│   │   ├── views
+│   │   ├── style
+│   │   ├── App.vue
+│   │   └── main.ts
+│   ├── index.html
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── vite.config.ts
 ├── web
 │   ├── src
 │   │   ├── api
+│   │   │   ├── request.ts
+│   │   │   └── modules
 │   │   ├── views
 │   │   ├── style
 │   │   ├── App.vue
@@ -202,6 +223,9 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 - `PUT /api/articles/:id`：更新文章（需鉴权）
 - `DELETE /api/articles/:id`：删除单个文章（需鉴权）
 - `DELETE /api/articles`：批量删除文章（需鉴权）
+- `POST /api/file/upload`：上传文件（依赖存储配置）
+- `DELETE /api/file`：删除文件（依赖存储配置）
+- `GET /api/file/url`：获取文件访问地址（依赖存储配置）
 - 角色策略：`admin` 可访问所有受保护接口；`editor` 仅可访问非管理员接口
 
 JWT 启用示例：
@@ -217,6 +241,12 @@ JWT_SECRET=replace-me-with-strong-secret JWT_REFRESH_EXPIRES_IN_SECONDS=604800 R
 ```bash
 docker compose up -d --build
 ```
+
+容器默认端口：
+
+- api: `6000`
+- admin: `7000`
+- web: `8000`
 
 首次启动后执行：
 

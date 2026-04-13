@@ -23,29 +23,29 @@ type EdenClientConfig = {
   refreshTokenKey: string;
 };
 
-type EdenClientDeps<TApp> = {
-  edenFetch: (origin: string) => unknown;
-  createRef: <T>(value: T) => any;
+type EdenCaller = (
+  requestPath: string,
+  requestOptions: RequestOptions,
+) => Promise<EdenResult>;
+
+type EdenClientDeps = {
+  createCaller: (origin: string) => EdenCaller;
+  createRef: (value: boolean) => any;
 };
 
-export const createEdenRequestClient = <TApp>(
+export const createEdenRequestClient = (
   config: EdenClientConfig,
-  deps: EdenClientDeps<TApp>,
+  deps: EdenClientDeps,
 ) => {
   const apiOrigin = config.apiBaseUrl.replace(/\/api\/?$/, '');
-  const eden = deps.edenFetch(apiOrigin);
+  const eden = deps.createCaller(apiOrigin);
   let refreshingPromise: Promise<string | null> | null = null;
 
   const requestByEden = async (
     path: string,
     options: RequestOptions,
   ): Promise<EdenResult> => {
-    return (await (
-      eden as unknown as (
-        requestPath: string,
-        requestOptions: RequestOptions,
-      ) => Promise<EdenResult>
-    )(path, options)) as EdenResult;
+    return eden(path, options);
   };
 
   const toErrorMessage = (payload: unknown) => {

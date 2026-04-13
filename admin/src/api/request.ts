@@ -7,14 +7,23 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:6000/api';
 const TOKEN_KEY = 'admin_access_token';
 const REFRESH_TOKEN_KEY = 'admin_refresh_token';
-const edenClient = createEdenRequestClient<AppType>(
+const edenClient = createEdenRequestClient(
   {
     apiBaseUrl: API_BASE_URL,
     tokenKey: TOKEN_KEY,
     refreshTokenKey: REFRESH_TOKEN_KEY,
   },
   {
-    edenFetch: (origin) => edenFetch<AppType>(origin),
+    createCaller: (origin) =>
+      edenFetch<AppType>(origin) as unknown as (
+        requestPath: string,
+        requestOptions: {
+          method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+          query?: Record<string, unknown>;
+          body?: unknown;
+          headers?: Record<string, string>;
+        },
+      ) => Promise<{ data?: unknown; error?: { value?: unknown } }>,
     createRef: ref,
   },
 );
