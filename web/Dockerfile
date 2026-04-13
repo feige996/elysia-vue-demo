@@ -7,6 +7,6 @@ COPY . .
 RUN bun install --frozen-lockfile
 RUN bun run --cwd web build
 
-EXPOSE 5173
+EXPOSE 8000
 
-CMD ["bun", "run", "--cwd", "web", "preview", "--host", "0.0.0.0", "--port", "5173"]
+CMD ["bun", "run", "--cwd", "web", "preview", "--host", "0.0.0.0", "--port", "8000"]

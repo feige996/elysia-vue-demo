@@ -4,7 +4,7 @@ import adapterFetch from 'alova/fetch';
 import VueHook from 'alova/vue';
 import type { AppType } from '../../../api/src';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:6000/api';
 const TOKEN_KEY = 'admin_access_token';
 const REFRESH_TOKEN_KEY = 'admin_refresh_token';
 

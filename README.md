@@ -1,18 +1,21 @@
 # vue3-bun-elysia-demo
 
-一个开箱即用的全栈模板，技术栈为 `Vue3 + Elysia + Bun + AlovaJS`，采用前后端分离目录：
+一个开箱即用的全栈模板，技术栈为 `Vue3 + Elysia + Bun + AlovaJS`，采用三端分离目录：
 
-- `web`：前端项目（Vue3 + Vite + TypeScript + AlovaJS + Zod）
 - `api`：后端项目（Elysia + Bun + TypeScript + elysia-di + Zod）
+- `admin`：后台项目（Vue3 + Vite + TypeScript + AlovaJS + Naive UI + Zod）
+- `web`：前端项目（Vue3 + Vite + TypeScript + AlovaJS + Zod）
 
 ## 环境要求
 
 - Bun >= 1.3
 
-后端环境变量文件：
+环境变量文件：
 
 - `api/.env`：本地默认环境
 - `api/.env.example`：环境变量示例模板
+- `admin/.env.example`：后台环境变量示例模板
+- `web/.env.example`：前台环境变量示例模板
 
 ## 快速开始
 
@@ -25,8 +28,9 @@ bun run dev
 
 启动后默认地址：
 
-- 前端：`http://localhost:5173`（若端口被占用会自动递增）
-- 后端：`http://localhost:3000`
+- 后端：`http://localhost:6000`
+- 后台：`http://localhost:7000`（若端口被占用会自动递增）
+- 前台：`http://localhost:8000`（若端口被占用会自动递增）
 
 ## 常用脚本
 
@@ -42,10 +46,10 @@ bun run test
 
 说明：
 
-- `dev`：并行启动前后端开发服务
-- `build`：构建前后端产物
+- `dev`：并行启动 api + admin + web 开发服务
+- `build`：构建三端产物
 - `start`：启动后端生产构建
-- `typecheck`：执行前后端类型检查
+- `typecheck`：执行三端类型检查
 - `test`：执行后端 unit + integration 测试
 
 ## 数据库模式（仅支持 PostgreSQL）
@@ -53,14 +57,15 @@ bun run test
 使用方式（在启动前设置环境变量）：
 
 ```bash
-DATABASE_URL=postgres://user:password@localhost:5432/demo bun run --cwd api dev
+PG_HOST=localhost PG_PORT=5432 PG_USER=postgres PG_PASSWORD=postgres PG_DATABASE=elysia_demo bun run --cwd api dev
 ```
 
 说明：
 
-- 必须提供 `DATABASE_URL`
-- 后端端口使用 `API_PORT`（默认 `3000`）
-- 前端端口使用 `WEB_PORT`（默认 `5173`）
+- 必须提供 `DATABASE_URL` 或完整的 `PG_HOST/PG_PORT/PG_USER/PG_PASSWORD/PG_DATABASE`
+- 后端端口使用 `API_PORT`（默认 `6000`）
+- 后台端口使用 `ADMIN_PORT`（默认 `7000`）
+- 前台端口使用 `WEB_PORT`（默认 `8000`）
 - 数据库访问使用 Drizzle ORM
 - 结构迁移使用 Drizzle Kit（配置文件：`api/drizzle.config.js`）
 - 首次运行前请先执行迁移命令
@@ -127,11 +132,15 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 - `LOG_FILE_PATH`：日志文件路径模板，支持 `{date}` 占位符
 - `LOG_FILE_DIR`：未设置 `LOG_FILE_PATH` 时的日志目录（默认 `logs`）
 - `LOG_FILE_PREFIX`：未设置 `LOG_FILE_PATH` 时的日志文件前缀（默认 `app`）
-- `DATABASE_URL`：PostgreSQL 连接串
+- `DATABASE_URL`：PostgreSQL 连接串（可选）
+- `PG_HOST/PG_PORT/PG_USER/PG_PASSWORD/PG_DATABASE`：PostgreSQL 拆分配置（推荐）
 - `JWT_SECRET`：JWT 签名密钥（必填）
-- `JWT_EXPIRES_IN_SECONDS`：access token 过期秒数（默认 `3600`）
+- `JWT_EXPIRES_IN`：access token 过期时间（示例：`1h`）
+- `JWT_EXPIRES_IN_SECONDS`：access token 过期秒数（可选）
 - `JWT_REFRESH_EXPIRES_IN_SECONDS`：refresh token 过期秒数（默认 `604800`）
-- `REDIS_URL`：refresh token 撤销状态存储地址（推荐 `redis://localhost:6379`）
+- `REDIS_URL`：refresh token 撤销状态存储地址（可选）
+- `REDIS_HOST/REDIS_PORT`：Redis 拆分配置（推荐）
+- `VITE_API_BASE_URL`：web/admin 访问 API 的基础地址
 
 ## 示例账号
 

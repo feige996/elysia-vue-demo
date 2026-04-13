@@ -29,7 +29,7 @@ const pageQueryDocSchema = z.object({
 const document = {
     openapi: '3.0.3',
     info: { title: 'Elysia Demo API', version: '1.0.0' },
-    servers: [{ url: 'http://localhost:3000' }],
+    servers: [{ url: 'http://localhost:6000' }],
     components: {
         securitySchemes: {
             bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },

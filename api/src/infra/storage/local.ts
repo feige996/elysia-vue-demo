@@ -5,7 +5,7 @@ export class LocalStorage implements IStorage {
     private readonly baseDir: string;
     private readonly baseUrl: string;
 
-    constructor(baseDir: string = 'uploads', baseUrl: string = 'http://localhost:3000/uploads') {
+    constructor(baseDir: string = 'uploads', baseUrl: string = 'http://localhost:6000/uploads') {
         this.baseDir = baseDir;
         this.baseUrl = baseUrl;
     }

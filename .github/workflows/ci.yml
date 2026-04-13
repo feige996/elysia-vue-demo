@@ -12,8 +12,9 @@ jobs:
         runs-on: ubuntu-latest
         env:
             DATABASE_URL: postgres://postgres:postgres@localhost:5432/elysia_demo
-            API_PORT: 3000
-            WEB_PORT: 5173
+            API_PORT: 6000
+            ADMIN_PORT: 7000
+            WEB_PORT: 8000
             JWT_SECRET: ci-jwt-secret
             JWT_REFRESH_EXPIRES_IN_SECONDS: 604800
         services:
