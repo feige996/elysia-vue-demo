@@ -4,7 +4,7 @@ import { ref } from 'vue';
 import { createEdenRequestClient } from '../../../shared/request/eden';
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:6000/api';
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:6000';
 const TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 const edenClient = createEdenRequestClient(

@@ -37,7 +37,8 @@ export const createEdenRequestClient = (
   config: EdenClientConfig,
   deps: EdenClientDeps,
 ) => {
-  const apiOrigin = config.apiBaseUrl.replace(/\/api\/?$/, '');
+  const normalizedBaseUrl = config.apiBaseUrl.replace(/\/$/, '');
+  const apiOrigin = normalizedBaseUrl.replace(/\/api\/?$/, '');
   const eden = deps.createCaller(apiOrigin);
   let refreshingPromise: Promise<string | null> | null = null;
 
