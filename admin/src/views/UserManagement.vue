@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, h, ref } from 'vue';
+import { computed, h, onMounted, ref } from 'vue';
 import {
   NButton,
   NCard,
@@ -87,6 +87,10 @@ const fetchUsers = async () => {
     errorText.value = error instanceof Error ? error.message : '加载失败';
   }
 };
+
+onMounted(() => {
+  void fetchUsers();
+});
 </script>
 
 <template>
@@ -99,6 +103,12 @@ const fetchUsers = async () => {
           placeholder="按账号或姓名搜索"
           style="width: 280px"
         />
+        <NButton v-permission="'system:user:create'" type="info" ghost
+          >新增用户</NButton
+        >
+        <NButton v-permission="'system:user:delete'" type="warning" ghost
+          >批量删除</NButton
+        >
         <NButton type="primary" :loading="loading" @click="fetchUsers"
           >查询</NButton
         >

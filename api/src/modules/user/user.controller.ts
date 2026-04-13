@@ -21,12 +21,12 @@ export const createUserController = (
   userService: UserService,
   userRepository: UserRepository,
   issueTokens?: (
-    role: AuthorizedRole
+    role: AuthorizedRole,
   ) => Promise<{ accessToken: string; refreshToken: string }>,
   consumeRefreshToken?: (
-    refreshToken: string
+    refreshToken: string,
   ) => Promise<AuthorizedRole | null>,
-  revokeRefreshToken?: (refreshToken: string) => Promise<boolean>
+  revokeRefreshToken?: (refreshToken: string) => Promise<boolean>,
 ) => ({
   login: async (body: unknown, request: Request) => {
     const { requestId } = ensureRequestContext(request);
@@ -35,14 +35,14 @@ export const createUserController = (
       return failByKey(
         requestId,
         ErrorKey.VALIDATION_ERROR,
-        parsedBody.error.issues[0]?.message ?? 'Invalid login payload'
+        parsedBody.error.issues[0]?.message ?? 'Invalid login payload',
       );
     }
 
     const user = await userService.login(
       parsedBody.data.account,
       parsedBody.data.password,
-      requestId
+      requestId,
     );
     if (!user) {
       return failByKey(requestId, ErrorKey.INVALID_CREDENTIALS);
@@ -51,7 +51,7 @@ export const createUserController = (
       return failByKey(
         requestId,
         ErrorKey.INTERNAL_ERROR,
-        'Auth token issuer is not configured'
+        'Auth token issuer is not configured',
       );
     }
     const tokens = await issueTokens(user.role);
@@ -65,7 +65,7 @@ export const createUserController = (
           refreshToken: tokens.refreshToken,
           user,
         },
-        'Login success'
+        'Login success',
       ),
     };
   },
@@ -74,7 +74,7 @@ export const createUserController = (
     const parsedQuery = listQuerySchema.safeParse(query);
     const users = await userService.getUsers(
       parsedQuery.success ? parsedQuery.data.keyword : undefined,
-      requestId
+      requestId,
     );
     return {
       status: 200,
@@ -88,7 +88,7 @@ export const createUserController = (
       return failByKey(
         requestId,
         ErrorKey.VALIDATION_ERROR,
-        parsedQuery.error.issues[0]?.message ?? 'Invalid query'
+        parsedQuery.error.issues[0]?.message ?? 'Invalid query',
       );
     }
     const { page, pageSize, keyword } = parsedQuery.data;
@@ -103,7 +103,7 @@ export const createUserController = (
           page,
           pageSize,
         } satisfies PaginatedData<UserEntity>,
-        'OK'
+        'OK',
       ),
     };
   },
@@ -114,17 +114,17 @@ export const createUserController = (
       return failByKey(
         requestId,
         ErrorKey.VALIDATION_ERROR,
-        parsedBody.error.issues[0]?.message ?? 'Invalid user payload'
+        parsedBody.error.issues[0]?.message ?? 'Invalid user payload',
       );
     }
     const existing = await userRepository.findByAccount(
-      parsedBody.data.account
+      parsedBody.data.account,
     );
     if (existing) {
       return failByKey(
         requestId,
         ErrorKey.CONFLICT,
-        'User account already exists'
+        'User account already exists',
       );
     }
     const created = await userRepository.create(parsedBody.data);
@@ -140,7 +140,7 @@ export const createUserController = (
       return failByKey(
         requestId,
         ErrorKey.VALIDATION_ERROR,
-        parsedId.error.issues[0]?.message ?? 'Invalid id'
+        parsedId.error.issues[0]?.message ?? 'Invalid id',
       );
     }
     const parsedBody = updateUserSchema.safeParse(body);
@@ -148,12 +148,12 @@ export const createUserController = (
       return failByKey(
         requestId,
         ErrorKey.VALIDATION_ERROR,
-        parsedBody.error.issues[0]?.message ?? 'Invalid user payload'
+        parsedBody.error.issues[0]?.message ?? 'Invalid user payload',
       );
     }
     const updated = await userRepository.update(
       parsedId.data.id,
-      parsedBody.data
+      parsedBody.data,
     );
     if (!updated) {
       return failByKey(requestId, ErrorKey.NOT_FOUND, 'User not found');
@@ -170,7 +170,7 @@ export const createUserController = (
       return failByKey(
         requestId,
         ErrorKey.VALIDATION_ERROR,
-        parsedId.error.issues[0]?.message ?? 'Invalid id'
+        parsedId.error.issues[0]?.message ?? 'Invalid id',
       );
     }
     const removed = await userRepository.deleteById(parsedId.data.id);
@@ -189,13 +189,29 @@ export const createUserController = (
       return failByKey(
         requestId,
         ErrorKey.VALIDATION_ERROR,
-        parsedBody.error.issues[0]?.message ?? 'Invalid ids payload'
+        parsedBody.error.issues[0]?.message ?? 'Invalid ids payload',
       );
     }
     const deletedCount = await userRepository.deleteByIds(parsedBody.data.ids);
     return {
       status: 200,
       payload: ok(requestId, { deleted: deletedCount }, 'Deleted'),
+    };
+  },
+  listCurrentPermissions: async (role: AuthorizedRole, request: Request) => {
+    const { requestId } = ensureRequestContext(request);
+    const permissions = await userRepository.findPermissionCodesByRole(role);
+    return {
+      status: 200,
+      payload: ok(requestId, permissions, 'OK'),
+    };
+  },
+  getCurrentMenuTree: async (role: AuthorizedRole, request: Request) => {
+    const { requestId } = ensureRequestContext(request);
+    const menus = await userRepository.findMenuTreeByRole(role);
+    return {
+      status: 200,
+      payload: ok(requestId, menus, 'OK'),
     };
   },
   refresh: async (body: unknown, request: Request) => {
@@ -205,14 +221,14 @@ export const createUserController = (
       return failByKey(
         requestId,
         ErrorKey.VALIDATION_ERROR,
-        parsedBody.error.issues[0]?.message ?? 'Invalid refresh token payload'
+        parsedBody.error.issues[0]?.message ?? 'Invalid refresh token payload',
       );
     }
     if (!consumeRefreshToken || !issueTokens) {
       return failByKey(
         requestId,
         ErrorKey.INTERNAL_ERROR,
-        'Refresh token handler is not configured'
+        'Refresh token handler is not configured',
       );
     }
     const role = await consumeRefreshToken(parsedBody.data.refreshToken);
@@ -220,7 +236,7 @@ export const createUserController = (
       return failByKey(
         requestId,
         ErrorKey.UNAUTHORIZED,
-        'Invalid refresh token'
+        'Invalid refresh token',
       );
     }
     const tokens = await issueTokens(role);
@@ -229,7 +245,7 @@ export const createUserController = (
       payload: ok(
         requestId,
         { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
-        'Token refreshed'
+        'Token refreshed',
       ),
     };
   },
@@ -240,14 +256,14 @@ export const createUserController = (
       return failByKey(
         requestId,
         ErrorKey.VALIDATION_ERROR,
-        parsedBody.error.issues[0]?.message ?? 'Invalid refresh token payload'
+        parsedBody.error.issues[0]?.message ?? 'Invalid refresh token payload',
       );
     }
     if (!revokeRefreshToken) {
       return failByKey(
         requestId,
         ErrorKey.INTERNAL_ERROR,
-        'Refresh token handler is not configured'
+        'Refresh token handler is not configured',
       );
     }
     const revoked = await revokeRefreshToken(parsedBody.data.refreshToken);
@@ -255,7 +271,7 @@ export const createUserController = (
       return failByKey(
         requestId,
         ErrorKey.UNAUTHORIZED,
-        'Invalid refresh token'
+        'Invalid refresh token',
       );
     }
     return {

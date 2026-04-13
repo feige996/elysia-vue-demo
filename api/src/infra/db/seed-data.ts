@@ -1,13 +1,289 @@
 import type { ArticleEntity, UserEntity } from '../../shared/types/entities';
 
+/**
+ * Legacy demo seed data for current user/article example modules.
+ */
 export const defaultUsers: UserEntity[] = [
-    { id: 1, account: 'admin', name: 'Admin', role: 'admin' },
-    { id: 2, account: 'editor', name: 'Editor', role: 'editor' },
-    { id: 3, account: 'alice', name: 'Alice', role: 'editor' },
+  { id: 1, account: 'admin', name: 'Admin', role: 'admin' },
+  { id: 2, account: 'editor', name: 'Editor', role: 'editor' },
+  { id: 3, account: 'alice', name: 'Alice', role: 'editor' },
 ];
 
 export const defaultArticles: ArticleEntity[] = [
-    { id: 1, title: 'Elysia + Bun 快速启动', author: 'Admin' },
-    { id: 2, title: 'Vue3 + Alova 请求实践', author: 'Editor' },
-    { id: 3, title: '前后端类型共享方案', author: 'Admin' },
+  { id: 1, title: 'Elysia + Bun 快速启动', author: 'Admin' },
+  { id: 2, title: 'Vue3 + Alova 请求实践', author: 'Editor' },
+  { id: 3, title: '前后端类型共享方案', author: 'Admin' },
+];
+
+/**
+ * P0/P1 base seed data for sys_* tables.
+ * NOTE: passwordHash uses plain seed text for now, should be replaced by real hash in auth migration.
+ */
+export const defaultSysRoles = [
+  {
+    id: 1,
+    code: 'admin',
+    name: '超级管理员',
+    description: '系统内置角色',
+    status: 1,
+  },
+  {
+    id: 2,
+    code: 'editor',
+    name: '运营编辑',
+    description: '运营/编辑角色',
+    status: 1,
+  },
+];
+
+export const defaultSysPermissions = [
+  {
+    id: 1,
+    code: 'system:user:view',
+    name: '查看用户',
+    type: 3,
+    module: 'system-user',
+    status: 1,
+  },
+  {
+    id: 2,
+    code: 'system:user:create',
+    name: '新增用户',
+    type: 2,
+    module: 'system-user',
+    status: 1,
+  },
+  {
+    id: 3,
+    code: 'system:user:update',
+    name: '编辑用户',
+    type: 2,
+    module: 'system-user',
+    status: 1,
+  },
+  {
+    id: 4,
+    code: 'system:user:delete',
+    name: '删除用户',
+    type: 2,
+    module: 'system-user',
+    status: 1,
+  },
+  {
+    id: 5,
+    code: 'system:role:view',
+    name: '查看角色',
+    type: 3,
+    module: 'system-role',
+    status: 1,
+  },
+  {
+    id: 6,
+    code: 'system:role:assign-permission',
+    name: '分配角色权限',
+    type: 2,
+    module: 'system-role',
+    status: 1,
+  },
+  {
+    id: 7,
+    code: 'system:menu:view',
+    name: '查看菜单',
+    type: 3,
+    module: 'system-menu',
+    status: 1,
+  },
+  {
+    id: 8,
+    code: 'system:menu:sort',
+    name: '菜单排序',
+    type: 2,
+    module: 'system-menu',
+    status: 1,
+  },
+  {
+    id: 9,
+    code: 'system:config:view',
+    name: '查看系统配置',
+    type: 3,
+    module: 'system-config',
+    status: 1,
+  },
+  {
+    id: 10,
+    code: 'system:config:update',
+    name: '更新系统配置',
+    type: 2,
+    module: 'system-config',
+    status: 1,
+  },
+];
+
+export const defaultSysMenus = [
+  {
+    id: 1,
+    parentId: 0,
+    name: '系统管理',
+    routeName: 'System',
+    path: '/system',
+    component: 'layout/router-view',
+    icon: 'settings-outline',
+    type: 1,
+    sort: 10,
+    visible: 1,
+    status: 1,
+    keepAlive: 0,
+    permissionCode: null,
+  },
+  {
+    id: 2,
+    parentId: 1,
+    name: '用户管理',
+    routeName: 'SystemUser',
+    path: '/system/user',
+    component: 'system/user/index',
+    icon: 'people-outline',
+    type: 2,
+    sort: 10,
+    visible: 1,
+    status: 1,
+    keepAlive: 1,
+    permissionCode: 'system:user:view',
+  },
+  {
+    id: 3,
+    parentId: 1,
+    name: '角色管理',
+    routeName: 'SystemRole',
+    path: '/system/role',
+    component: 'system/role/index',
+    icon: 'shield-outline',
+    type: 2,
+    sort: 20,
+    visible: 1,
+    status: 1,
+    keepAlive: 1,
+    permissionCode: 'system:role:view',
+  },
+  {
+    id: 4,
+    parentId: 1,
+    name: '菜单管理',
+    routeName: 'SystemMenu',
+    path: '/system/menu',
+    component: 'system/menu/index',
+    icon: 'list-outline',
+    type: 2,
+    sort: 30,
+    visible: 1,
+    status: 1,
+    keepAlive: 1,
+    permissionCode: 'system:menu:view',
+  },
+];
+
+export const defaultSysUsers = [
+  {
+    id: 1,
+    account: 'admin',
+    passwordHash: 'admin123',
+    nickname: '管理员',
+    email: null,
+    mobile: null,
+    avatarUrl: null,
+    status: 1,
+  },
+  {
+    id: 2,
+    account: 'editor',
+    passwordHash: 'editor123',
+    nickname: '编辑',
+    email: null,
+    mobile: null,
+    avatarUrl: null,
+    status: 1,
+  },
+];
+
+export const defaultSysUserRoles = [
+  { userId: 1, roleId: 1 },
+  { userId: 2, roleId: 2 },
+];
+
+export const defaultSysRolePermissions = [
+  { roleId: 1, permissionId: 1 },
+  { roleId: 1, permissionId: 2 },
+  { roleId: 1, permissionId: 3 },
+  { roleId: 1, permissionId: 4 },
+  { roleId: 1, permissionId: 5 },
+  { roleId: 1, permissionId: 6 },
+  { roleId: 1, permissionId: 7 },
+  { roleId: 1, permissionId: 8 },
+  { roleId: 1, permissionId: 9 },
+  { roleId: 1, permissionId: 10 },
+  { roleId: 2, permissionId: 1 },
+  { roleId: 2, permissionId: 5 },
+  { roleId: 2, permissionId: 7 },
+  { roleId: 2, permissionId: 9 },
+];
+
+export const defaultSysRoleMenus = [
+  { roleId: 1, menuId: 1 },
+  { roleId: 1, menuId: 2 },
+  { roleId: 1, menuId: 3 },
+  { roleId: 1, menuId: 4 },
+  { roleId: 2, menuId: 1 },
+  { roleId: 2, menuId: 2 },
+];
+
+export const defaultSysDictTypes = [
+  {
+    id: 1,
+    code: 'sys_common_status',
+    name: '通用状态',
+    status: 1,
+    remark: '0 禁用, 1 启用',
+  },
+];
+
+export const defaultSysDictItems = [
+  {
+    id: 1,
+    dictTypeId: 1,
+    label: '禁用',
+    value: '0',
+    sort: 10,
+    status: 1,
+    isDefault: 0,
+  },
+  {
+    id: 2,
+    dictTypeId: 1,
+    label: '启用',
+    value: '1',
+    sort: 20,
+    status: 1,
+    isDefault: 1,
+  },
+];
+
+export const defaultSysConfigs = [
+  {
+    id: 1,
+    key: 'system.upload.maxSizeMb',
+    value: '5',
+    valueType: 2,
+    groupName: 'upload',
+    isPublic: 1,
+    remark: '上传大小限制（MB）',
+  },
+  {
+    id: 2,
+    key: 'system.theme.defaultMode',
+    value: 'light',
+    valueType: 1,
+    groupName: 'theme',
+    isPublic: 1,
+    remark: '默认主题',
+  },
 ];

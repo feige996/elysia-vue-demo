@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 import { z } from 'zod';
-import { NButton, NCard, NForm, NFormItem, NInput, NText } from 'naive-ui';
+import { NButton, NForm, NFormItem, NInput, NText } from 'naive-ui';
 import { requestState, setAccessToken, setRefreshToken } from '../api/request';
 import {
   loginMethod,
@@ -57,25 +57,23 @@ const submitLogin = async () => {
 </script>
 
 <template>
-  <NCard title="Admin 登录" :bordered="false">
-    <NForm @submit.prevent="submitLogin">
-      <NFormItem label="账号">
-        <NInput v-model:value="formState.account" placeholder="admin" />
-      </NFormItem>
-      <NFormItem label="密码">
-        <NInput
-          v-model:value="formState.password"
-          type="password"
-          placeholder="admin123"
-          show-password-on="click"
-        />
-      </NFormItem>
-      <NFormItem>
-        <NButton type="primary" :loading="loading" attr-type="submit" block
-          >登录</NButton
-        >
-      </NFormItem>
-    </NForm>
-    <NText v-if="errorMessage.text" type="error">{{ errorMessage.text }}</NText>
-  </NCard>
+  <NForm @submit.prevent="submitLogin">
+    <NFormItem label="账号">
+      <NInput v-model:value="formState.account" placeholder="admin" />
+    </NFormItem>
+    <NFormItem label="密码">
+      <NInput
+        v-model:value="formState.password"
+        type="password"
+        placeholder="admin123"
+        show-password-on="click"
+      />
+    </NFormItem>
+    <NFormItem>
+      <NButton type="primary" :loading="loading" attr-type="submit" block
+        >登录</NButton
+      >
+    </NFormItem>
+  </NForm>
+  <NText v-if="errorMessage.text" type="error">{{ errorMessage.text }}</NText>
 </template>

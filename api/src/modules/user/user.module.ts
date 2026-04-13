@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 import {
   consumeRefreshToken,
+  getAuthorizedRole,
   issueAccessToken,
   issueRefreshToken,
   revokeRefreshToken,
@@ -22,6 +23,23 @@ const userSchema = t.Object({
   account: t.String(),
   name: t.String(),
   role: roleSchema,
+});
+
+const menuSchema = t.Object({
+  id: t.Number(),
+  parentId: t.Number(),
+  name: t.String(),
+  path: t.String(),
+  routeName: t.String(),
+  component: t.Nullable(t.String()),
+  icon: t.Nullable(t.String()),
+  type: t.Number(),
+  sort: t.Number(),
+  visible: t.Number(),
+  status: t.Number(),
+  permissionCode: t.Nullable(t.String()),
+  keepAlive: t.Number(),
+  children: t.Array(t.Any()),
 });
 
 const loginBodySchema = t.Object({
@@ -112,6 +130,20 @@ const usersAllSuccessSchema = t.Object({
   data: t.Array(userSchema),
 });
 
+const permissionCodesSuccessSchema = t.Object({
+  code: t.Literal(0),
+  message: t.String(),
+  requestId: t.String(),
+  data: t.Array(t.String()),
+});
+
+const menuTreeSuccessSchema = t.Object({
+  code: t.Literal(0),
+  message: t.String(),
+  requestId: t.String(),
+  data: t.Array(menuSchema),
+});
+
 const userSuccessSchema = t.Object({
   code: t.Literal(0),
   message: t.String(),
@@ -146,16 +178,16 @@ export const userModule = new Elysia({ prefix: '/api' })
         userRepository,
         async (role) => ({
           accessToken: await issueAccessToken(role, async (payload) =>
-            jwt.sign(payload)
+            jwt.sign(payload),
           ),
           refreshToken: await issueRefreshToken(role, async (payload) =>
-            jwt.sign(payload)
+            jwt.sign(payload),
           ),
         }),
         async (refreshToken) =>
           consumeRefreshToken(refreshToken, async (token) => jwt.verify(token)),
         async (refreshToken) =>
-          revokeRefreshToken(refreshToken, async (token) => jwt.verify(token))
+          revokeRefreshToken(refreshToken, async (token) => jwt.verify(token)),
       );
       const response = await controller.login(body, ctx.request);
       set.status = response.status;
@@ -169,7 +201,7 @@ export const userModule = new Elysia({ prefix: '/api' })
         401: apiErrorSchema,
         500: apiErrorSchema,
       },
-    }
+    },
   )
   .post(
     '/auth/refresh',
@@ -188,14 +220,14 @@ export const userModule = new Elysia({ prefix: '/api' })
         userRepository,
         async (role) => ({
           accessToken: await issueAccessToken(role, async (payload) =>
-            jwt.sign(payload)
+            jwt.sign(payload),
           ),
           refreshToken: await issueRefreshToken(role, async (payload) =>
-            jwt.sign(payload)
+            jwt.sign(payload),
           ),
         }),
         async (refreshToken) =>
-          consumeRefreshToken(refreshToken, async (token) => jwt.verify(token))
+          consumeRefreshToken(refreshToken, async (token) => jwt.verify(token)),
       );
       const response = await controller.refresh(body, ctx.request);
       set.status = response.status;
@@ -209,7 +241,7 @@ export const userModule = new Elysia({ prefix: '/api' })
         401: apiErrorSchema,
         500: apiErrorSchema,
       },
-    }
+    },
   )
   .post(
     '/auth/logout',
@@ -226,7 +258,7 @@ export const userModule = new Elysia({ prefix: '/api' })
         undefined,
         undefined,
         async (refreshToken) =>
-          revokeRefreshToken(refreshToken, async (token) => jwt.verify(token))
+          revokeRefreshToken(refreshToken, async (token) => jwt.verify(token)),
       );
       const response = await controller.logout(body, ctx.request);
       set.status = response.status;
@@ -240,7 +272,7 @@ export const userModule = new Elysia({ prefix: '/api' })
         401: apiErrorSchema,
         500: apiErrorSchema,
       },
-    }
+    },
   )
   .get(
     '/users',
@@ -263,7 +295,76 @@ export const userModule = new Elysia({ prefix: '/api' })
         401: apiErrorSchema,
         403: apiErrorSchema,
       },
-    }
+    },
+  )
+  .get(
+    '/permissions/current',
+    async (ctx) => {
+      const { set } = ctx;
+      const { userService, userRepository, jwt } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+        jwt: { verify: (token: string) => Promise<unknown> };
+      };
+      const role = await getAuthorizedRole(
+        ctx.request.headers.get('authorization'),
+        async (token) => jwt.verify(token),
+      );
+      if (!role) {
+        set.status = 401;
+        return {
+          code: 401000,
+          message: 'Unauthorized',
+          requestId: crypto.randomUUID(),
+        };
+      }
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.listCurrentPermissions(
+        role,
+        ctx.request,
+      );
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      response: {
+        200: permissionCodesSuccessSchema,
+        401: apiErrorSchema,
+      },
+    },
+  )
+  .get(
+    '/menus/tree',
+    async (ctx) => {
+      const { set } = ctx;
+      const { userService, userRepository, jwt } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+        jwt: { verify: (token: string) => Promise<unknown> };
+      };
+      const role = await getAuthorizedRole(
+        ctx.request.headers.get('authorization'),
+        async (token) => jwt.verify(token),
+      );
+      if (!role) {
+        set.status = 401;
+        return {
+          code: 401000,
+          message: 'Unauthorized',
+          requestId: crypto.randomUUID(),
+        };
+      }
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.getCurrentMenuTree(role, ctx.request);
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      response: {
+        200: menuTreeSuccessSchema,
+        401: apiErrorSchema,
+      },
+    },
   )
   .get(
     '/users/all',
@@ -285,7 +386,7 @@ export const userModule = new Elysia({ prefix: '/api' })
         401: apiErrorSchema,
         403: apiErrorSchema,
       },
-    }
+    },
   )
   .post(
     '/users',
@@ -309,7 +410,7 @@ export const userModule = new Elysia({ prefix: '/api' })
         403: apiErrorSchema,
         409: apiErrorSchema,
       },
-    }
+    },
   )
   .put(
     '/users/:id',
@@ -334,7 +435,7 @@ export const userModule = new Elysia({ prefix: '/api' })
         403: apiErrorSchema,
         404: apiErrorSchema,
       },
-    }
+    },
   )
   .delete(
     '/users/:id',
@@ -358,7 +459,7 @@ export const userModule = new Elysia({ prefix: '/api' })
         403: apiErrorSchema,
         404: apiErrorSchema,
       },
-    }
+    },
   )
   .delete(
     '/users',
@@ -381,5 +482,5 @@ export const userModule = new Elysia({ prefix: '/api' })
         401: apiErrorSchema,
         403: apiErrorSchema,
       },
-    }
+    },
   );

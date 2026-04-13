@@ -8,6 +8,13 @@
       "when": 1776010159312,
       "tag": "0000_strong_gideon",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1776077789477,
+      "tag": "0001_futuristic_purple_man",
+      "breakpoints": true
     }
   ]
 }
