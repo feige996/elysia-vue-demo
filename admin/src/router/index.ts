@@ -62,6 +62,10 @@ const ensureDynamicRoutes = (router: Router, menuTree: MenuTreeEntity[]) => {
   }
 };
 
+export const ensureAuthDynamicRoutes = (menuTree: MenuTreeEntity[]) => {
+  ensureDynamicRoutes(router, menuTree);
+};
+
 const routes: RouteRecordRaw[] = [
   {
     path: '/login',
@@ -77,7 +81,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        redirect: '/system/user',
+        redirect: '/login',
       },
       {
         path: '403',
@@ -87,7 +91,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/system/user',
+    redirect: '/login',
   },
 ];
 
@@ -103,6 +107,17 @@ router.beforeEach(async (to) => {
   if (to.meta.public) {
     if (token && to.path === '/login') {
       authStore.restoreProfile();
+      if (!authStore.initialized) {
+        try {
+          await authStore.bootstrapAuthContext();
+          ensureDynamicRoutes(router, authStore.menuTree);
+        } catch {
+          authStore.clearAuthState();
+          return true;
+        }
+      } else if (dynamicRouteNames.size === 0) {
+        ensureDynamicRoutes(router, authStore.menuTree);
+      }
       return '/system/user';
     }
     return true;

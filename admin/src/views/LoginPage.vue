@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router';
 import Login from './Login.vue';
 import type { LoginResult } from '../api/modules/auth';
 import { useAuthStore } from '../store/auth';
+import { ensureAuthDynamicRoutes } from '../router';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -17,6 +18,7 @@ const onLoginSuccess = async (payload: LoginResult) => {
   try {
     authStore.applyLoginResult(payload);
     await authStore.bootstrapAuthContext();
+    ensureAuthDynamicRoutes(authStore.menuTree);
     await router.replace('/system/user');
   } catch (error) {
     authStore.clearAuthState();
