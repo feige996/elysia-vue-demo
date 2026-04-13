@@ -61,6 +61,7 @@ bun run --cwd api openapi:generate
 
 - 页面层禁止直接写请求细节，统一走 `api/modules/*`。
 - `request.ts` 只做“请求内核”，不放业务接口实现。
+- 新增业务接口时只改 `api/modules/*`，不要改 `request.ts` 与 `shared/request/*` 内核。
 - 新接口必须先补路由契约，再写前端调用。
 - 任何返回结构变化，都必须触发 typecheck 与集成测试。
 
