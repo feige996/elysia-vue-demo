@@ -14,11 +14,13 @@ import {
 import { useRoute, useRouter } from 'vue-router';
 import type { MenuTreeEntity } from '../../../api/src/shared/types/entities';
 import { useAuthStore } from '../store/auth';
+import { useUiStore } from '../store/ui';
 
 const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 const collapsed = ref(false);
+const uiStore = useUiStore();
 
 const welcomeText = computed(() =>
   authStore.profile ? `欢迎你，${authStore.profile.name}` : '未登录',
@@ -58,6 +60,15 @@ const logout = () => {
         <NSpace align="center">
           <NText>{{ welcomeText }}</NText>
           <NButton tertiary @click="collapsed = !collapsed">折叠菜单</NButton>
+          <NButton tertiary @click="uiStore.toggleThemeMode">{{
+            uiStore.isDarkMode ? '浅色模式' : '暗黑模式'
+          }}</NButton>
+          <NButton tertiary @click="uiStore.setPrimaryColor('#18a058')"
+            >绿色主题</NButton
+          >
+          <NButton tertiary @click="uiStore.setPrimaryColor('#2080f0')"
+            >蓝色主题</NButton
+          >
           <NButton tertiary type="error" @click="logout">退出</NButton>
         </NSpace>
       </NSpace>

@@ -8,6 +8,8 @@ import {
     ensureRequestContext,
     setAuthorizedRoleInContext,
 } from '../../shared/types/request-context';
+import { db } from '../../infra/db/client';
+import { sysAuditLogsTable } from '../../infra/db/schema';
 
 const isPublicRoute = (method: string, path: string) => {
     if (path === '/') return true;
@@ -18,7 +20,17 @@ const isPublicRoute = (method: string, path: string) => {
 };
 
 const requireAdminRoute = (path: string) =>
-    path.startsWith('/api/users') || (path.startsWith('/api/articles') && path !== '/api/articles' && path !== '/api/articles/all');
+    path.startsWith('/api/users') ||
+    path.startsWith('/api/dicts') ||
+    path.startsWith('/api/configs') ||
+    path.startsWith('/api/audit-logs') ||
+    (path.startsWith('/api/articles') && path !== '/api/articles' && path !== '/api/articles/all');
+
+const resolveAuditModule = (path: string) => {
+    const normalized = path.replace(/^\/api\//, '');
+    const [first] = normalized.split('/');
+    return first || 'app';
+};
 
 export const loggerMiddleware = new Elysia({ name: 'logger-middleware' })
     .onRequest(({ request }) => {
@@ -26,7 +38,7 @@ export const loggerMiddleware = new Elysia({ name: 'logger-middleware' })
         const path = new URL(request.url).pathname;
         logService.info('request_received', { event: 'request_received', requestId, method: request.method, path });
     })
-    .onAfterHandle(({ request, set }) => {
+    .onAfterHandle(async ({ request, set }) => {
         const { requestId, requestStartedAt } = ensureRequestContext(request);
         const path = new URL(request.url).pathname;
         const status = typeof set.status === 'number' ? set.status : 200;
@@ -41,6 +53,26 @@ export const loggerMiddleware = new Elysia({ name: 'logger-middleware' })
             durationMs,
             role: authorizedRole,
         });
+
+        if (path.startsWith('/api/') && path !== '/api/audit-logs') {
+            try {
+                await db.insert(sysAuditLogsTable).values({
+                    traceId: requestId,
+                    action: request.method.toUpperCase(),
+                    module: resolveAuditModule(path),
+                    resource: path,
+                    requestMethod: request.method.toUpperCase(),
+                    requestPath: path,
+                    responseCode: status,
+                    success: status < 400 ? 1 : 0,
+                    durationMs,
+                    operatorAccount: authorizedRole ?? null,
+                });
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                logService.warn('audit_log_write_failed', { requestId, path, error: message });
+            }
+        }
     });
 
 export const authMiddleware = new Elysia({ name: 'auth-middleware' }).onRequest(async (ctx) => {

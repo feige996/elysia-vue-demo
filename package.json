@@ -14,7 +14,8 @@
         "typecheck": "bun run --cwd api typecheck && bun run --cwd web typecheck && bun run --cwd admin typecheck",
         "test": "bun run test:unit && bun run test:integration",
         "test:unit": "bun run --cwd api test:unit",
-        "test:integration": "bun run --cwd api test:integration"
+        "test:integration": "bun run --cwd api test:integration",
+        "test:e2e:admin": "bun run --cwd admin test:e2e"
     },
     "devDependencies": {
         "concurrently": "^9.2.1"

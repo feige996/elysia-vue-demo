@@ -35,6 +35,8 @@ const sqlClient = postgres(env.DATABASE_URL, { prepare: false });
 export const db = drizzle(sqlClient);
 
 export const seedDatabase = async () => {
+  await checkDatabaseHealth();
+
   const existingUsers = await db.select({ total: count() }).from(usersTable);
   if (Number(existingUsers[0]?.total ?? 0) === 0) {
     await db
@@ -172,9 +174,15 @@ export const checkDatabaseHealth = async () => {
 if (import.meta.main) {
   const action = Bun.argv[2];
   if (action === 'seed') {
-    await seedDatabase();
-    console.log('Database seed completed');
-    process.exit(0);
+    try {
+      await seedDatabase();
+      console.log('Database seed completed');
+      process.exit(0);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`Database seed failed: ${message}`);
+      process.exit(1);
+    }
   }
   if (action === 'check') {
     await checkDatabaseHealth();

@@ -8,6 +8,7 @@ import { checkDatabaseHealth } from '../infra/db/client';
 import { env } from '../shared/config/env';
 import { logService } from '../shared/logger/log.service';
 import { userModule } from '../modules/user';
+import { systemModule } from '../modules/system';
 import { ok } from '../shared/types/http';
 import { ensureRequestContext } from '../shared/types/request-context';
 import {
@@ -47,6 +48,7 @@ export const app = new Elysia()
           { name: 'User', description: 'User and auth APIs' },
           { name: 'Article', description: 'Article CRUD APIs' },
           { name: 'File', description: 'File management APIs' },
+          { name: 'System', description: 'System dict/config/audit APIs' },
         ],
       },
     }),
@@ -73,7 +75,8 @@ export const app = new Elysia()
   )
   .use(userModule)
   .use(articleModule)
-  .use(fileModule);
+  .use(fileModule)
+  .use(systemModule);
 
 export type AppType = typeof app;
 

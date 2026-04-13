@@ -117,6 +117,22 @@ export const defaultSysPermissions = [
     module: 'system-config',
     status: 1,
   },
+  {
+    id: 11,
+    code: 'system:dict:view',
+    name: '查看字典',
+    type: 3,
+    module: 'system-dict',
+    status: 1,
+  },
+  {
+    id: 12,
+    code: 'audit:log:view',
+    name: '查看操作日志',
+    type: 3,
+    module: 'audit-log',
+    status: 1,
+  },
 ];
 
 export const defaultSysMenus = [
@@ -180,6 +196,36 @@ export const defaultSysMenus = [
     keepAlive: 1,
     permissionCode: 'system:menu:view',
   },
+  {
+    id: 5,
+    parentId: 1,
+    name: '字典配置',
+    routeName: 'SystemDictConfig',
+    path: '/system/dict-config',
+    component: 'system/dict-config/index',
+    icon: 'book-outline',
+    type: 2,
+    sort: 40,
+    visible: 1,
+    status: 1,
+    keepAlive: 1,
+    permissionCode: 'system:dict:view',
+  },
+  {
+    id: 6,
+    parentId: 1,
+    name: '操作日志',
+    routeName: 'AuditLog',
+    path: '/system/audit-log',
+    component: 'system/audit-log/index',
+    icon: 'document-text-outline',
+    type: 2,
+    sort: 50,
+    visible: 1,
+    status: 1,
+    keepAlive: 1,
+    permissionCode: 'audit:log:view',
+  },
 ];
 
 export const defaultSysUsers = [
@@ -221,6 +267,8 @@ export const defaultSysRolePermissions = [
   { roleId: 1, permissionId: 8 },
   { roleId: 1, permissionId: 9 },
   { roleId: 1, permissionId: 10 },
+  { roleId: 1, permissionId: 11 },
+  { roleId: 1, permissionId: 12 },
   { roleId: 2, permissionId: 1 },
   { roleId: 2, permissionId: 5 },
   { roleId: 2, permissionId: 7 },
@@ -232,6 +280,8 @@ export const defaultSysRoleMenus = [
   { roleId: 1, menuId: 2 },
   { roleId: 1, menuId: 3 },
   { roleId: 1, menuId: 4 },
+  { roleId: 1, menuId: 5 },
+  { roleId: 1, menuId: 6 },
   { roleId: 2, menuId: 1 },
   { roleId: 2, menuId: 2 },
 ];

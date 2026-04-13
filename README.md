@@ -104,6 +104,13 @@ bun run --cwd api db:seed
 bun run --cwd api dev
 ```
 
+常见故障排查：
+
+- `Database seed failed`：先确认数据库可连通，执行 `bun run --cwd api db:check`
+- `DATABASE_URL is required ...`：确认已配置 `PG_HOST/PG_PORT/PG_USER/PG_PASSWORD/PG_DATABASE`
+- `OpenAPI drift detected`：执行 `bun run --cwd api openapi:generate` 并提交 `api/openapi.generated.json`
+- 后台登录后空白或权限异常：确认已执行 `bun run --cwd api db:seed` 初始化角色/菜单/权限数据
+
 ## 日志模式
 
 后端日志统一使用 `pino`，支持 `LOG_LEVEL` 与按天落盘配置。

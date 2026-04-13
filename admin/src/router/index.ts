@@ -12,6 +12,8 @@ import LoginPage from '../views/LoginPage.vue';
 import MenuManagement from '../views/MenuManagement.vue';
 import RoleManagement from '../views/RoleManagement.vue';
 import UserManagement from '../views/UserManagement.vue';
+import DictConfigManagement from '../views/DictConfigManagement.vue';
+import AuditLogManagement from '../views/AuditLogManagement.vue';
 import { pinia } from '../store';
 import { useAuthStore } from '../store/auth';
 
@@ -24,6 +26,8 @@ const resolveMenuComponent = (menu: MenuTreeEntity) => {
   if (componentKey === 'system/user/index') return UserManagement;
   if (componentKey === 'system/role/index') return RoleManagement;
   if (componentKey === 'system/menu/index') return MenuManagement;
+  if (componentKey === 'system/dict-config/index') return DictConfigManagement;
+  if (componentKey === 'system/audit-log/index') return AuditLogManagement;
   return MenuManagement;
 };
 
