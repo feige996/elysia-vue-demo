@@ -47,7 +47,10 @@ describe('createEdenRequestClient', () => {
         createRef: (value) => ({ value }),
         createCaller: () => async (path, options) => {
           calls.push({ path, auth: options.headers?.Authorization });
-          if (path === '/api/users/all' && options.headers?.Authorization === 'Bearer expired-token') {
+          if (
+            path === '/api/users/all' &&
+            options.headers?.Authorization === 'Bearer expired-token'
+          ) {
             return { error: { value: { message: 'Unauthorized' } } };
           }
           if (path === '/api/auth/refresh') {
@@ -64,7 +67,10 @@ describe('createEdenRequestClient', () => {
               },
             };
           }
-          if (path === '/api/users/all' && options.headers?.Authorization === 'Bearer access-new') {
+          if (
+            path === '/api/users/all' &&
+            options.headers?.Authorization === 'Bearer access-new'
+          ) {
             return {
               data: {
                 code: 0,
@@ -79,9 +85,12 @@ describe('createEdenRequestClient', () => {
       },
     );
 
-    const result = await client.authRequest<Array<{ id: number }>>('/api/users/all', {
-      method: 'GET',
-    });
+    const result = await client.authRequest<Array<{ id: number }>>(
+      '/api/users/all',
+      {
+        method: 'GET',
+      },
+    );
 
     expect(result.data).toEqual([{ id: 1 }]);
     expect(storage.getItem('access_token')).toBe('access-new');
@@ -103,11 +112,15 @@ describe('createEdenRequestClient', () => {
       },
       {
         createRef: (value) => ({ value }),
-        createCaller: () => async () => ({ error: { value: { message: 'Network down' } } }),
+        createCaller: () => async () => ({
+          error: { value: { message: 'Network down' } },
+        }),
       },
     );
 
-    await expect(client.request('/api/articles/all', { method: 'GET' })).rejects.toThrow('Network down');
+    await expect(
+      client.request('/api/articles/all', { method: 'GET' }),
+    ).rejects.toThrow('Network down');
   });
 
   it('does not refresh token on non-401 errors', async () => {
@@ -125,12 +138,16 @@ describe('createEdenRequestClient', () => {
         createRef: (value) => ({ value }),
         createCaller: () => async (path) => {
           calls.push(path);
-          return { error: { value: { code: 500000, message: 'Internal Error' } } };
+          return {
+            error: { value: { code: 500000, message: 'Internal Error' } },
+          };
         },
       },
     );
 
-    await expect(client.authRequest('/api/users/all', { method: 'GET' })).rejects.toThrow('Internal Error');
+    await expect(
+      client.authRequest('/api/users/all', { method: 'GET' }),
+    ).rejects.toThrow('Internal Error');
     expect(calls).toEqual(['/api/users/all']);
     expect(storage.getItem('access_token')).toBe('token-a');
     expect(storage.getItem('refresh_token')).toBe('token-r');
@@ -150,18 +167,24 @@ describe('createEdenRequestClient', () => {
         createRef: (value) => ({ value }),
         createCaller: () => async (path, options) => {
           if (path === '/api/users/all') {
-            return { error: { value: { code: 401000, message: 'Unauthorized' } } };
+            return {
+              error: { value: { code: 401000, message: 'Unauthorized' } },
+            };
           }
           if (path === '/api/auth/refresh') {
             expect(options.body).toEqual({ refreshToken: 'refresh-old' });
-            return { error: { value: { code: 401000, message: 'Unauthorized' } } };
+            return {
+              error: { value: { code: 401000, message: 'Unauthorized' } },
+            };
           }
           return { error: { value: { message: 'unexpected path' } } };
         },
       },
     );
 
-    await expect(client.authRequest('/api/users/all', { method: 'GET' })).rejects.toThrow('Unauthorized');
+    await expect(
+      client.authRequest('/api/users/all', { method: 'GET' }),
+    ).rejects.toThrow('Unauthorized');
     expect(storage.getItem('access_token')).toBeNull();
     expect(storage.getItem('refresh_token')).toBeNull();
   });

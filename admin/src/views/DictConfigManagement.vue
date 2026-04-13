@@ -45,9 +45,19 @@ const loadData = async () => {
   <NSpace vertical :size="16">
     <NCard title="字典与配置（只读）" :bordered="false">
       <NSpace>
-        <NInput v-model:value="dictCode" placeholder="字典编码" style="width: 220px" />
-        <NInput v-model:value="configKey" placeholder="配置键" style="width: 260px" />
-        <NButton type="primary" :loading="loading" @click="loadData">查询</NButton>
+        <NInput
+          v-model:value="dictCode"
+          placeholder="字典编码"
+          style="width: 220px"
+        />
+        <NInput
+          v-model:value="configKey"
+          placeholder="配置键"
+          style="width: 260px"
+        />
+        <NButton type="primary" :loading="loading" @click="loadData"
+          >查询</NButton
+        >
       </NSpace>
       <NText v-if="errorText" type="error">{{ errorText }}</NText>
     </NCard>

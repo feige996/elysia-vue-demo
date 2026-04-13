@@ -38,7 +38,10 @@ export class ApiRequestError extends Error {
   public readonly status?: number;
   public readonly requestId?: string;
 
-  constructor(message: string, meta?: { code?: number; status?: number; requestId?: string }) {
+  constructor(
+    message: string,
+    meta?: { code?: number; status?: number; requestId?: string },
+  ) {
     super(message);
     this.name = 'ApiRequestError';
     this.code = meta?.code;
@@ -79,7 +82,9 @@ export const createEdenRequestClient = (
     const status = Reflect.get(payload, 'status');
     if (code === 401000 || status === 401) return true;
     const message = Reflect.get(payload, 'message');
-    return typeof message === 'string' && message.toLowerCase() === 'unauthorized';
+    return (
+      typeof message === 'string' && message.toLowerCase() === 'unauthorized'
+    );
   };
 
   const setAccessToken = (token: string) => {
@@ -101,10 +106,18 @@ export const createEdenRequestClient = (
   const parseResponse = <T>(response: EdenResult): ApiResponse<T> => {
     if (response.error) {
       const payload = response.error.value;
-      const code = payload && typeof payload === 'object' ? Number(Reflect.get(payload, 'code')) : undefined;
-      const status = payload && typeof payload === 'object' ? Number(Reflect.get(payload, 'status')) : undefined;
+      const code =
+        payload && typeof payload === 'object'
+          ? Number(Reflect.get(payload, 'code'))
+          : undefined;
+      const status =
+        payload && typeof payload === 'object'
+          ? Number(Reflect.get(payload, 'status'))
+          : undefined;
       const requestId =
-        payload && typeof payload === 'object' && typeof Reflect.get(payload, 'requestId') === 'string'
+        payload &&
+          typeof payload === 'object' &&
+          typeof Reflect.get(payload, 'requestId') === 'string'
           ? (Reflect.get(payload, 'requestId') as string)
           : undefined;
       throw new ApiRequestError(toErrorMessage(payload), {
@@ -167,9 +180,9 @@ export const createEdenRequestClient = (
         ...options,
         headers: token
           ? {
-              ...(options.headers ?? {}),
-              Authorization: `Bearer ${token}`,
-            }
+            ...(options.headers ?? {}),
+            Authorization: `Bearer ${token}`,
+          }
           : options.headers,
       });
 
@@ -185,10 +198,18 @@ export const createEdenRequestClient = (
       clearAccessToken();
       clearRefreshToken();
       const payload = response.error.value;
-      const code = payload && typeof payload === 'object' ? Number(Reflect.get(payload, 'code')) : undefined;
-      const status = payload && typeof payload === 'object' ? Number(Reflect.get(payload, 'status')) : undefined;
+      const code =
+        payload && typeof payload === 'object'
+          ? Number(Reflect.get(payload, 'code'))
+          : undefined;
+      const status =
+        payload && typeof payload === 'object'
+          ? Number(Reflect.get(payload, 'status'))
+          : undefined;
       const requestId =
-        payload && typeof payload === 'object' && typeof Reflect.get(payload, 'requestId') === 'string'
+        payload &&
+          typeof payload === 'object' &&
+          typeof Reflect.get(payload, 'requestId') === 'string'
           ? (Reflect.get(payload, 'requestId') as string)
           : undefined;
       throw new ApiRequestError(toErrorMessage(payload), {

@@ -1,8 +1,19 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { NButton, NCard, NDataTable, NInput, NSpace, NSwitch, NText } from 'naive-ui';
+import {
+  NButton,
+  NCard,
+  NDataTable,
+  NInput,
+  NSpace,
+  NSwitch,
+  NText,
+} from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
-import { getAuditLogsMethod, type AuditLogItem } from '../api/modules/audit-log';
+import {
+  getAuditLogsMethod,
+  type AuditLogItem,
+} from '../api/modules/audit-log';
 
 const moduleKeyword = ref('');
 const successOnly = ref(false);
@@ -77,7 +88,9 @@ onMounted(() => {
           <NText>仅成功</NText>
           <NSwitch v-model:value="successOnly" />
         </NSpace>
-        <NButton type="primary" :loading="loading" @click="loadLogs">查询</NButton>
+        <NButton type="primary" :loading="loading" @click="loadLogs"
+          >查询</NButton
+        >
       </NSpace>
       <NText v-if="errorText" type="error">{{ errorText }}</NText>
       <NDataTable

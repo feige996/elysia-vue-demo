@@ -74,7 +74,7 @@ const databaseUrl = databaseUrlFromPgConfig ?? rawEnv.DATABASE_URL;
 
 if (!databaseUrl) {
   throw new Error(
-    'PG_HOST/PG_PORT/PG_USER/PG_PASSWORD/PG_DATABASE are required (or set DATABASE_URL for compatibility)'
+    'PG_HOST/PG_PORT/PG_USER/PG_PASSWORD/PG_DATABASE are required (or set DATABASE_URL for compatibility)',
   );
 }
 

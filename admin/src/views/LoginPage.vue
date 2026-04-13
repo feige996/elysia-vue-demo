@@ -33,7 +33,8 @@ const onLoginSuccess = async (payload: LoginResult) => {
         return;
       }
     }
-    errorText.value = error instanceof Error ? error.message : '初始化登录上下文失败';
+    errorText.value =
+      error instanceof Error ? error.message : '初始化登录上下文失败';
   } finally {
     loading.value = false;
   }

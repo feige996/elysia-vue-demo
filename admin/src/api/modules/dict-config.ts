@@ -21,11 +21,17 @@ export type SystemConfig = {
 };
 
 export const getDictItemsByCodeMethod = (code: string) =>
-  apiClient.authRequest<DictItem[]>(`/api/dicts/${encodeURIComponent(code)}/items`, {
-    method: 'GET',
-  });
+  apiClient.authRequest<DictItem[]>(
+    `/api/dicts/${encodeURIComponent(code)}/items`,
+    {
+      method: 'GET',
+    },
+  );
 
 export const getSystemConfigByKeyMethod = (key: string) =>
-  apiClient.authRequest<SystemConfig>(`/api/configs/${encodeURIComponent(key)}`, {
-    method: 'GET',
-  });
+  apiClient.authRequest<SystemConfig>(
+    `/api/configs/${encodeURIComponent(key)}`,
+    {
+      method: 'GET',
+    },
+  );

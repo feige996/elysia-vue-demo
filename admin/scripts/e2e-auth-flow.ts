@@ -25,7 +25,10 @@ const main = async () => {
   const permissionRes = await fetch(`${baseUrl}/api/permissions/current`, {
     headers: { authorization: `Bearer ${token}` },
   });
-  assert(permissionRes.ok, `permissions failed with status ${permissionRes.status}`);
+  assert(
+    permissionRes.ok,
+    `permissions failed with status ${permissionRes.status}`,
+  );
   const permissionJson = (await permissionRes.json()) as {
     code: number;
     data?: string[];

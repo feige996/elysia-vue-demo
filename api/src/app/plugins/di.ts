@@ -8,22 +8,22 @@ const articleRepository = new ArticleRepository();
 const userService = new UserService(userRepository, logService);
 
 export const diPlugin = di({
-    instances: [
-        {
-            identifier: 'logService',
-            instance: logService,
-        },
-        {
-            identifier: 'userRepository',
-            instance: userRepository,
-        },
-        {
-            identifier: 'articleRepository',
-            instance: articleRepository,
-        },
-        {
-            identifier: 'userService',
-            instance: userService,
-        },
-    ],
+  instances: [
+    {
+      identifier: 'logService',
+      instance: logService,
+    },
+    {
+      identifier: 'userRepository',
+      instance: userRepository,
+    },
+    {
+      identifier: 'articleRepository',
+      instance: articleRepository,
+    },
+    {
+      identifier: 'userService',
+      instance: userService,
+    },
+  ],
 });

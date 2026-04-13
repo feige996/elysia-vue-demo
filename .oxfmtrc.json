@@ -4,5 +4,11 @@
   "singleQuote": true,
   "semi": true,
   "trailingComma": "all",
-  "ignorePatterns": ["**/*.vue"]
+  "ignorePatterns": [
+    "**/*.vue",
+    "api/openapi.generated.json",
+    "api/drizzle/**",
+    "doc/**",
+    ".trae/**"
+  ]
 }

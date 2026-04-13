@@ -128,7 +128,10 @@ export const systemModule = new Elysia({
         .select({ id: sysDictTypesTable.id })
         .from(sysDictTypesTable)
         .where(
-          and(eq(sysDictTypesTable.code, code), eq(sysDictTypesTable.status, 1)),
+          and(
+            eq(sysDictTypesTable.code, code),
+            eq(sysDictTypesTable.status, 1),
+          ),
         )
         .limit(1);
       if (!dictType[0]) {
@@ -223,13 +226,24 @@ export const systemModule = new Elysia({
       const pageSize = query.pageSize ?? 20;
       const offset = (page - 1) * pageSize;
       const filters = [
-        query.module ? ilike(sysAuditLogsTable.module, `%${query.module}%`) : undefined,
-        query.operatorAccount
-          ? ilike(sysAuditLogsTable.operatorAccount, `%${query.operatorAccount}%`)
+        query.module
+          ? ilike(sysAuditLogsTable.module, `%${query.module}%`)
           : undefined,
-        query.success !== undefined ? eq(sysAuditLogsTable.success, query.success) : undefined,
-        query.dateFrom ? gte(sysAuditLogsTable.createdAt, new Date(query.dateFrom)) : undefined,
-        query.dateTo ? lte(sysAuditLogsTable.createdAt, new Date(query.dateTo)) : undefined,
+        query.operatorAccount
+          ? ilike(
+              sysAuditLogsTable.operatorAccount,
+              `%${query.operatorAccount}%`,
+            )
+          : undefined,
+        query.success !== undefined
+          ? eq(sysAuditLogsTable.success, query.success)
+          : undefined,
+        query.dateFrom
+          ? gte(sysAuditLogsTable.createdAt, new Date(query.dateFrom))
+          : undefined,
+        query.dateTo
+          ? lte(sysAuditLogsTable.createdAt, new Date(query.dateTo))
+          : undefined,
       ].filter((item): item is NonNullable<typeof item> => Boolean(item));
 
       const list = await db
