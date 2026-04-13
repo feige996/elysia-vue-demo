@@ -8,7 +8,9 @@
 
 ## 环境要求
 
-- Bun >= 1.3
+- Bun **1.3.11**（与 `.bun-version` / `package.json` 的 `engines` 保持一致）
+
+开源协议见仓库根目录 [LICENSE](./LICENSE)。协作说明见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
 
 环境变量文件：
 
@@ -51,6 +53,21 @@ bun run test
 - `start`：启动后端生产构建
 - `typecheck`：执行三端类型检查
 - `test`：执行后端 unit + integration 测试
+- `lint` / `format` / `format:check`：Oxlint、Oxfmt 与 Prettier（含 Vue / Markdown）
+- `audit`：`bun audit` 依赖安全报告（合并前建议扫一眼；已知传递依赖告警可通过升级评估）
+
+## 发布 / 合并前检查
+
+与 CI 对齐的最低限度自检（在仓库根目录）：
+
+```bash
+bun install
+bun run dev:check   # db:check + openapi 生成 + 三端 typecheck + lint + format:check
+bun run test
+bun run build
+```
+
+说明：`dev:check` 会连本地库并写回 `api/openapi.generated.json`，若与远端不一致请重新提交该文件。更完整的流水线见 `.github/workflows/ci.yml`（含迁移/OpenAPI 漂移、E2E 等）。
 
 ## 数据库模式（仅支持 PostgreSQL）
 
@@ -241,6 +258,13 @@ JWT 启用示例：
 JWT_SECRET=replace-me-with-strong-secret JWT_REFRESH_EXPIRES_IN_SECONDS=604800 REDIS_URL=redis://localhost:6379 bun run --cwd api dev
 ```
 
+## 健康检查
+
+- `GET /health`：进程存活探针（不访问数据库，适合最简 liveness）。
+- `GET /ready`：就绪探针（会查询数据库核心表；未迁移或库不可用时返回 **503**，负载均衡与 Docker 可用此端点判断「可接流量」）。
+
+`docker compose` 中 `api` 已对 `/ready` 配置 `healthcheck`，`admin` / `web` 在 `api` **healthy** 后再启动。首次拉起后仍需执行迁移与种子，否则 `api` 会长期处于 unhealthy，直至数据库可用且结构就绪。
+
 ## Docker 部署
 
 根目录一键启动：
@@ -261,3 +285,5 @@ docker compose up -d --build
 docker compose exec api bun run db:migrate
 docker compose exec api bun run db:seed
 ```
+
+依赖安全：仓库启用 [Dependabot](.github/dependabot.yml) 每周检查 npm 生态依赖；也可本地执行 `bun run audit`。

@@ -13,7 +13,12 @@ import { sysAuditLogsTable } from '../../infra/db/schema';
 
 const isPublicRoute = (method: string, path: string) => {
   if (path === '/') return true;
-  if (path === '/health' || path === '/openapi.json' || path === '/docs')
+  if (
+    path === '/health' ||
+    path === '/ready' ||
+    path === '/openapi.json' ||
+    path === '/docs'
+  )
     return true;
   if (
     method === 'POST' &&

@@ -8,6 +8,7 @@ export const AppCode = {
   CONFLICT: 409000,
   INVALID_CREDENTIALS: 401001,
   RATE_LIMITED: 429000,
+  SERVICE_UNAVAILABLE: 503000,
   INTERNAL_ERROR: 500000,
 } as const;
 
@@ -22,6 +23,7 @@ export const ErrorKey: Record<ErrorCodeKey, ErrorCodeKey> = {
   CONFLICT: 'CONFLICT',
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
   RATE_LIMITED: 'RATE_LIMITED',
+  SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
 };
 
@@ -91,6 +93,11 @@ export const ErrorCatalog: Record<
     code: AppCode.RATE_LIMITED,
     status: 429,
     message: 'Too many requests, please try again later',
+  },
+  SERVICE_UNAVAILABLE: {
+    code: AppCode.SERVICE_UNAVAILABLE,
+    status: 503,
+    message: 'Service unavailable',
   },
   INTERNAL_ERROR: {
     code: AppCode.INTERNAL_ERROR,

@@ -9,7 +9,7 @@ import { env } from '../shared/config/env';
 import { logService } from '../shared/logger/log.service';
 import { userModule } from '../modules/user';
 import { systemModule } from '../modules/system';
-import { ok } from '../shared/types/http';
+import { failByKey, ok } from '../shared/types/http';
 import { ensureRequestContext } from '../shared/types/request-context';
 import {
   authMiddleware,
@@ -66,6 +66,7 @@ export const app = new Elysia()
         docs: '/docs',
         openapi: '/openapi.json',
         health: '/health',
+        ready: '/ready',
       },
       'ok',
     ),
@@ -73,6 +74,22 @@ export const app = new Elysia()
   .get('/health', ({ request }) =>
     ok(ensureRequestContext(request).requestId, { status: 'ok' }, 'ok'),
   )
+  .get('/ready', async ({ request, set }) => {
+    const requestId = ensureRequestContext(request).requestId;
+    try {
+      await checkDatabaseHealth();
+      return ok(requestId, { status: 'ready', database: 'ok' }, 'ok');
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      const result = failByKey(
+        requestId,
+        'SERVICE_UNAVAILABLE',
+        `Not ready: ${detail}`,
+      );
+      set.status = result.status;
+      return result.payload;
+    }
+  })
   .use(userModule)
   .use(articleModule)
   .use(fileModule)

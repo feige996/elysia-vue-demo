@@ -235,6 +235,13 @@ const app = new Elysia()
   .get('/health', ({ request }) =>
     ok(ensureRequestContext(request).requestId, { status: 'ok' }, 'ok'),
   )
+  .get('/ready', ({ request }) =>
+    ok(
+      ensureRequestContext(request).requestId,
+      { status: 'ready', database: 'ok' },
+      'ok',
+    ),
+  )
   .use(userModule)
   .use(articleModule);
 
@@ -266,6 +273,18 @@ describe('HTTP integration', () => {
     expect(response.status).toBe(200);
     expect(payload.code).toBe(0);
     expect(typeof payload.requestId).toBe('string');
+  });
+
+  it('returns ready payload for readiness probe', async () => {
+    const response = await app.handle(new Request('http://localhost/ready'));
+    const payload = (await response.json()) as {
+      code: number;
+      data?: { status?: string; database?: string };
+    };
+
+    expect(response.status).toBe(200);
+    expect(payload.code).toBe(0);
+    expect(payload.data?.status).toBe('ready');
   });
 
   it('allows login and protected users endpoint', async () => {

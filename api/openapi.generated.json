@@ -39,6 +39,11 @@
         "operationId": "getHealth"
       }
     },
+    "/ready": {
+      "get": {
+        "operationId": "getReady"
+      }
+    },
     "/api/auth/login": {
       "post": {
         "tags": [
