@@ -1,6 +1,6 @@
 ---
-name: "eden-api-fastcheck"
-description: "Provides a fast checklist and command sequence for adding Eden APIs. Invoke when user wants to quickly add/modify interfaces and run required validations."
+name: 'eden-api-fastcheck'
+description: 'Provides a fast checklist and command sequence for adding Eden APIs. Invoke when user wants to quickly add/modify interfaces and run required validations.'
 ---
 
 # Eden API Fast Check

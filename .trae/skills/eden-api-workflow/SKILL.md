@@ -1,6 +1,6 @@
 ---
-name: "eden-api-workflow"
-description: "Standardizes adding/updating Eden APIs across api/admin/web with contract-first steps. Invoke when user adds business interfaces, refactors API modules, or fixes type drift."
+name: 'eden-api-workflow'
+description: 'Standardizes adding/updating Eden APIs across api/admin/web with contract-first steps. Invoke when user adds business interfaces, refactors API modules, or fixes type drift.'
 ---
 
 # Eden API Workflow

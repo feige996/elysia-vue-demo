@@ -49,4 +49,3 @@
 
 当前项目已具备典型分层（Module + Service + Repository），建议保留 DI。  
 若未来继续接入数据库、Redis、JWT、消息队列，DI 的价值会进一步放大。
-

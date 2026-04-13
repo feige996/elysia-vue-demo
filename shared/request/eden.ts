@@ -116,8 +116,8 @@ export const createEdenRequestClient = (
           : undefined;
       const requestId =
         payload &&
-          typeof payload === 'object' &&
-          typeof Reflect.get(payload, 'requestId') === 'string'
+        typeof payload === 'object' &&
+        typeof Reflect.get(payload, 'requestId') === 'string'
           ? (Reflect.get(payload, 'requestId') as string)
           : undefined;
       throw new ApiRequestError(toErrorMessage(payload), {
@@ -180,9 +180,9 @@ export const createEdenRequestClient = (
         ...options,
         headers: token
           ? {
-            ...(options.headers ?? {}),
-            Authorization: `Bearer ${token}`,
-          }
+              ...(options.headers ?? {}),
+              Authorization: `Bearer ${token}`,
+            }
           : options.headers,
       });
 
@@ -208,8 +208,8 @@ export const createEdenRequestClient = (
           : undefined;
       const requestId =
         payload &&
-          typeof payload === 'object' &&
-          typeof Reflect.get(payload, 'requestId') === 'string'
+        typeof payload === 'object' &&
+        typeof Reflect.get(payload, 'requestId') === 'string'
           ? (Reflect.get(payload, 'requestId') as string)
           : undefined;
       throw new ApiRequestError(toErrorMessage(payload), {
