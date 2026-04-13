@@ -3,13 +3,14 @@
     "private": true,
     "workspaces": [
         "api",
+        "admin",
         "web"
     ],
     "scripts": {
-        "dev": "concurrently \"bun run --cwd api dev\" \"bun run --cwd web dev\"",
-        "build": "bun run --cwd api build && bun run --cwd web build",
+        "dev": "concurrently \"bun run --cwd api dev\" \"bun run --cwd web dev\" \"bun run --cwd admin dev\"",
+        "build": "bun run --cwd api build && bun run --cwd web build && bun run --cwd admin build",
         "start": "bun run --cwd api start",
-        "typecheck": "bun run --cwd api typecheck && bun run --cwd web typecheck",
+        "typecheck": "bun run --cwd api typecheck && bun run --cwd web typecheck && bun run --cwd admin typecheck",
         "test": "bun run test:unit && bun run test:integration",
         "test:unit": "bun run --cwd api test:unit",
         "test:integration": "bun run --cwd api test:integration"
