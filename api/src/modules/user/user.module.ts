@@ -160,7 +160,12 @@ const deletedSuccessSchema = t.Object({
   }),
 });
 
-export const userModule = new Elysia({ prefix: '/api' })
+export const userModule = new Elysia({
+  prefix: '/api',
+  detail: {
+    tags: ['User'],
+  },
+})
   .post(
     '/auth/login',
     async (ctx) => {
@@ -194,6 +199,7 @@ export const userModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '用户登录' },
       body: loginBodySchema,
       response: {
         200: loginSuccessSchema,
@@ -234,6 +240,7 @@ export const userModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '刷新访问令牌' },
       body: refreshTokenBodySchema,
       response: {
         200: refreshSuccessSchema,
@@ -265,6 +272,7 @@ export const userModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '用户登出并撤销刷新令牌' },
       body: refreshTokenBodySchema,
       response: {
         200: logoutSuccessSchema,
@@ -288,6 +296,7 @@ export const userModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '分页查询用户列表' },
       query: pageQuerySchema,
       response: {
         200: usersPageSuccessSchema,
@@ -327,6 +336,7 @@ export const userModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '获取当前用户权限码列表' },
       response: {
         200: permissionCodesSuccessSchema,
         401: apiErrorSchema,
@@ -360,6 +370,7 @@ export const userModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '获取当前用户菜单树' },
       response: {
         200: menuTreeSuccessSchema,
         401: apiErrorSchema,
@@ -380,6 +391,7 @@ export const userModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '查询全部用户列表' },
       query: listQuerySchema,
       response: {
         200: usersAllSuccessSchema,
@@ -402,6 +414,7 @@ export const userModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '创建用户' },
       body: createUserBodySchema,
       response: {
         201: userSuccessSchema,
@@ -426,6 +439,7 @@ export const userModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '更新指定用户' },
       params: idParamSchema,
       body: updateUserBodySchema,
       response: {
@@ -451,6 +465,7 @@ export const userModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '删除指定用户' },
       params: idParamSchema,
       response: {
         200: deletedSuccessSchema,
@@ -475,6 +490,7 @@ export const userModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '批量删除用户' },
       body: batchDeleteBodySchema,
       response: {
         200: deletedSuccessSchema,

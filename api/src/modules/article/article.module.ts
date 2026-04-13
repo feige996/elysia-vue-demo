@@ -77,7 +77,12 @@ const deletedSuccessSchema = t.Object({
   }),
 });
 
-export const articleModule = new Elysia({ prefix: '/api' })
+export const articleModule = new Elysia({
+  prefix: '/api',
+  detail: {
+    tags: ['Article'],
+  },
+})
   .get(
     '/articles',
     async (ctx) => {
@@ -91,6 +96,7 @@ export const articleModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '分页查询文章列表' },
       query: pageQuerySchema,
       response: {
         200: articlePageSuccessSchema,
@@ -111,6 +117,7 @@ export const articleModule = new Elysia({ prefix: '/api' })
       return response.payload as never;
     },
     {
+      detail: { summary: '查询全部文章列表' },
       query: listQuerySchema,
       response: {
         200: articleListSuccessSchema,
@@ -130,6 +137,7 @@ export const articleModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '创建文章' },
       body: createArticleBodySchema,
       response: {
         201: articleSuccessSchema,
@@ -152,6 +160,7 @@ export const articleModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '更新指定文章' },
       params: idParamSchema,
       body: updateArticleBodySchema,
       response: {
@@ -176,6 +185,7 @@ export const articleModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '删除指定文章' },
       params: idParamSchema,
       response: {
         200: deletedSuccessSchema,
@@ -199,6 +209,7 @@ export const articleModule = new Elysia({ prefix: '/api' })
       return response.payload;
     },
     {
+      detail: { summary: '批量删除文章' },
       body: batchDeleteBodySchema,
       response: {
         200: deletedSuccessSchema,
