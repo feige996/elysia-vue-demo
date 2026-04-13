@@ -406,6 +406,10 @@ export class UserRepository {
 
     const roots: MenuTreeEntity[] = [];
     for (const node of nodeMap.values()) {
+      if (node.parentId === node.id) {
+        roots.push(node);
+        continue;
+      }
       const parent = nodeMap.get(node.parentId);
       if (parent) {
         parent.children.push(node);
@@ -414,10 +418,24 @@ export class UserRepository {
       }
     }
 
-    const sortTree = (nodes: MenuTreeEntity[]) => {
+    if (roots.length === 0) {
+      for (const node of nodeMap.values()) {
+        roots.push(node);
+      }
+    }
+
+    const sortTree = (nodes: MenuTreeEntity[], path = new Set<number>()) => {
       nodes.sort((a, b) => a.sort - b.sort || a.id - b.id);
       for (const item of nodes) {
-        if (item.children.length > 0) sortTree(item.children);
+        if (path.has(item.id)) {
+          item.children = [];
+          continue;
+        }
+        if (item.children.length > 0) {
+          const nextPath = new Set(path);
+          nextPath.add(item.id);
+          sortTree(item.children, nextPath);
+        }
       }
     };
     sortTree(roots);

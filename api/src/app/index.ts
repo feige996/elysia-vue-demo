@@ -43,6 +43,11 @@ export const app = new Elysia()
           version: '1.0.0',
         },
         servers: [{ url: `http://localhost:${env.API_PORT}` }],
+        tags: [
+          { name: 'User', description: 'User and auth APIs' },
+          { name: 'Article', description: 'Article CRUD APIs' },
+          { name: 'File', description: 'File management APIs' },
+        ],
       },
     }),
   )

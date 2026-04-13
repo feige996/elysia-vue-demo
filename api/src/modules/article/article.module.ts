@@ -137,7 +137,11 @@ export const articleModule = new Elysia({
       return response.payload;
     },
     {
-      detail: { summary: '创建文章' },
+      detail: {
+        summary: '创建文章',
+        description: '需要登录，创建新的文章记录。',
+        security: [{ bearerAuth: [] }],
+      },
       body: createArticleBodySchema,
       response: {
         201: articleSuccessSchema,
@@ -160,7 +164,11 @@ export const articleModule = new Elysia({
       return response.payload;
     },
     {
-      detail: { summary: '更新指定文章' },
+      detail: {
+        summary: '更新指定文章',
+        description: '需要登录，按文章 ID 更新内容。',
+        security: [{ bearerAuth: [] }],
+      },
       params: idParamSchema,
       body: updateArticleBodySchema,
       response: {
@@ -185,7 +193,11 @@ export const articleModule = new Elysia({
       return response.payload;
     },
     {
-      detail: { summary: '删除指定文章' },
+      detail: {
+        summary: '删除指定文章',
+        description: '需要登录，按文章 ID 删除。',
+        security: [{ bearerAuth: [] }],
+      },
       params: idParamSchema,
       response: {
         200: deletedSuccessSchema,
@@ -209,7 +221,11 @@ export const articleModule = new Elysia({
       return response.payload;
     },
     {
-      detail: { summary: '批量删除文章' },
+      detail: {
+        summary: '批量删除文章',
+        description: '需要登录，按 ID 列表批量删除文章。',
+        security: [{ bearerAuth: [] }],
+      },
       body: batchDeleteBodySchema,
       response: {
         200: deletedSuccessSchema,

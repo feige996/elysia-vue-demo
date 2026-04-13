@@ -24,7 +24,11 @@ export const fileModule = new Elysia({
             return { message: 'File service is not available' };
         },
         {
-            detail: { summary: '文件服务健康检查' },
+            detail: {
+                summary: '文件服务健康检查',
+                description: '需要登录，检查文件服务是否可用。',
+                security: [{ bearerAuth: [] }],
+            },
             beforeHandle: () => {
                 if (!fileService) {
                     return { status: 503, payload: { message: 'File storage is not configured' } };
@@ -55,7 +59,11 @@ export const fileModule = new Elysia({
             return response.payload;
         },
         {
-            detail: { summary: '上传文件' },
+            detail: {
+                summary: '上传文件',
+                description: '需要登录，上传文件并返回访问地址。',
+                security: [{ bearerAuth: [] }],
+            },
         },
     )
     .delete(
@@ -72,7 +80,11 @@ export const fileModule = new Elysia({
             return response.payload;
         },
         {
-            detail: { summary: '删除文件' },
+            detail: {
+                summary: '删除文件',
+                description: '需要登录，按对象 key 删除文件。',
+                security: [{ bearerAuth: [] }],
+            },
         },
     )
     .get(
@@ -89,6 +101,10 @@ export const fileModule = new Elysia({
             return response.payload;
         },
         {
-            detail: { summary: '获取文件访问地址' },
+            detail: {
+                summary: '获取文件访问地址',
+                description: '需要登录，按对象 key 获取文件 URL。',
+                security: [{ bearerAuth: [] }],
+            },
         },
     );

@@ -78,6 +78,58 @@ const userRepository = {
         }
         return deleted;
     },
+    async findPermissionCodesByRole(role: 'admin' | 'editor') {
+        if (role === 'admin') {
+            return ['system:user:view', 'system:role:view', 'system:menu:view'];
+        }
+        return ['system:user:view'];
+    },
+    async findMenuTreeByRole(role: 'admin' | 'editor') {
+        const baseTree = [
+            {
+                id: 1,
+                parentId: 0,
+                name: '系统管理',
+                path: '/system',
+                routeName: 'System',
+                component: 'layout/router-view',
+                icon: 'settings-outline',
+                type: 1,
+                sort: 10,
+                visible: 1,
+                status: 1,
+                permissionCode: null,
+                keepAlive: 0,
+                children: [
+                    {
+                        id: 2,
+                        parentId: 1,
+                        name: '用户管理',
+                        path: '/system/user',
+                        routeName: 'SystemUser',
+                        component: 'system/user/index',
+                        icon: 'people-outline',
+                        type: 2,
+                        sort: 10,
+                        visible: 1,
+                        status: 1,
+                        permissionCode: 'system:user:view',
+                        keepAlive: 1,
+                        children: [],
+                    },
+                ],
+            },
+        ];
+        if (role === 'admin') {
+            return baseTree;
+        }
+        return [
+            {
+                ...baseTree[0],
+                children: [baseTree[0].children[0]],
+            },
+        ];
+    },
 };
 
 const articleRepository = {
@@ -262,6 +314,32 @@ describe('HTTP integration', () => {
             refreshToken: refreshPayload.data?.refreshToken ?? ''
         });
         expect(logoutResponse.status).toBe(200);
+    });
+
+    it('returns permission codes and menu tree for current user', async () => {
+        const loginResponse = await sendJson('http://localhost/api/auth/login', 'POST', {
+            account: 'admin',
+            password: 'admin123',
+        });
+        const loginPayload = (await loginResponse.json()) as { data?: { accessToken: string } };
+        const authHeaders = { authorization: `Bearer ${loginPayload.data?.accessToken ?? ''}` };
+
+        const permissionResponse = await app.handle(
+            new Request('http://localhost/api/permissions/current', { headers: authHeaders }),
+        );
+        const permissionPayload = (await permissionResponse.json()) as { code: number; data?: string[] };
+        expect(permissionResponse.status).toBe(200);
+        expect(permissionPayload.code).toBe(0);
+        expect(permissionPayload.data?.includes('system:user:view')).toBeTrue();
+
+        const menuResponse = await app.handle(
+            new Request('http://localhost/api/menus/tree', { headers: authHeaders }),
+        );
+        const menuPayload = (await menuResponse.json()) as { code: number; data?: Array<{ children: unknown[] }> };
+        expect(menuResponse.status).toBe(200);
+        expect(menuPayload.code).toBe(0);
+        expect(Array.isArray(menuPayload.data)).toBeTrue();
+        expect(Array.isArray(menuPayload.data?.[0]?.children)).toBeTrue();
     });
 
     it('supports user and article CRUD endpoints', async () => {

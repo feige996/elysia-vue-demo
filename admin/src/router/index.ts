@@ -30,10 +30,13 @@ const resolveMenuComponent = (menu: MenuTreeEntity) => {
 const walkMenuTree = (
   tree: MenuTreeEntity[],
   collector: MenuTreeEntity[] = [],
+  visited = new Set<number>(),
 ) => {
   for (const item of tree) {
+    if (visited.has(item.id)) continue;
+    visited.add(item.id);
     if (item.type === 2) collector.push(item);
-    if (item.children.length > 0) walkMenuTree(item.children, collector);
+    if (item.children.length > 0) walkMenuTree(item.children, collector, visited);
   }
   return collector;
 };

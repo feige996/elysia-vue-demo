@@ -296,7 +296,11 @@ export const userModule = new Elysia({
       return response.payload;
     },
     {
-      detail: { summary: '分页查询用户列表' },
+      detail: {
+        summary: '分页查询用户列表',
+        description: '需要管理员权限，支持关键字搜索与分页。',
+        security: [{ bearerAuth: [] }],
+      },
       query: pageQuerySchema,
       response: {
         200: usersPageSuccessSchema,
@@ -336,7 +340,11 @@ export const userModule = new Elysia({
       return response.payload;
     },
     {
-      detail: { summary: '获取当前用户权限码列表' },
+      detail: {
+        summary: '获取当前用户权限码列表',
+        description: '返回当前登录用户可访问的权限编码列表。',
+        security: [{ bearerAuth: [] }],
+      },
       response: {
         200: permissionCodesSuccessSchema,
         401: apiErrorSchema,
@@ -370,7 +378,11 @@ export const userModule = new Elysia({
       return response.payload;
     },
     {
-      detail: { summary: '获取当前用户菜单树' },
+      detail: {
+        summary: '获取当前用户菜单树',
+        description: '返回当前登录用户可见菜单树结构。',
+        security: [{ bearerAuth: [] }],
+      },
       response: {
         200: menuTreeSuccessSchema,
         401: apiErrorSchema,
@@ -391,7 +403,11 @@ export const userModule = new Elysia({
       return response.payload;
     },
     {
-      detail: { summary: '查询全部用户列表' },
+      detail: {
+        summary: '查询全部用户列表',
+        description: '需要管理员权限，返回完整用户列表。',
+        security: [{ bearerAuth: [] }],
+      },
       query: listQuerySchema,
       response: {
         200: usersAllSuccessSchema,
@@ -414,7 +430,11 @@ export const userModule = new Elysia({
       return response.payload;
     },
     {
-      detail: { summary: '创建用户' },
+      detail: {
+        summary: '创建用户',
+        description: '需要管理员权限，创建新的后台用户。',
+        security: [{ bearerAuth: [] }],
+      },
       body: createUserBodySchema,
       response: {
         201: userSuccessSchema,
@@ -439,7 +459,11 @@ export const userModule = new Elysia({
       return response.payload;
     },
     {
-      detail: { summary: '更新指定用户' },
+      detail: {
+        summary: '更新指定用户',
+        description: '需要管理员权限，按用户 ID 更新字段。',
+        security: [{ bearerAuth: [] }],
+      },
       params: idParamSchema,
       body: updateUserBodySchema,
       response: {
@@ -465,7 +489,11 @@ export const userModule = new Elysia({
       return response.payload;
     },
     {
-      detail: { summary: '删除指定用户' },
+      detail: {
+        summary: '删除指定用户',
+        description: '需要管理员权限，按用户 ID 软删除用户。',
+        security: [{ bearerAuth: [] }],
+      },
       params: idParamSchema,
       response: {
         200: deletedSuccessSchema,
@@ -490,7 +518,11 @@ export const userModule = new Elysia({
       return response.payload;
     },
     {
-      detail: { summary: '批量删除用户' },
+      detail: {
+        summary: '批量删除用户',
+        description: '需要管理员权限，按 ID 列表批量删除用户。',
+        security: [{ bearerAuth: [] }],
+      },
       body: batchDeleteBodySchema,
       response: {
         200: deletedSuccessSchema,

@@ -10,6 +10,20 @@
       "url": "http://localhost:9000"
     }
   ],
+  "tags": [
+    {
+      "name": "User",
+      "description": "User and auth APIs"
+    },
+    {
+      "name": "Article",
+      "description": "Article CRUD APIs"
+    },
+    {
+      "name": "File",
+      "description": "File management APIs"
+    }
+  ],
   "paths": {
     "/": {
       "get": {
@@ -603,6 +617,12 @@
           "User"
         ],
         "summary": "分页查询用户列表",
+        "description": "需要管理员权限，支持关键字搜索与分页。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "keyword",
@@ -822,6 +842,12 @@
           "User"
         ],
         "summary": "创建用户",
+        "description": "需要管理员权限，创建新的后台用户。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1082,6 +1108,12 @@
           "User"
         ],
         "summary": "批量删除用户",
+        "description": "需要管理员权限，按 ID 列表批量删除用户。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1299,6 +1331,12 @@
           "User"
         ],
         "summary": "获取当前用户权限码列表",
+        "description": "返回当前登录用户可访问的权限编码列表。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Response for status 200",
@@ -1370,6 +1408,12 @@
           "User"
         ],
         "summary": "获取当前用户菜单树",
+        "description": "返回当前登录用户可见菜单树结构。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Response for status 200",
@@ -1526,6 +1570,12 @@
           "User"
         ],
         "summary": "查询全部用户列表",
+        "description": "需要管理员权限，返回完整用户列表。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "keyword",
@@ -1657,6 +1707,12 @@
           "User"
         ],
         "summary": "更新指定用户",
+        "description": "需要管理员权限，按用户 ID 更新字段。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -1923,6 +1979,12 @@
           "User"
         ],
         "summary": "删除指定用户",
+        "description": "需要管理员权限，按用户 ID 软删除用户。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -2256,6 +2318,12 @@
           "Article"
         ],
         "summary": "创建文章",
+        "description": "需要登录，创建新的文章记录。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2457,6 +2525,12 @@
           "Article"
         ],
         "summary": "批量删除文章",
+        "description": "需要登录，按 ID 列表批量删除文章。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2743,6 +2817,12 @@
           "Article"
         ],
         "summary": "更新指定文章",
+        "description": "需要登录，按文章 ID 更新内容。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -2979,6 +3059,12 @@
           "Article"
         ],
         "summary": "删除指定文章",
+        "description": "需要登录，按文章 ID 删除。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -3153,6 +3239,12 @@
           "File"
         ],
         "summary": "文件服务健康检查",
+        "description": "需要登录，检查文件服务是否可用。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "operationId": "getApiFile"
       },
       "delete": {
@@ -3160,6 +3252,12 @@
           "File"
         ],
         "summary": "删除文件",
+        "description": "需要登录，按对象 key 删除文件。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "operationId": "deleteApiFile"
       }
     },
@@ -3169,6 +3267,12 @@
           "File"
         ],
         "summary": "上传文件",
+        "description": "需要登录，上传文件并返回访问地址。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "operationId": "postApiFileUpload"
       }
     },
@@ -3178,6 +3282,12 @@
           "File"
         ],
         "summary": "获取文件访问地址",
+        "description": "需要登录，按对象 key 获取文件 URL。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "operationId": "getApiFileUrl"
       }
     }

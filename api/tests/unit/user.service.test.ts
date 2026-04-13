@@ -16,8 +16,14 @@ describe('UserService', () => {
     const createTestUserRepository = () => {
         const users: UserEntity[] = [{ id: 1, account: 'admin', name: 'Admin', role: 'admin' }];
         return {
-            async findByAccount(account: string) {
-                return users.find((user) => user.account === account);
+            async findAuthByAccount(account: string) {
+                const user = users.find((item) => item.account === account);
+                if (!user) return undefined;
+                return {
+                    user,
+                    status: 1,
+                    passwordHash: 'admin123',
+                };
             },
             async findAll(keyword?: string) {
                 if (!keyword) return users;

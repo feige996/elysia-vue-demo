@@ -33,6 +33,20 @@ type EdenClientDeps = {
   createRef: (value: boolean) => any;
 };
 
+export class ApiRequestError extends Error {
+  public readonly code?: number;
+  public readonly status?: number;
+  public readonly requestId?: string;
+
+  constructor(message: string, meta?: { code?: number; status?: number; requestId?: string }) {
+    super(message);
+    this.name = 'ApiRequestError';
+    this.code = meta?.code;
+    this.status = meta?.status;
+    this.requestId = meta?.requestId;
+  }
+}
+
 export const createEdenRequestClient = (
   config: EdenClientConfig,
   deps: EdenClientDeps,
@@ -59,6 +73,15 @@ export const createEdenRequestClient = (
     return 'Request failed';
   };
 
+  const isUnauthorizedError = (payload: unknown) => {
+    if (!payload || typeof payload !== 'object') return false;
+    const code = Reflect.get(payload, 'code');
+    const status = Reflect.get(payload, 'status');
+    if (code === 401000 || status === 401) return true;
+    const message = Reflect.get(payload, 'message');
+    return typeof message === 'string' && message.toLowerCase() === 'unauthorized';
+  };
+
   const setAccessToken = (token: string) => {
     localStorage.setItem(config.tokenKey, token);
   };
@@ -77,11 +100,25 @@ export const createEdenRequestClient = (
 
   const parseResponse = <T>(response: EdenResult): ApiResponse<T> => {
     if (response.error) {
-      throw new Error(toErrorMessage(response.error.value));
+      const payload = response.error.value;
+      const code = payload && typeof payload === 'object' ? Number(Reflect.get(payload, 'code')) : undefined;
+      const status = payload && typeof payload === 'object' ? Number(Reflect.get(payload, 'status')) : undefined;
+      const requestId =
+        payload && typeof payload === 'object' && typeof Reflect.get(payload, 'requestId') === 'string'
+          ? (Reflect.get(payload, 'requestId') as string)
+          : undefined;
+      throw new ApiRequestError(toErrorMessage(payload), {
+        code: Number.isNaN(code) ? undefined : code,
+        status: Number.isNaN(status) ? undefined : status,
+        requestId,
+      });
     }
     const payload = response.data as ApiResponse<T>;
     if (payload.code !== 0) {
-      throw new Error(payload.message || 'Request failed');
+      throw new ApiRequestError(payload.message || 'Request failed', {
+        code: payload.code,
+        requestId: payload.requestId,
+      });
     }
     return payload;
   };
@@ -137,7 +174,7 @@ export const createEdenRequestClient = (
       });
 
     let response = await execute(localStorage.getItem(config.tokenKey));
-    if (response.error) {
+    if (response.error && isUnauthorizedError(response.error.value)) {
       const refreshedToken = await ensureRefreshedToken();
       if (refreshedToken) {
         response = await execute(refreshedToken);
@@ -147,7 +184,18 @@ export const createEdenRequestClient = (
     if (response.error) {
       clearAccessToken();
       clearRefreshToken();
-      throw new Error(toErrorMessage(response.error.value));
+      const payload = response.error.value;
+      const code = payload && typeof payload === 'object' ? Number(Reflect.get(payload, 'code')) : undefined;
+      const status = payload && typeof payload === 'object' ? Number(Reflect.get(payload, 'status')) : undefined;
+      const requestId =
+        payload && typeof payload === 'object' && typeof Reflect.get(payload, 'requestId') === 'string'
+          ? (Reflect.get(payload, 'requestId') as string)
+          : undefined;
+      throw new ApiRequestError(toErrorMessage(payload), {
+        code: Number.isNaN(code) ? undefined : code,
+        status: Number.isNaN(status) ? undefined : status,
+        requestId,
+      });
     }
 
     return parseResponse<T>(response);

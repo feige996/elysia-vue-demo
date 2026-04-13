@@ -109,4 +109,60 @@ describe('createEdenRequestClient', () => {
 
     await expect(client.request('/api/articles/all', { method: 'GET' })).rejects.toThrow('Network down');
   });
+
+  it('does not refresh token on non-401 errors', async () => {
+    const calls: string[] = [];
+    const storage = installLocalStorage();
+    storage.setItem('access_token', 'token-a');
+    storage.setItem('refresh_token', 'token-r');
+    const client = createEdenRequestClient(
+      {
+        apiBaseUrl: 'http://localhost:9000',
+        tokenKey: 'access_token',
+        refreshTokenKey: 'refresh_token',
+      },
+      {
+        createRef: (value) => ({ value }),
+        createCaller: () => async (path) => {
+          calls.push(path);
+          return { error: { value: { code: 500000, message: 'Internal Error' } } };
+        },
+      },
+    );
+
+    await expect(client.authRequest('/api/users/all', { method: 'GET' })).rejects.toThrow('Internal Error');
+    expect(calls).toEqual(['/api/users/all']);
+    expect(storage.getItem('access_token')).toBe('token-a');
+    expect(storage.getItem('refresh_token')).toBe('token-r');
+  });
+
+  it('clears tokens when refresh failed after unauthorized', async () => {
+    const storage = installLocalStorage();
+    storage.setItem('access_token', 'expired-token');
+    storage.setItem('refresh_token', 'refresh-old');
+    const client = createEdenRequestClient(
+      {
+        apiBaseUrl: 'http://localhost:9000',
+        tokenKey: 'access_token',
+        refreshTokenKey: 'refresh_token',
+      },
+      {
+        createRef: (value) => ({ value }),
+        createCaller: () => async (path, options) => {
+          if (path === '/api/users/all') {
+            return { error: { value: { code: 401000, message: 'Unauthorized' } } };
+          }
+          if (path === '/api/auth/refresh') {
+            expect(options.body).toEqual({ refreshToken: 'refresh-old' });
+            return { error: { value: { code: 401000, message: 'Unauthorized' } } };
+          }
+          return { error: { value: { message: 'unexpected path' } } };
+        },
+      },
+    );
+
+    await expect(client.authRequest('/api/users/all', { method: 'GET' })).rejects.toThrow('Unauthorized');
+    expect(storage.getItem('access_token')).toBeNull();
+    expect(storage.getItem('refresh_token')).toBeNull();
+  });
 });

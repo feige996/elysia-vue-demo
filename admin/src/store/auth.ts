@@ -18,6 +18,7 @@ export const useAuthStore = defineStore('auth', () => {
   const permissionCodes = ref<string[]>([]);
   const menuTree = ref<MenuTreeEntity[]>([]);
   const initialized = ref(false);
+  let bootstrapPromise: Promise<void> | null = null;
 
   const isLoggedIn = computed(() => profile.value !== null);
 
@@ -33,13 +34,21 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   const bootstrapAuthContext = async () => {
-    const [permissionResponse, menuResponse] = await Promise.all([
-      getCurrentPermissionCodesMethod(),
-      getCurrentMenuTreeMethod(),
-    ]);
-    permissionCodes.value = permissionResponse.data;
-    menuTree.value = menuResponse.data;
-    initialized.value = true;
+    if (initialized.value) return;
+    if (!bootstrapPromise) {
+      bootstrapPromise = (async () => {
+        const [permissionResponse, menuResponse] = await Promise.all([
+          getCurrentPermissionCodesMethod(),
+          getCurrentMenuTreeMethod(),
+        ]);
+        permissionCodes.value = permissionResponse.data;
+        menuTree.value = menuResponse.data;
+        initialized.value = true;
+      })().finally(() => {
+        bootstrapPromise = null;
+      });
+    }
+    await bootstrapPromise;
   };
 
   const clearAuthState = () => {
@@ -50,6 +59,7 @@ export const useAuthStore = defineStore('auth', () => {
     menuTree.value = [];
     localStorage.removeItem(ADMIN_PROFILE_KEY);
     initialized.value = false;
+    bootstrapPromise = null;
   };
 
   const restoreProfile = () => {

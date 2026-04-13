@@ -4,7 +4,10 @@ import { getAuthorizedRole } from '../../shared/auth/token-auth';
 import { env } from '../../shared/config/env';
 import { logService } from '../../shared/logger/log.service';
 import { ErrorKey, failByKey } from '../../shared/types/http';
-import { ensureRequestContext } from '../../shared/types/request-context';
+import {
+    ensureRequestContext,
+    setAuthorizedRoleInContext,
+} from '../../shared/types/request-context';
 
 const isPublicRoute = (method: string, path: string) => {
     if (path === '/') return true;
@@ -28,6 +31,7 @@ export const loggerMiddleware = new Elysia({ name: 'logger-middleware' })
         const path = new URL(request.url).pathname;
         const status = typeof set.status === 'number' ? set.status : 200;
         const durationMs = Date.now() - requestStartedAt;
+        const { authorizedRole } = ensureRequestContext(request);
         logService.info('request_completed', {
             event: 'request_completed',
             requestId,
@@ -35,6 +39,7 @@ export const loggerMiddleware = new Elysia({ name: 'logger-middleware' })
             path,
             status,
             durationMs,
+            role: authorizedRole,
         });
     });
 
@@ -50,6 +55,7 @@ export const authMiddleware = new Elysia({ name: 'auth-middleware' }).onRequest(
         set.status = unauthorized.status;
         return unauthorized.payload;
     }
+    setAuthorizedRoleInContext(request, role);
     if (requireAdminRoute(path) && role !== 'admin') {
         const { requestId } = ensureRequestContext(request);
         const forbidden = failByKey(requestId, ErrorKey.FORBIDDEN);
