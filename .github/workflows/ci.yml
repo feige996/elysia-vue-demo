@@ -1,77 +1,77 @@
 name: CI
 
 on:
-    push:
-        branches:
-            - main
-            - master
-    pull_request:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
 
 jobs:
-    validate:
-        runs-on: ubuntu-latest
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/elysia_demo
+      API_PORT: 6000
+      ADMIN_PORT: 7000
+      WEB_PORT: 8000
+      JWT_SECRET: ci-jwt-secret
+      JWT_REFRESH_EXPIRES_IN_SECONDS: 604800
+    services:
+      postgres:
+        image: postgres:16-alpine
         env:
-            DATABASE_URL: postgres://postgres:postgres@localhost:5432/elysia_demo
-            API_PORT: 6000
-            ADMIN_PORT: 7000
-            WEB_PORT: 8000
-            JWT_SECRET: ci-jwt-secret
-            JWT_REFRESH_EXPIRES_IN_SECONDS: 604800
-        services:
-            postgres:
-                image: postgres:16-alpine
-                env:
-                    POSTGRES_USER: postgres
-                    POSTGRES_PASSWORD: postgres
-                    POSTGRES_DB: elysia_demo
-                ports:
-                    - 5432:5432
-                options: >-
-                    --health-cmd "pg_isready -U postgres -d elysia_demo"
-                    --health-interval 10s
-                    --health-timeout 5s
-                    --health-retries 5
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: elysia_demo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d elysia_demo"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - name: Setup Bun
-              uses: oven-sh/setup-bun@v2
-              with:
-                  bun-version: latest
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
-            - name: Install dependencies
-              run: bun install --frozen-lockfile
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
 
-            - name: Run database migrations
-              run: bun run --cwd api db:migrate
+      - name: Run database migrations
+        run: bun run --cwd api db:migrate
 
-            - name: Check database health
-              run: bun run --cwd api db:check
+      - name: Check database health
+        run: bun run --cwd api db:check
 
-            - name: Check migration drift
-              run: |
-                  bun run --cwd api db:generate
-                  if [ -n "$(git status --porcelain -- api/drizzle)" ]; then
-                      echo "Drizzle migration drift detected. Please commit generated migration files."
-                      git status --short -- api/drizzle
-                      exit 1
-                  fi
+      - name: Check migration drift
+        run: |
+          bun run --cwd api db:generate
+          if [ -n "$(git status --porcelain -- api/drizzle)" ]; then
+              echo "Drizzle migration drift detected. Please commit generated migration files."
+              git status --short -- api/drizzle
+              exit 1
+          fi
 
-            - name: Check OpenAPI drift
-              run: |
-                  bun run --cwd api openapi:generate
-                  if [ -n "$(git status --porcelain -- api/openapi.generated.json)" ]; then
-                      echo "OpenAPI drift detected. Please commit api/openapi.generated.json"
-                      git status --short -- api/openapi.generated.json
-                      exit 1
-                  fi
+      - name: Check OpenAPI drift
+        run: |
+          bun run --cwd api openapi:generate
+          if [ -n "$(git status --porcelain -- api/openapi.generated.json)" ]; then
+              echo "OpenAPI drift detected. Please commit api/openapi.generated.json"
+              git status --short -- api/openapi.generated.json
+              exit 1
+          fi
 
-            - name: Typecheck
-              run: bun run typecheck
+      - name: Typecheck
+        run: bun run typecheck
 
-            - name: Unit test
-              run: bun run test:unit
+      - name: Unit test
+        run: bun run test:unit
 
-            - name: Integration test
-              run: bun run test:integration
+      - name: Integration test
+        run: bun run test:integration

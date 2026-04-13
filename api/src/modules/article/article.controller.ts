@@ -12,7 +12,7 @@ import {
 import type { ArticleEntity } from '../../shared/types/entities';
 
 export const createArticleController = (articleRepository: ArticleRepository) => ({
-    listAll: async (query: Record<string, string | undefined>, request: Request) => {
+    listAll: async (query: unknown, request: Request) => {
         const { requestId } = ensureRequestContext(request);
         const parsedQuery = articleListQuerySchema.safeParse(query);
         const list = await articleRepository.findAll(parsedQuery.success ? parsedQuery.data.keyword : undefined);
@@ -21,7 +21,7 @@ export const createArticleController = (articleRepository: ArticleRepository) =>
             payload: ok(requestId, list, 'OK'),
         };
     },
-    list: async (query: Record<string, string | undefined>, request: Request) => {
+    list: async (query: unknown, request: Request) => {
         const { requestId } = ensureRequestContext(request);
         const parsedQuery = articleQuerySchema.safeParse(query);
         if (!parsedQuery.success) {
