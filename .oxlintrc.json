@@ -8,6 +8,10 @@
     "api/openapi.generated.json"
   ],
   "plugins": ["eslint", "typescript", "unicorn", "oxc"],
+  "rules": {
+    "unicorn/no-useless-fallback-in-spread": "off",
+    "no-unused-vars": "off"
+  },
   "overrides": [
     {
       "files": ["admin/**/*.vue", "web/**/*.vue"],
