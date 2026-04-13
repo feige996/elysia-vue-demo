@@ -7,10 +7,15 @@
   },
   "servers": [
     {
-      "url": "http://localhost:6000"
+      "url": "http://localhost:9000"
     }
   ],
   "paths": {
+    "/": {
+      "get": {
+        "operationId": "getIndex"
+      }
+    },
     "/health": {
       "get": {
         "operationId": "getHealth"

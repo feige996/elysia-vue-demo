@@ -8,7 +8,7 @@ import {
 import { createEdenRequestClient } from '../../../shared/request/eden';
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:6000';
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:9000';
 const edenClient = createEdenRequestClient(
   {
     apiBaseUrl: API_BASE_URL,

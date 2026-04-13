@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 const ensureEnv = () => {
   process.env.NODE_ENV ??= 'development';
-  process.env.API_PORT ??= '6000';
+  process.env.API_PORT ??= '9000';
   process.env.JWT_SECRET ??= 'openapi-generate-only-secret';
   process.env.PG_HOST ??= 'localhost';
   process.env.PG_PORT ??= '5432';

@@ -16,7 +16,7 @@ jobs:
       PG_USER: postgres
       PG_PASSWORD: postgres
       PG_DATABASE: elysia_demo
-      API_PORT: 6000
+      API_PORT: 9000
       ADMIN_PORT: 7000
       WEB_PORT: 8000
       JWT_SECRET: ci-jwt-secret

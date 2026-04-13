@@ -18,7 +18,7 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
     .default('development'),
-  API_PORT: z.coerce.number().int().positive().default(6000),
+  API_PORT: z.coerce.number().int().positive().default(9000),
   DATABASE_URL: z.string().min(1).optional(),
   PG_HOST: z.string().optional(),
   PG_PORT: z.coerce.number().int().positive().optional(),
@@ -46,7 +46,7 @@ const envSchema = z.object({
   RATE_LIMIT_DURATION: z.coerce.number().int().positive().default(60000),
   STORAGE_TYPE: z.enum(['local', 'oss', 'cos']).default('local'),
   LOCAL_BASE_DIR: z.string().default('uploads'),
-  LOCAL_BASE_URL: z.string().default('http://localhost:6000/uploads'),
+  LOCAL_BASE_URL: z.string().default('http://localhost:9000/uploads'),
   OSS_REGION: z.string().optional(),
   OSS_ACCESS_KEY_ID: z.string().optional(),
   OSS_ACCESS_KEY_SECRET: z.string().optional(),

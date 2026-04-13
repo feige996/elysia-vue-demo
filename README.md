@@ -28,7 +28,7 @@ bun run dev
 
 启动后默认地址：
 
-- 后端：`http://localhost:6000`
+- 后端：`http://localhost:9000`
 - 后台：`http://localhost:7000`（若端口被占用会自动递增）
 - 前台：`http://localhost:8000`（若端口被占用会自动递增）
 
@@ -63,7 +63,7 @@ PG_HOST=localhost PG_PORT=5432 PG_USER=postgres PG_PASSWORD=postgres PG_DATABASE
 说明：
 
 - 必须提供完整的 `PG_HOST/PG_PORT/PG_USER/PG_PASSWORD/PG_DATABASE`（兼容 `DATABASE_URL` 旧配置）
-- 后端端口使用 `API_PORT`（默认 `6000`）
+- 后端端口使用 `API_PORT`（默认 `9000`）
 - 后台端口使用 `ADMIN_PORT`（默认 `7000`）
 - 前台端口使用 `WEB_PORT`（默认 `8000`）
 - 数据库访问使用 Drizzle ORM
@@ -244,7 +244,7 @@ docker compose up -d --build
 
 容器默认端口：
 
-- api: `6000`
+- api: `9000`
 - admin: `7000`
 - web: `8000`
 

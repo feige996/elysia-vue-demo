@@ -39,7 +39,7 @@ describe('createEdenRequestClient', () => {
 
     const client = createEdenRequestClient(
       {
-        apiBaseUrl: 'http://localhost:6000',
+        apiBaseUrl: 'http://localhost:9000',
         tokenKey: 'access_token',
         refreshTokenKey: 'refresh_token',
       },
@@ -97,7 +97,7 @@ describe('createEdenRequestClient', () => {
     installLocalStorage();
     const client = createEdenRequestClient(
       {
-        apiBaseUrl: 'http://localhost:6000',
+        apiBaseUrl: 'http://localhost:9000',
         tokenKey: 'access_token',
         refreshTokenKey: 'refresh_token',
       },
