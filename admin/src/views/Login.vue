@@ -2,14 +2,12 @@
 import { reactive } from 'vue';
 import { z } from 'zod';
 import { NButton, NCard, NForm, NFormItem, NInput, NText } from 'naive-ui';
+import { requestState, setAccessToken, setRefreshToken } from '../api/request';
 import {
   loginMethod,
-  requestState,
-  setAccessToken,
-  setRefreshToken,
   type LoginPayload,
   type LoginResult,
-} from '../api/request';
+} from '../api/modules/auth';
 
 const emit = defineEmits<{
   loginSuccess: [payload: LoginResult];
@@ -33,7 +31,7 @@ const { loading, send } = requestState.useRequest(
   (payload: LoginPayload) => loginMethod(payload),
   {
     immediate: false,
-  }
+  },
 );
 
 const submitLogin = async () => {

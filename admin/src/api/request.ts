@@ -28,54 +28,9 @@ export type ApiResponse<T> = {
   data: T;
 };
 
-export type User = {
-  id: number;
-  account: string;
-  name: string;
-  role: 'admin' | 'editor';
-};
-
-export type UserPageData = {
-  list: User[];
-  total: number;
-  page: number;
-  pageSize: number;
-};
-
-export type LoginPayload = {
-  account: string;
-  password: string;
-};
-
-export type LoginResult = {
-  accessToken: string;
-  refreshToken: string;
-  user: User;
-};
-
-type RefreshResult = {
-  accessToken: string;
-  refreshToken: string;
-};
+export const apiClient = edenClient;
 
 export const requestState = edenClient.requestState;
-
-export const loginMethod = async (payload: LoginPayload) => {
-  return edenClient.request<LoginResult>('/api/auth/login', {
-    method: 'POST',
-    body: payload,
-  });
-};
-
-export const getUsersPageMethod = (params: {
-  page: number;
-  pageSize: number;
-  keyword?: string;
-}) =>
-  edenClient.authRequest<UserPageData>('/api/users', {
-    method: 'GET',
-    query: params,
-  });
 
 export const setAccessToken = edenClient.setAccessToken;
 export const setRefreshToken = edenClient.setRefreshToken;

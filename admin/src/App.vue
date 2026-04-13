@@ -11,16 +11,13 @@ import {
 } from 'naive-ui';
 import Login from './views/Login.vue';
 import UserManagement from './views/UserManagement.vue';
-import {
-  clearAccessToken,
-  clearRefreshToken,
-  type LoginResult,
-} from './api/request';
+import { clearAccessToken, clearRefreshToken } from './api/request';
+import type { LoginResult } from './api/modules/auth';
 
 const profile = ref<LoginResult['user'] | null>(null);
 
 const welcomeText = computed(() =>
-  profile.value ? `欢迎你，${profile.value.name}` : '未登录'
+  profile.value ? `欢迎你，${profile.value.name}` : '未登录',
 );
 
 const onLoginSuccess = (payload: LoginResult) => {

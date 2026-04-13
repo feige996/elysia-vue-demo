@@ -10,7 +10,8 @@ import {
   NText,
   type DataTableColumns,
 } from 'naive-ui';
-import { getUsersPageMethod, requestState, type User } from '../api/request';
+import { requestState } from '../api/request';
+import { getUsersPageMethod, type User } from '../api/modules/user';
 
 type UserRow = User;
 
@@ -30,7 +31,7 @@ const { loading, send } = requestState.useRequest(
     }),
   {
     immediate: false,
-  }
+  },
 );
 
 const columns: DataTableColumns<UserRow> = [
@@ -54,7 +55,7 @@ const columns: DataTableColumns<UserRow> = [
       h(
         NTag,
         { type: row.role === 'admin' ? 'error' : 'info' },
-        { default: () => row.role }
+        { default: () => row.role },
       ),
   },
 ];
