@@ -131,6 +131,7 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 - `JWT_SECRET`：JWT 签名密钥（必填）
 - `JWT_EXPIRES_IN_SECONDS`：access token 过期秒数（默认 `3600`）
 - `JWT_REFRESH_EXPIRES_IN_SECONDS`：refresh token 过期秒数（默认 `604800`）
+- `REDIS_URL`：refresh token 撤销状态存储地址（推荐 `redis://localhost:6379`）
 
 ## 示例账号
 
@@ -197,7 +198,7 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 JWT 启用示例：
 
 ```bash
-JWT_SECRET=replace-me-with-strong-secret JWT_REFRESH_EXPIRES_IN_SECONDS=604800 bun run --cwd api dev
+JWT_SECRET=replace-me-with-strong-secret JWT_REFRESH_EXPIRES_IN_SECONDS=604800 REDIS_URL=redis://localhost:6379 bun run --cwd api dev
 ```
 
 ## Docker 部署
