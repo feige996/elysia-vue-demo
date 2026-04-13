@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "bun.lock",
+    "coverage/**",
+    "api/openapi.generated.json"
+  ],
+  "plugins": ["eslint", "typescript", "unicorn", "oxc"],
+  "overrides": [
+    {
+      "files": ["admin/**/*.vue", "web/**/*.vue"],
+      "plugins": ["eslint", "typescript", "unicorn", "oxc", "vue"]
+    }
+  ]
+}
