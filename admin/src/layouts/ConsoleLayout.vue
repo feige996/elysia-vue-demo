@@ -106,7 +106,6 @@ const logout = () => {
 
 .header {
   padding: 14px 20px;
-  background: #fff;
 }
 
 .content {
