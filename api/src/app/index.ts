@@ -51,6 +51,18 @@ export const app = new Elysia()
   .use(loggerMiddleware)
   .use(errorMiddleware)
   .use(authMiddleware)
+  .get('/', ({ request }) =>
+    ok(
+      ensureRequestContext(request).requestId,
+      {
+        name: 'Elysia Demo API',
+        docs: '/docs',
+        openapi: '/openapi.json',
+        health: '/health',
+      },
+      'ok',
+    ),
+  )
   .get('/health', ({ request }) =>
     ok(ensureRequestContext(request).requestId, { status: 'ok' }, 'ok'),
   )

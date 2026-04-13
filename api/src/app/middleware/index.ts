@@ -7,6 +7,7 @@ import { ErrorKey, failByKey } from '../../shared/types/http';
 import { ensureRequestContext } from '../../shared/types/request-context';
 
 const isPublicRoute = (method: string, path: string) => {
+    if (path === '/') return true;
     if (path === '/health' || path === '/openapi.json' || path === '/docs') return true;
     if (method === 'POST' && (path === '/api/auth/login' || path === '/api/auth/refresh' || path === '/api/auth/logout')) return true;
     if (method === 'GET' && (path === '/api/articles' || path === '/api/articles/all')) return true;
