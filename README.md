@@ -1,6 +1,16 @@
 # Harbor
 
-**港湾** — 开箱即用的全栈 Monorepo 模板，技术栈为 **Vue 3 + Elysia + Bun + Eden**，三端目录：
+**港湾** — 面向中后台场景的全栈 Monorepo 基座（baseline/starter kit），技术栈为 **Vue 3 + Elysia + Bun + Eden**。
+
+它不是仅用于演示的模板，而是可持续复用的工程骨架：内置 RBAC、审计日志、统一错误码映射、就绪检查、分级限流、CI/E2E 与 CRUD 页面基建，可在此基础上快速孵化业务系统。
+
+**Harbor** is a reusable full-stack baseline for admin/business systems, not just a demo template.
+
+### 30 秒电梯介绍
+
+Harbor 是一个面向中后台业务的全栈工程基座：后端提供鉴权、RBAC、审计与就绪检查，前端提供统一请求层与 CRUD 页面基建，工程侧内置 CI/E2E 与发布前检查。团队可以在统一规范下直接扩展业务模块，而不是从零搭权限、日志、测试和运维能力。
+
+三端目录：
 
 - `api`：后端项目（Elysia + Bun + TypeScript + elysia-di + Zod）
 - `admin`：后台项目（Vue3 + Vite + TypeScript + Eden + Naive UI + Zod）
