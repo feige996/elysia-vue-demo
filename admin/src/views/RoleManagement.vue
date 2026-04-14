@@ -2,10 +2,8 @@
 import { computed, h, onMounted, ref } from 'vue';
 import {
   NButton,
-  NCard,
   NCheckbox,
   NCheckboxGroup,
-  NDataTable,
   NForm,
   NFormItem,
   NInput,
@@ -32,9 +30,8 @@ import {
 } from '../api/modules/role';
 import { getMappedErrorMessage } from '../api/error-map';
 import SearchBar from '../components/crud/SearchBar.vue';
-import TableToolbar from '../components/crud/TableToolbar.vue';
 import FormDrawer from '../components/crud/FormDrawer.vue';
-import UnifiedState from '../components/state/UnifiedState.vue';
+import DataTablePage from '../components/crud/DataTablePage.vue';
 
 const message = useMessage();
 const dialog = useDialog();
@@ -307,37 +304,26 @@ onMounted(() => {
 </script>
 
 <template>
-  <NCard title="角色管理" :bordered="false">
-    <NSpace vertical :size="12">
-      <TableToolbar>
-        <template #left>
-          <SearchBar>
-            <NButton type="default" :loading="loading" @click="loadRoles"
-              >刷新</NButton
-            >
-          </SearchBar>
-        </template>
-        <template #right>
-          <NButton type="primary" @click="openCreateRoleModal"
-            >新增角色</NButton
-          >
-        </template>
-      </TableToolbar>
-      <UnifiedState
-        :loading="loading"
-        :error-text="errorText"
-        :empty="roles.length === 0"
-        empty-description="暂无角色数据"
-      >
-        <NDataTable
-          :columns="columns"
-          :data="roles"
-          :loading="loading"
-          :pagination="false"
-        />
-      </UnifiedState>
-    </NSpace>
-
+  <DataTablePage
+    title="角色管理"
+    :loading="loading"
+    :error-text="errorText"
+    :empty="roles.length === 0"
+    empty-description="暂无角色数据"
+    :columns="columns"
+    :data="roles"
+    :pagination="false"
+  >
+    <template #toolbar-left>
+      <SearchBar>
+        <NButton type="default" :loading="loading" @click="loadRoles"
+          >刷新</NButton
+        >
+      </SearchBar>
+    </template>
+    <template #toolbar-right>
+      <NButton type="primary" @click="openCreateRoleModal">新增角色</NButton>
+    </template>
     <FormDrawer
       v-model:show="roleModalVisible"
       :title="roleModalMode === 'create' ? '新增角色' : '编辑角色'"
@@ -411,5 +397,5 @@ onMounted(() => {
         </template>
       </NCard>
     </NModal>
-  </NCard>
+  </DataTablePage>
 </template>

@@ -1,21 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import {
-  NButton,
-  NCard,
-  NDataTable,
-  NDatePicker,
-  NInput,
-  NSelect,
-  NSpace,
-} from 'naive-ui';
+import { NButton, NDatePicker, NInput, NSelect } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
 import {
   getAuditLogsMethod,
   type AuditLogItem,
 } from '../api/modules/audit-log';
 import SearchBar from '../components/crud/SearchBar.vue';
-import UnifiedState from '../components/state/UnifiedState.vue';
+import DataTablePage from '../components/crud/DataTablePage.vue';
+import { getMappedErrorMessage } from '../api/error-map';
 
 const moduleKeyword = ref('');
 const operatorAccountKeyword = ref('');
@@ -58,6 +51,11 @@ const pagination = computed(() => ({
   },
 }));
 
+const tableProps = {
+  striped: true,
+  maxHeight: 560,
+};
+
 const loadLogs = async () => {
   errorText.value = '';
   loading.value = true;
@@ -91,7 +89,7 @@ const loadLogs = async () => {
     rows.value = response.data.list;
     total.value = response.data.total;
   } catch (error) {
-    errorText.value = error instanceof Error ? error.message : '加载日志失败';
+    errorText.value = getMappedErrorMessage(error, '加载日志失败');
   } finally {
     loading.value = false;
   }
@@ -103,61 +101,56 @@ onMounted(() => {
 </script>
 
 <template>
-  <NCard title="操作日志" :bordered="false">
-    <NSpace vertical :size="12">
-      <NSpace align="center">
-        <SearchBar>
-          <NInput
-            v-model:value="moduleKeyword"
-            clearable
-            placeholder="按模块筛选"
-            style="width: 180px"
-          />
-          <NInput
-            v-model:value="operatorAccountKeyword"
-            clearable
-            placeholder="按操作者账号筛选"
-            style="width: 180px"
-          />
-          <NInput
-            v-model:value="operatorUserIdText"
-            clearable
-            placeholder="按操作者 ID 筛选"
-            style="width: 180px"
-          />
-          <NSelect
-            v-model:value="successValue"
-            style="width: 160px"
-            :options="[
-              { label: '全部结果', value: 'all' },
-              { label: '仅成功', value: 'success' },
-              { label: '仅失败', value: 'failed' },
-            ]"
-          />
-          <NDatePicker
-            v-model:value="dateRange"
-            type="datetimerange"
-            clearable
-            style="width: 320px"
-          />
-          <NButton type="primary" :loading="loading" @click="loadLogs"
-            >查询</NButton
-          >
-        </SearchBar>
-      </NSpace>
-      <UnifiedState
-        :loading="loading"
-        :error-text="errorText"
-        :empty="rows.length === 0"
-        empty-description="暂无日志数据"
-      >
-        <NDataTable
-          :columns="columns"
-          :data="rows"
-          :loading="loading"
-          :pagination="pagination"
+  <DataTablePage
+    title="操作日志"
+    :loading="loading"
+    :error-text="errorText"
+    :empty="rows.length === 0"
+    empty-description="暂无日志数据"
+    :columns="columns"
+    :data="rows"
+    :pagination="pagination"
+    :table-props="tableProps"
+  >
+    <template #toolbar-left>
+      <SearchBar>
+        <NInput
+          v-model:value="moduleKeyword"
+          clearable
+          placeholder="按模块筛选"
+          style="width: 180px"
         />
-      </UnifiedState>
-    </NSpace>
-  </NCard>
+        <NInput
+          v-model:value="operatorAccountKeyword"
+          clearable
+          placeholder="按操作者账号筛选"
+          style="width: 180px"
+        />
+        <NInput
+          v-model:value="operatorUserIdText"
+          clearable
+          placeholder="按操作者 ID 筛选"
+          style="width: 180px"
+        />
+        <NSelect
+          v-model:value="successValue"
+          style="width: 160px"
+          :options="[
+            { label: '全部结果', value: 'all' },
+            { label: '仅成功', value: 'success' },
+            { label: '仅失败', value: 'failed' },
+          ]"
+        />
+        <NDatePicker
+          v-model:value="dateRange"
+          type="datetimerange"
+          clearable
+          style="width: 320px"
+        />
+        <NButton type="primary" :loading="loading" @click="loadLogs"
+          >查询</NButton
+        >
+      </SearchBar>
+    </template>
+  </DataTablePage>
 </template>

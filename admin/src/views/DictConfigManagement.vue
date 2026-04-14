@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NButton, NCard, NDataTable, NInput, NSpace, NText } from 'naive-ui';
+import { NButton, NCard, NInput, NSpace, NText } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
 import {
   getDictItemsByCodeMethod,
@@ -8,6 +8,9 @@ import {
   type DictItem,
   type SystemConfig,
 } from '../api/modules/dict-config';
+import { getMappedErrorMessage } from '../api/error-map';
+import SearchBar from '../components/crud/SearchBar.vue';
+import DataTablePage from '../components/crud/DataTablePage.vue';
 
 const dictCode = ref('sys_common_status');
 const configKey = ref('system.theme.defaultMode');
@@ -34,7 +37,7 @@ const loadData = async () => {
     dictItems.value = dictRes.data;
     configData.value = configRes.data;
   } catch (error) {
-    errorText.value = error instanceof Error ? error.message : '加载失败';
+    errorText.value = getMappedErrorMessage(error, '加载失败');
   } finally {
     loading.value = false;
   }
@@ -42,30 +45,35 @@ const loadData = async () => {
 </script>
 
 <template>
-  <NSpace vertical :size="16">
-    <NCard title="字典与配置（只读）" :bordered="false">
-      <NSpace>
-        <NInput
-          v-model:value="dictCode"
-          placeholder="字典编码"
-          style="width: 220px"
-        />
-        <NInput
-          v-model:value="configKey"
-          placeholder="配置键"
-          style="width: 260px"
-        />
-        <NButton type="primary" :loading="loading" @click="loadData"
-          >查询</NButton
-        >
-      </NSpace>
-      <NText v-if="errorText" type="error">{{ errorText }}</NText>
-    </NCard>
-
-    <NCard title="字典项" :bordered="false">
-      <NDataTable :columns="columns" :data="dictItems" :loading="loading" />
-    </NCard>
-
+  <NSpace vertical :size="12">
+    <DataTablePage
+      title="字典项"
+      :loading="loading"
+      :error-text="errorText"
+      :empty="dictItems.length === 0"
+      empty-description="暂无字典项数据"
+      :columns="columns"
+      :data="dictItems"
+      :pagination="false"
+    >
+      <template #toolbar-left>
+        <SearchBar>
+          <NInput
+            v-model:value="dictCode"
+            placeholder="字典编码"
+            style="width: 220px"
+          />
+          <NInput
+            v-model:value="configKey"
+            placeholder="配置键"
+            style="width: 260px"
+          />
+          <NButton type="primary" :loading="loading" @click="loadData"
+            >查询</NButton
+          >
+        </SearchBar>
+      </template>
+    </DataTablePage>
     <NCard title="系统配置" :bordered="false">
       <pre v-if="configData">{{ configData }}</pre>
       <NText v-else depth="3">暂无数据，点击查询加载。</NText>

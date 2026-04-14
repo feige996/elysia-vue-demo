@@ -2,8 +2,6 @@
 import { computed, h, onMounted, ref } from 'vue';
 import {
   NButton,
-  NCard,
-  NDataTable,
   NForm,
   NFormItem,
   NInput,
@@ -25,9 +23,8 @@ import {
 } from '../api/modules/user';
 import { getMappedErrorMessage } from '../api/error-map';
 import SearchBar from '../components/crud/SearchBar.vue';
-import TableToolbar from '../components/crud/TableToolbar.vue';
 import FormDrawer from '../components/crud/FormDrawer.vue';
-import UnifiedState from '../components/state/UnifiedState.vue';
+import DataTablePage from '../components/crud/DataTablePage.vue';
 
 type UserRow = User;
 
@@ -262,56 +259,47 @@ onMounted(() => {
 </script>
 
 <template>
-  <NCard title="用户管理" :bordered="false">
-    <NSpace vertical :size="12">
-      <TableToolbar>
-        <template #left>
-          <SearchBar>
-            <NInput
-              v-model:value="keyword"
-              clearable
-              placeholder="按账号或姓名搜索"
-              style="width: 280px"
-            />
-            <NButton type="primary" :loading="loading" @click="fetchUsers"
-              >查询</NButton
-            >
-          </SearchBar>
-        </template>
-        <template #right>
-          <NButton
-            v-permission="'system:user:create'"
-            type="info"
-            ghost
-            @click="openCreateUserModal"
-            >新增用户</NButton
-          >
-          <NButton
-            v-permission="'system:user:delete'"
-            type="warning"
-            ghost
-            @click="deleteBatchUsers"
-            >批量删除</NButton
-          >
-        </template>
-      </TableToolbar>
-      <UnifiedState
-        :loading="loading"
-        :error-text="errorText"
-        :empty="users.length === 0"
-        empty-description="暂无用户数据"
-      >
-        <NDataTable
-          :columns="columns"
-          :data="users"
-          :loading="loading"
-          :pagination="pagination"
-          :row-key="rowKey"
-          :row-selection="rowSelection"
+  <DataTablePage
+    title="用户管理"
+    :loading="loading"
+    :error-text="errorText"
+    :empty="users.length === 0"
+    empty-description="暂无用户数据"
+    :columns="columns"
+    :data="users"
+    :pagination="pagination"
+    :row-key="rowKey"
+    :row-selection="rowSelection"
+  >
+    <template #toolbar-left>
+      <SearchBar>
+        <NInput
+          v-model:value="keyword"
+          clearable
+          placeholder="按账号或姓名搜索"
+          style="width: 280px"
         />
-      </UnifiedState>
-    </NSpace>
-
+        <NButton type="primary" :loading="loading" @click="fetchUsers"
+          >查询</NButton
+        >
+      </SearchBar>
+    </template>
+    <template #toolbar-right>
+      <NButton
+        v-permission="'system:user:create'"
+        type="info"
+        ghost
+        @click="openCreateUserModal"
+        >新增用户</NButton
+      >
+      <NButton
+        v-permission="'system:user:delete'"
+        type="warning"
+        ghost
+        @click="deleteBatchUsers"
+        >批量删除</NButton
+      >
+    </template>
     <FormDrawer
       v-model:show="userModalVisible"
       :title="userModalMode === 'create' ? '新增用户' : '编辑用户'"
@@ -334,5 +322,5 @@ onMounted(() => {
         </NFormItem>
       </NForm>
     </FormDrawer>
-  </NCard>
+  </DataTablePage>
 </template>
