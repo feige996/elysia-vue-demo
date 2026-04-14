@@ -5455,6 +5455,25 @@
             }
           },
           {
+            "name": "operatorUserId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 1,
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          {
             "name": "operatorAccount",
             "in": "query",
             "required": false,

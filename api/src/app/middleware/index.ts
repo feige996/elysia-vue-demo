@@ -1,5 +1,4 @@
 import { Elysia } from 'elysia';
-import { rateLimit } from 'elysia-rate-limit';
 import { getAuthorizedIdentity } from '../../shared/auth/token-auth';
 import { env } from '../../shared/config/env';
 import { logService } from '../../shared/logger/log.service';
@@ -174,15 +173,88 @@ export const errorMiddleware = new Elysia({ name: 'error-middleware' }).onError(
   },
 );
 
-export const rateLimitMiddleware = rateLimit({
-  max: env.RATE_LIMIT_MAX,
-  duration: env.RATE_LIMIT_DURATION,
-  errorResponse: (() => {
-    const requestId = crypto.randomUUID();
-    const response = failByKey(requestId, ErrorKey.RATE_LIMITED);
-    return new Response(JSON.stringify(response.payload), {
-      status: 429,
-      headers: { 'Content-Type': 'application/json' },
+type RateLimitProfile = {
+  key: 'auth' | 'write' | 'read' | 'default';
+  max: number;
+  durationMs: number;
+};
+
+const rateLimitBuckets = new Map<
+  string,
+  { count: number; expiresAt: number }
+>();
+
+const resolveRateLimitProfile = (
+  method: string,
+  path: string,
+): RateLimitProfile => {
+  if (
+    method === 'POST' &&
+    (path === '/api/auth/login' ||
+      path === '/api/auth/refresh' ||
+      path === '/api/auth/logout')
+  ) {
+    return {
+      key: 'auth',
+      max: env.RATE_LIMIT_MAX_AUTH,
+      durationMs: env.RATE_LIMIT_DURATION,
+    };
+  }
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    return {
+      key: 'write',
+      max: env.RATE_LIMIT_MAX_WRITE,
+      durationMs: env.RATE_LIMIT_DURATION,
+    };
+  }
+  if (method === 'GET') {
+    return {
+      key: 'read',
+      max: env.RATE_LIMIT_MAX_READ,
+      durationMs: env.RATE_LIMIT_DURATION,
+    };
+  }
+  return {
+    key: 'default',
+    max: env.RATE_LIMIT_MAX,
+    durationMs: env.RATE_LIMIT_DURATION,
+  };
+};
+
+const resolveClientId = (request: Request) => {
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0]?.trim() ?? 'unknown';
+  }
+  return (
+    request.headers.get('x-real-ip') ??
+    request.headers.get('cf-connecting-ip') ??
+    'unknown'
+  );
+};
+
+export const rateLimitMiddleware = new Elysia({
+  name: 'rate-limit-middleware',
+}).onRequest(({ request, set }) => {
+  const method = request.method.toUpperCase();
+  const path = new URL(request.url).pathname;
+  const profile = resolveRateLimitProfile(method, path);
+  const requestId = ensureRequestContext(request).requestId;
+  const now = Date.now();
+  const clientId = resolveClientId(request);
+  const bucketKey = `${clientId}:${profile.key}`;
+  const existing = rateLimitBuckets.get(bucketKey);
+  if (!existing || existing.expiresAt <= now) {
+    rateLimitBuckets.set(bucketKey, {
+      count: 1,
+      expiresAt: now + profile.durationMs,
     });
-  })(),
+    return;
+  }
+  if (existing.count >= profile.max) {
+    const response = failByKey(requestId, ErrorKey.RATE_LIMITED);
+    set.status = response.status;
+    return response.payload;
+  }
+  existing.count += 1;
 });

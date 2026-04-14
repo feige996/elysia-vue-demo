@@ -20,11 +20,26 @@ import {
 } from './middleware';
 import { diPlugin } from './plugins/di';
 
+const defaultCorsOriginRules = [
+  /^http:\/\/localhost:\d+$/,
+  /^http:\/\/127\.0\.0\.1:\d+$/,
+];
+
+const configuredCorsOrigins = (env.CORS_ALLOW_ORIGINS ?? '')
+  .split(',')
+  .map((item) => item.trim())
+  .filter((item) => item.length > 0);
+
+const corsOrigins =
+  configuredCorsOrigins.length > 0
+    ? configuredCorsOrigins
+    : defaultCorsOriginRules;
+
 export const app = new Elysia()
   .use(
     cors({
-      origin: [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/],
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      origin: corsOrigins,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true,
     }),

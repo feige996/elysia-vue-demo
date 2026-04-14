@@ -4,15 +4,12 @@ import {
   NButton,
   NCard,
   NDataTable,
-  NEmpty,
   NForm,
   NFormItem,
   NInput,
-  NModal,
   NSpace,
   NSelect,
   NTag,
-  NText,
   useDialog,
   useMessage,
   type DataTableRowKey,
@@ -27,6 +24,10 @@ import {
   type User,
 } from '../api/modules/user';
 import { getMappedErrorMessage } from '../api/error-map';
+import SearchBar from '../components/crud/SearchBar.vue';
+import TableToolbar from '../components/crud/TableToolbar.vue';
+import FormDrawer from '../components/crud/FormDrawer.vue';
+import UnifiedState from '../components/state/UnifiedState.vue';
 
 type UserRow = User;
 
@@ -263,77 +264,75 @@ onMounted(() => {
 <template>
   <NCard title="用户管理" :bordered="false">
     <NSpace vertical :size="12">
-      <NSpace>
-        <NInput
-          v-model:value="keyword"
-          clearable
-          placeholder="按账号或姓名搜索"
-          style="width: 280px"
-        />
-        <NButton
-          v-permission="'system:user:create'"
-          type="info"
-          ghost
-          @click="openCreateUserModal"
-          >新增用户</NButton
-        >
-        <NButton
-          v-permission="'system:user:delete'"
-          type="warning"
-          ghost
-          @click="deleteBatchUsers"
-          >批量删除</NButton
-        >
-        <NButton type="primary" :loading="loading" @click="fetchUsers"
-          >查询</NButton
-        >
-      </NSpace>
-      <NText v-if="errorText" type="error">{{ errorText }}</NText>
-      <NEmpty
-        v-if="!loading && !errorText && users.length === 0"
-        description="暂无用户数据"
-      />
-      <NDataTable
-        v-else
-        :columns="columns"
-        :data="users"
+      <TableToolbar>
+        <template #left>
+          <SearchBar>
+            <NInput
+              v-model:value="keyword"
+              clearable
+              placeholder="按账号或姓名搜索"
+              style="width: 280px"
+            />
+            <NButton type="primary" :loading="loading" @click="fetchUsers"
+              >查询</NButton
+            >
+          </SearchBar>
+        </template>
+        <template #right>
+          <NButton
+            v-permission="'system:user:create'"
+            type="info"
+            ghost
+            @click="openCreateUserModal"
+            >新增用户</NButton
+          >
+          <NButton
+            v-permission="'system:user:delete'"
+            type="warning"
+            ghost
+            @click="deleteBatchUsers"
+            >批量删除</NButton
+          >
+        </template>
+      </TableToolbar>
+      <UnifiedState
         :loading="loading"
-        :pagination="pagination"
-        :row-key="rowKey"
-        :row-selection="rowSelection"
-      />
+        :error-text="errorText"
+        :empty="users.length === 0"
+        empty-description="暂无用户数据"
+      >
+        <NDataTable
+          :columns="columns"
+          :data="users"
+          :loading="loading"
+          :pagination="pagination"
+          :row-key="rowKey"
+          :row-selection="rowSelection"
+        />
+      </UnifiedState>
     </NSpace>
 
-    <NModal v-model:show="userModalVisible">
-      <NCard
-        style="width: 520px"
-        :title="userModalMode === 'create' ? '新增用户' : '编辑用户'"
-        :bordered="false"
-      >
-        <NForm label-placement="left" label-width="90">
-          <NFormItem label="账号" required>
-            <NInput v-model:value="userForm.account" placeholder="请输入账号" />
-          </NFormItem>
-          <NFormItem label="姓名" required>
-            <NInput v-model:value="userForm.name" placeholder="请输入姓名" />
-          </NFormItem>
-          <NFormItem label="角色" required>
-            <NSelect
-              v-model:value="userForm.role"
-              :options="roleOptions"
-              placeholder="请选择角色"
-            />
-          </NFormItem>
-        </NForm>
-        <template #footer>
-          <NSpace justify="end">
-            <NButton @click="userModalVisible = false">取消</NButton>
-            <NButton type="primary" :loading="saving" @click="submitUserForm"
-              >保存</NButton
-            >
-          </NSpace>
-        </template>
-      </NCard>
-    </NModal>
+    <FormDrawer
+      v-model:show="userModalVisible"
+      :title="userModalMode === 'create' ? '新增用户' : '编辑用户'"
+      :loading="saving"
+      @save="submitUserForm"
+    >
+      <NForm label-placement="left" label-width="90">
+        <NFormItem label="账号" required>
+          <NInput v-model:value="userForm.account" placeholder="请输入账号" />
+        </NFormItem>
+        <NFormItem label="姓名" required>
+          <NInput v-model:value="userForm.name" placeholder="请输入姓名" />
+        </NFormItem>
+        <NFormItem label="角色" required>
+          <NSelect
+            v-model:value="userForm.role"
+            :options="roleOptions"
+            placeholder="请选择角色"
+          />
+        </NFormItem>
+      </NForm>
+    </FormDrawer>
   </NCard>
 </template>

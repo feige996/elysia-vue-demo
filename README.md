@@ -69,6 +69,23 @@ bun run build
 
 说明：`dev:check` 会连本地库并写回 `api/openapi.generated.json`，若与远端不一致请重新提交该文件。更完整的流水线见 `.github/workflows/ci.yml`（含迁移/OpenAPI 漂移、E2E 等）。
 
+## 发布流程与回滚策略
+
+推荐发布步骤（主干发布）：
+
+1. 本地完成最小回归：`bun run dev:check && bun run test && bun run build`
+2. 合并 PR，等待 CI 全量通过（含 admin e2e smoke）
+3. 在目标环境执行数据库迁移：`bun run --cwd api db:migrate`
+4. 发布新版本服务并执行就绪检查：`GET /ready`
+
+建议回滚策略：
+
+- **应用回滚**：优先回滚到上一个稳定构建版本（镜像/包）
+- **数据回滚**：避免在生产环境使用 `db:push`，只通过迁移文件管理结构变更
+- **故障隔离**：若 `/ready` 显示 `not_ready`，按 `checks` 字段定位 database/redis 依赖
+
+发布前建议保留一份“版本 -> 迁移 -> 发布时间”的记录，便于故障追溯。
+
 ## 数据库模式（仅支持 PostgreSQL）
 
 使用方式（在启动前设置环境变量）：
@@ -127,6 +144,9 @@ bun run --cwd api dev
 - `DATABASE_URL is required ...`：确认已配置 `PG_HOST/PG_PORT/PG_USER/PG_PASSWORD/PG_DATABASE`
 - `OpenAPI drift detected`：执行 `bun run --cwd api openapi:generate` 并提交 `api/openapi.generated.json`
 - 后台登录后空白或权限异常：确认已执行 `bun run --cwd api db:seed` 初始化角色/菜单/权限数据
+- `/ready` 返回 `Not ready: redis`：检查 `REDIS_URL` 或 `REDIS_HOST/REDIS_PORT` 配置与 Redis 连通性
+- CI 中 admin e2e 失败：确认迁移与 seed 已执行，且 `E2E_API_BASE_URL` 指向可访问 API
+- 权限分配后页面仍不可见：退出重登获取最新权限与菜单树（权限缓存已按 token 作用域隔离）
 
 ## 日志模式
 
@@ -171,6 +191,20 @@ NODE_ENV=production LOG_FILE_PATH=/var/log/elysia/app-{date}.log bun run --cwd a
 - `web/src/api/request.ts`、`admin/src/api/request.ts`：统一请求内核（token、refresh、错误归一化）
 - `web/src/api/modules/*`、`admin/src/api/modules/*`：业务接口方法
 - 页面层只消费 modules，不直接编写请求细节
+
+## 安全策略补充
+
+CORS 白名单策略：
+
+- 默认仅允许本地开发域名：`http://localhost:*`、`http://127.0.0.1:*`
+- 生产建议通过 `CORS_ALLOW_ORIGINS` 显式配置白名单（逗号分隔）
+
+限流分级策略（同一窗口内）：
+
+- `auth`：登录/刷新/登出（`RATE_LIMIT_MAX_AUTH`）
+- `write`：`POST/PUT/PATCH/DELETE`（`RATE_LIMIT_MAX_WRITE`）
+- `read`：`GET`（`RATE_LIMIT_MAX_READ`）
+- `default`：其他请求（`RATE_LIMIT_MAX`）
 
 ## 示例账号
 

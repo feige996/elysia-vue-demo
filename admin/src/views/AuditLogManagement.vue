@@ -8,13 +8,14 @@ import {
   NInput,
   NSelect,
   NSpace,
-  NText,
 } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
 import {
   getAuditLogsMethod,
   type AuditLogItem,
 } from '../api/modules/audit-log';
+import SearchBar from '../components/crud/SearchBar.vue';
+import UnifiedState from '../components/state/UnifiedState.vue';
 
 const moduleKeyword = ref('');
 const operatorAccountKeyword = ref('');
@@ -105,50 +106,58 @@ onMounted(() => {
   <NCard title="操作日志" :bordered="false">
     <NSpace vertical :size="12">
       <NSpace align="center">
-        <NInput
-          v-model:value="moduleKeyword"
-          clearable
-          placeholder="按模块筛选"
-          style="width: 180px"
-        />
-        <NInput
-          v-model:value="operatorAccountKeyword"
-          clearable
-          placeholder="按操作者账号筛选"
-          style="width: 180px"
-        />
-        <NInput
-          v-model:value="operatorUserIdText"
-          clearable
-          placeholder="按操作者 ID 筛选"
-          style="width: 180px"
-        />
-        <NSelect
-          v-model:value="successValue"
-          style="width: 160px"
-          :options="[
-            { label: '全部结果', value: 'all' },
-            { label: '仅成功', value: 'success' },
-            { label: '仅失败', value: 'failed' },
-          ]"
-        />
-        <NDatePicker
-          v-model:value="dateRange"
-          type="datetimerange"
-          clearable
-          style="width: 320px"
-        />
-        <NButton type="primary" :loading="loading" @click="loadLogs"
-          >查询</NButton
-        >
+        <SearchBar>
+          <NInput
+            v-model:value="moduleKeyword"
+            clearable
+            placeholder="按模块筛选"
+            style="width: 180px"
+          />
+          <NInput
+            v-model:value="operatorAccountKeyword"
+            clearable
+            placeholder="按操作者账号筛选"
+            style="width: 180px"
+          />
+          <NInput
+            v-model:value="operatorUserIdText"
+            clearable
+            placeholder="按操作者 ID 筛选"
+            style="width: 180px"
+          />
+          <NSelect
+            v-model:value="successValue"
+            style="width: 160px"
+            :options="[
+              { label: '全部结果', value: 'all' },
+              { label: '仅成功', value: 'success' },
+              { label: '仅失败', value: 'failed' },
+            ]"
+          />
+          <NDatePicker
+            v-model:value="dateRange"
+            type="datetimerange"
+            clearable
+            style="width: 320px"
+          />
+          <NButton type="primary" :loading="loading" @click="loadLogs"
+            >查询</NButton
+          >
+        </SearchBar>
       </NSpace>
-      <NText v-if="errorText" type="error">{{ errorText }}</NText>
-      <NDataTable
-        :columns="columns"
-        :data="rows"
+      <UnifiedState
         :loading="loading"
-        :pagination="pagination"
-      />
+        :error-text="errorText"
+        :empty="rows.length === 0"
+        empty-description="暂无日志数据"
+      >
+        <NDataTable
+          :columns="columns"
+          :data="rows"
+          :loading="loading"
+          :pagination="pagination"
+        />
+      </UnifiedState>
     </NSpace>
   </NCard>
 </template>

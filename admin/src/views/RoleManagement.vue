@@ -6,14 +6,12 @@ import {
   NCheckbox,
   NCheckboxGroup,
   NDataTable,
-  NEmpty,
   NForm,
   NFormItem,
   NInput,
   NModal,
   NSpace,
   NTag,
-  NText,
   useDialog,
   useMessage,
   type DataTableColumns,
@@ -33,6 +31,10 @@ import {
   type RoleRow,
 } from '../api/modules/role';
 import { getMappedErrorMessage } from '../api/error-map';
+import SearchBar from '../components/crud/SearchBar.vue';
+import TableToolbar from '../components/crud/TableToolbar.vue';
+import FormDrawer from '../components/crud/FormDrawer.vue';
+import UnifiedState from '../components/state/UnifiedState.vue';
 
 const message = useMessage();
 const dialog = useDialog();
@@ -307,63 +309,57 @@ onMounted(() => {
 <template>
   <NCard title="角色管理" :bordered="false">
     <NSpace vertical :size="12">
-      <NSpace>
-        <NButton type="primary" @click="openCreateRoleModal">新增角色</NButton>
-        <NButton type="default" :loading="loading" @click="loadRoles"
-          >刷新</NButton
-        >
-      </NSpace>
-      <NText v-if="errorText" type="error">{{ errorText }}</NText>
-      <NEmpty
-        v-if="!loading && !errorText && roles.length === 0"
-        description="暂无角色数据"
-      />
-      <NDataTable
-        v-else
-        :columns="columns"
-        :data="roles"
+      <TableToolbar>
+        <template #left>
+          <SearchBar>
+            <NButton type="default" :loading="loading" @click="loadRoles"
+              >刷新</NButton
+            >
+          </SearchBar>
+        </template>
+        <template #right>
+          <NButton type="primary" @click="openCreateRoleModal"
+            >新增角色</NButton
+          >
+        </template>
+      </TableToolbar>
+      <UnifiedState
         :loading="loading"
-        :pagination="false"
-      />
+        :error-text="errorText"
+        :empty="roles.length === 0"
+        empty-description="暂无角色数据"
+      >
+        <NDataTable
+          :columns="columns"
+          :data="roles"
+          :loading="loading"
+          :pagination="false"
+        />
+      </UnifiedState>
     </NSpace>
 
-    <NModal v-model:show="roleModalVisible">
-      <NCard
-        style="width: 520px"
-        :title="roleModalMode === 'create' ? '新增角色' : '编辑角色'"
-        :bordered="false"
-      >
-        <NForm label-placement="left" label-width="90">
-          <NFormItem label="角色编码" required>
-            <NInput
-              v-model:value="roleForm.code"
-              placeholder="请输入角色编码"
-            />
-          </NFormItem>
-          <NFormItem label="角色名称" required>
-            <NInput
-              v-model:value="roleForm.name"
-              placeholder="请输入角色名称"
-            />
-          </NFormItem>
-          <NFormItem label="说明">
-            <NInput
-              v-model:value="roleForm.description"
-              type="textarea"
-              placeholder="请输入角色说明"
-            />
-          </NFormItem>
-        </NForm>
-        <template #footer>
-          <NSpace justify="end">
-            <NButton @click="roleModalVisible = false">取消</NButton>
-            <NButton type="primary" :loading="saving" @click="submitRoleForm"
-              >保存</NButton
-            >
-          </NSpace>
-        </template>
-      </NCard>
-    </NModal>
+    <FormDrawer
+      v-model:show="roleModalVisible"
+      :title="roleModalMode === 'create' ? '新增角色' : '编辑角色'"
+      :loading="saving"
+      @save="submitRoleForm"
+    >
+      <NForm label-placement="left" label-width="90">
+        <NFormItem label="角色编码" required>
+          <NInput v-model:value="roleForm.code" placeholder="请输入角色编码" />
+        </NFormItem>
+        <NFormItem label="角色名称" required>
+          <NInput v-model:value="roleForm.name" placeholder="请输入角色名称" />
+        </NFormItem>
+        <NFormItem label="说明">
+          <NInput
+            v-model:value="roleForm.description"
+            type="textarea"
+            placeholder="请输入角色说明"
+          />
+        </NFormItem>
+      </NForm>
+    </FormDrawer>
 
     <NModal v-model:show="permissionModalVisible">
       <NCard style="width: 680px" title="分配权限" :bordered="false">
