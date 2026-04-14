@@ -1,12 +1,13 @@
 import { Elysia } from 'elysia';
 import { rateLimit } from 'elysia-rate-limit';
-import { getAuthorizedRole } from '../../shared/auth/token-auth';
+import { getAuthorizedIdentity } from '../../shared/auth/token-auth';
 import { env } from '../../shared/config/env';
 import { logService } from '../../shared/logger/log.service';
 import { ErrorKey, failByKey } from '../../shared/types/http';
 import {
   ensureRequestContext,
   setAuthorizedRoleInContext,
+  setAuthorizedUserInContext,
 } from '../../shared/types/request-context';
 import { db } from '../../infra/db/client';
 import { sysAuditLogsTable } from '../../infra/db/schema';
@@ -78,7 +79,8 @@ export const loggerMiddleware = new Elysia({ name: 'logger-middleware' })
     const path = new URL(request.url).pathname;
     const status = typeof set.status === 'number' ? set.status : 200;
     const durationMs = Date.now() - requestStartedAt;
-    const { authorizedRole } = ensureRequestContext(request);
+    const { authorizedRole, authorizedUserId, authorizedAccount } =
+      ensureRequestContext(request);
     logService.info('request_completed', {
       event: 'request_completed',
       requestId,
@@ -101,7 +103,8 @@ export const loggerMiddleware = new Elysia({ name: 'logger-middleware' })
           responseCode: status,
           success: status < 400 ? 1 : 0,
           durationMs,
-          operatorAccount: authorizedRole ?? null,
+          operatorUserId: authorizedUserId ?? null,
+          operatorAccount: authorizedAccount ?? null,
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -122,18 +125,19 @@ export const authMiddleware = new Elysia({ name: 'auth-middleware' }).onRequest(
     const path = new URL(request.url).pathname;
     const method = request.method.toUpperCase();
     if (isPublicRoute(method, path)) return;
-    const role = await getAuthorizedRole(
+    const identity = await getAuthorizedIdentity(
       request.headers.get('authorization'),
       async (token) => jwt.verify(token),
     );
-    if (!role) {
+    if (!identity) {
       const { requestId } = ensureRequestContext(request);
       const unauthorized = failByKey(requestId, ErrorKey.UNAUTHORIZED);
       set.status = unauthorized.status;
       return unauthorized.payload;
     }
-    setAuthorizedRoleInContext(request, role);
-    if (requireAdminRoute(method, path) && role !== 'admin') {
+    setAuthorizedRoleInContext(request, identity.role);
+    setAuthorizedUserInContext(request, identity.userId, identity.account);
+    if (requireAdminRoute(method, path) && identity.role !== 'admin') {
       const { requestId } = ensureRequestContext(request);
       const forbidden = failByKey(requestId, ErrorKey.FORBIDDEN);
       set.status = forbidden.status;

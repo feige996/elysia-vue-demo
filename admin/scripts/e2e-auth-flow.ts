@@ -47,7 +47,10 @@ const main = async () => {
     data?: { accessToken?: string };
   };
   assert(loginJson.code === 0, 'login api code is not 0');
-  const token = assertNonEmptyString(loginJson.data?.accessToken, 'missing access token');
+  const token = assertNonEmptyString(
+    loginJson.data?.accessToken,
+    'missing access token',
+  );
 
   const permissionRes = await fetch(`${baseUrl}/api/permissions/current`, {
     headers: { authorization: `Bearer ${token}` },

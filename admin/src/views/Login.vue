@@ -3,12 +3,12 @@ import { reactive } from 'vue';
 import { z } from 'zod';
 import { NButton, NForm, NFormItem, NInput, NText } from 'naive-ui';
 import { requestState, setAccessToken, setRefreshToken } from '../api/request';
-import { ApiRequestError } from '../../../shared/request/eden';
 import {
   loginMethod,
   type LoginPayload,
   type LoginResult,
 } from '../api/modules/auth';
+import { getMappedErrorMessage } from '../api/error-map';
 
 const emit = defineEmits<{
   loginSuccess: [payload: LoginResult];
@@ -52,15 +52,7 @@ const submitLogin = async () => {
     setRefreshToken(response.data.refreshToken);
     emit('loginSuccess', response.data);
   } catch (error) {
-    if (error instanceof ApiRequestError) {
-      if (error.code === 401000) {
-        errorMessage.text = '账号或密码错误';
-        return;
-      }
-      errorMessage.text = error.message;
-      return;
-    }
-    errorMessage.text = error instanceof Error ? error.message : '登录失败';
+    errorMessage.text = getMappedErrorMessage(error, '登录失败');
   }
 };
 </script>

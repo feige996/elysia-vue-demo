@@ -5,6 +5,7 @@ import { openapi } from '@elysiajs/openapi';
 import { articleModule } from '../modules/article';
 import { fileModule } from '../modules/file';
 import { checkDatabaseHealth } from '../infra/db/client';
+import { checkRedisHealth } from '../shared/auth/refresh-token-store';
 import { env } from '../shared/config/env';
 import { logService } from '../shared/logger/log.service';
 import { userModule } from '../modules/user';
@@ -77,18 +78,72 @@ export const app = new Elysia()
   )
   .get('/ready', async ({ request, set }) => {
     const requestId = ensureRequestContext(request).requestId;
+    const checks = {
+      database: {
+        enabled: true,
+        ok: false,
+        detail: '',
+      },
+      redis: {
+        enabled: false,
+        ok: true,
+        detail: '',
+      },
+    };
     try {
       await checkDatabaseHealth();
-      return ok(requestId, { status: 'ready', database: 'ok' }, 'ok');
+      checks.database.ok = true;
+      checks.database.detail = 'Database health check passed';
+      const redisHealth = await checkRedisHealth();
+      checks.redis.enabled = redisHealth.enabled;
+      checks.redis.ok = redisHealth.ok;
+      checks.redis.detail = redisHealth.detail;
+      const notReadyDependencies = Object.entries(checks)
+        .filter(([, value]) => value.enabled && !value.ok)
+        .map(([key]) => key);
+
+      if (notReadyDependencies.length > 0) {
+        const result = failByKey(
+          requestId,
+          'SERVICE_UNAVAILABLE',
+          `Not ready: ${notReadyDependencies.join(', ')}`,
+        );
+        set.status = result.status;
+        return {
+          ...result.payload,
+          data: {
+            status: 'not_ready',
+            checks,
+            notReadyDependencies,
+          },
+        };
+      }
+      return ok(
+        requestId,
+        {
+          status: 'ready',
+          checks,
+        },
+        'ok',
+      );
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
+      checks.database.ok = false;
+      checks.database.detail = detail;
       const result = failByKey(
         requestId,
         'SERVICE_UNAVAILABLE',
-        `Not ready: ${detail}`,
+        'Not ready: database',
       );
       set.status = result.status;
-      return result.payload;
+      return {
+        ...result.payload,
+        data: {
+          status: 'not_ready',
+          checks,
+          notReadyDependencies: ['database'],
+        },
+      };
     }
   })
   .use(userModule)

@@ -89,6 +89,7 @@ const auditLogQuerySchema = t.Object({
   page: t.Optional(t.Numeric({ minimum: 1, default: 1 })),
   pageSize: t.Optional(t.Numeric({ minimum: 1, maximum: 100, default: 20 })),
   module: t.Optional(t.String()),
+  operatorUserId: t.Optional(t.Numeric({ minimum: 1 })),
   operatorAccount: t.Optional(t.String()),
   success: t.Optional(t.Numeric({ minimum: 0, maximum: 1 })),
   dateFrom: t.Optional(t.String()),
@@ -228,6 +229,9 @@ export const systemModule = new Elysia({
       const filters = [
         query.module
           ? ilike(sysAuditLogsTable.module, `%${query.module}%`)
+          : undefined,
+        query.operatorUserId !== undefined
+          ? eq(sysAuditLogsTable.operatorUserId, query.operatorUserId)
           : undefined,
         query.operatorAccount
           ? ilike(

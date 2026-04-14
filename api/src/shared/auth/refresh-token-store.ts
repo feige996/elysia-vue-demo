@@ -30,6 +30,53 @@ const getRedisClient = async () => {
   return redisClient.status === 'ready' ? redisClient : null;
 };
 
+export const checkRedisHealth = async () => {
+  if (!redisClient) {
+    return {
+      enabled: false,
+      ok: true,
+      detail: 'Redis is not configured, health check skipped',
+    };
+  }
+  if (redisClient.status === 'wait') {
+    try {
+      await redisClient.connect();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        enabled: true,
+        ok: false,
+        detail: `Redis connect failed: ${message}`,
+      };
+    }
+  }
+  if (redisClient.status !== 'ready') {
+    return {
+      enabled: true,
+      ok: false,
+      detail: `Redis status is ${redisClient.status}`,
+    };
+  }
+  try {
+    const pong = await redisClient.ping();
+    return {
+      enabled: true,
+      ok: pong === 'PONG',
+      detail:
+        pong === 'PONG'
+          ? 'Redis ping success'
+          : `Redis ping returned unexpected response: ${pong}`,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      enabled: true,
+      ok: false,
+      detail: `Redis ping failed: ${message}`,
+    };
+  }
+};
+
 const cleanupMemoryStore = () => {
   const now = nowInSeconds();
   for (const [jti, expiredAt] of memoryRevokedSet.entries()) {

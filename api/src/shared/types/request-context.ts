@@ -2,6 +2,8 @@ type RequestContext = {
   requestId: string;
   requestStartedAt: number;
   authorizedRole?: 'admin' | 'editor';
+  authorizedUserId?: number;
+  authorizedAccount?: string;
 };
 
 const requestContextMap = new WeakMap<Request, RequestContext>();
@@ -24,4 +26,14 @@ export const setAuthorizedRoleInContext = (
 ) => {
   const context = ensureRequestContext(request);
   context.authorizedRole = role;
+};
+
+export const setAuthorizedUserInContext = (
+  request: Request,
+  userId: number | undefined,
+  account: string | undefined,
+) => {
+  const context = ensureRequestContext(request);
+  context.authorizedUserId = userId;
+  context.authorizedAccount = account;
 };

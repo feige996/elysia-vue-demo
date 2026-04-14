@@ -9,6 +9,11 @@ const TOKEN_PREFIX = 'Bearer ';
 
 export type AuthorizedRole = 'admin' | 'editor';
 type TokenType = 'access' | 'refresh';
+type AuthorizedIdentity = {
+  role: AuthorizedRole;
+  userId?: number;
+  account?: string;
+};
 
 type JwtSignFn = (payload: Record<string, unknown>) => Promise<string>;
 type JwtVerifyFn = (token: string) => Promise<unknown>;
@@ -19,6 +24,8 @@ type TokenPayload = {
   jti: string;
   iat: number;
   exp: number;
+  userId?: number;
+  account?: string;
 };
 
 const extractBearerToken = (authorizationHeader: string | null) => {
@@ -39,21 +46,30 @@ const parseTokenPayload = (payload: unknown): TokenPayload | null => {
   const jti = Reflect.get(payload, 'jti');
   const iat = Reflect.get(payload, 'iat');
   const exp = Reflect.get(payload, 'exp');
+  const userIdValue = Reflect.get(payload, 'userId');
+  const accountValue = Reflect.get(payload, 'account');
   if (!isRole(role) || !isTokenType(type) || typeof jti !== 'string')
     return null;
   if (typeof iat !== 'number' || typeof exp !== 'number') return null;
-  return { role, type, jti, iat, exp };
+  const userId =
+    typeof userIdValue === 'number' && Number.isInteger(userIdValue)
+      ? userIdValue
+      : undefined;
+  const account = typeof accountValue === 'string' ? accountValue : undefined;
+  return { role, type, jti, iat, exp, userId, account };
 };
 
 const issueToken = async (
-  role: AuthorizedRole,
+  identity: AuthorizedIdentity,
   type: TokenType,
   expiresInSeconds: number,
   signJwt: JwtSignFn,
 ) => {
   const now = Math.floor(Date.now() / 1000);
   return signJwt({
-    role,
+    role: identity.role,
+    userId: identity.userId,
+    account: identity.account,
     type,
     jti: randomUUID(),
     iat: now,
@@ -62,14 +78,15 @@ const issueToken = async (
 };
 
 export const issueAccessToken = async (
-  role: AuthorizedRole,
+  identity: AuthorizedIdentity,
   signJwt: JwtSignFn,
-) => issueToken(role, 'access', env.JWT_EXPIRES_IN_SECONDS, signJwt);
+) => issueToken(identity, 'access', env.JWT_EXPIRES_IN_SECONDS, signJwt);
 
 export const issueRefreshToken = async (
-  role: AuthorizedRole,
+  identity: AuthorizedIdentity,
   signJwt: JwtSignFn,
-) => issueToken(role, 'refresh', env.JWT_REFRESH_EXPIRES_IN_SECONDS, signJwt);
+) =>
+  issueToken(identity, 'refresh', env.JWT_REFRESH_EXPIRES_IN_SECONDS, signJwt);
 
 export const revokeRefreshToken = async (
   refreshToken: string,
@@ -85,13 +102,17 @@ export const revokeRefreshToken = async (
 export const consumeRefreshToken = async (
   refreshToken: string,
   verifyJwt: JwtVerifyFn,
-): Promise<AuthorizedRole | null> => {
+): Promise<AuthorizedIdentity | null> => {
   const verified = await verifyJwt(refreshToken);
   const payload = parseTokenPayload(verified);
   if (!payload || payload.type !== 'refresh') return null;
   if (await isRefreshTokenRevoked(payload.jti)) return null;
   await markRefreshTokenRevoked(payload.jti, payload.exp);
-  return payload.role;
+  return {
+    role: payload.role,
+    userId: payload.userId,
+    account: payload.account,
+  };
 };
 
 export const getAuthorizedRole = async (
@@ -110,3 +131,19 @@ export const isAuthorizedToken = async (
   authorizationHeader: string | null,
   verifyJwt: JwtVerifyFn,
 ) => (await getAuthorizedRole(authorizationHeader, verifyJwt)) !== null;
+
+export const getAuthorizedIdentity = async (
+  authorizationHeader: string | null,
+  verifyJwt: JwtVerifyFn,
+): Promise<AuthorizedIdentity | null> => {
+  const token = extractBearerToken(authorizationHeader);
+  if (!token) return null;
+  const verified = await verifyJwt(token);
+  const payload = parseTokenPayload(verified);
+  if (!payload || payload.type !== 'access') return null;
+  return {
+    role: payload.role,
+    userId: payload.userId,
+    account: payload.account,
+  };
+};

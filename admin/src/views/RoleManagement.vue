@@ -32,6 +32,7 @@ import {
   type PermissionOption,
   type RoleRow,
 } from '../api/modules/role';
+import { getMappedErrorMessage } from '../api/error-map';
 
 const message = useMessage();
 const dialog = useDialog();
@@ -72,7 +73,7 @@ const loadRoles = async () => {
     const response = await getRolesMethod();
     roles.value = response.data;
   } catch (error) {
-    errorText.value = error instanceof Error ? error.message : '加载失败';
+    errorText.value = getMappedErrorMessage(error, '加载失败');
     roles.value = [];
   } finally {
     loading.value = false;
@@ -138,7 +139,7 @@ const submitRoleForm = async () => {
     roleModalVisible.value = false;
     await loadRoles();
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '保存失败');
+    message.error(getMappedErrorMessage(error, '保存失败'));
   } finally {
     saving.value = false;
   }
@@ -151,7 +152,7 @@ const updateRoleStatus = async (row: RoleRow) => {
     message.success(nextStatus === 1 ? '角色已启用' : '角色已禁用');
     await loadRoles();
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '状态更新失败');
+    message.error(getMappedErrorMessage(error, '状态更新失败'));
   }
 };
 
@@ -167,7 +168,7 @@ const deleteRole = (row: RoleRow) => {
         message.success('删除成功');
         await loadRoles();
       } catch (error) {
-        message.error(error instanceof Error ? error.message : '删除失败');
+        message.error(getMappedErrorMessage(error, '删除失败'));
       }
     },
   });
@@ -180,7 +181,7 @@ const openPermissionModal = async (row: RoleRow) => {
     await ensurePermissionOptions();
     permissionModalVisible.value = true;
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '加载权限失败');
+    message.error(getMappedErrorMessage(error, '加载权限失败'));
   }
 };
 
@@ -195,7 +196,7 @@ const submitRolePermissions = async () => {
     message.success('权限分配已保存');
     permissionModalVisible.value = false;
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '保存权限失败');
+    message.error(getMappedErrorMessage(error, '保存权限失败'));
   } finally {
     saving.value = false;
   }
@@ -208,7 +209,7 @@ const openMenuModal = async (row: RoleRow) => {
     await ensureMenuOptions();
     menuModalVisible.value = true;
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '加载菜单失败');
+    message.error(getMappedErrorMessage(error, '加载菜单失败'));
   }
 };
 
@@ -220,7 +221,7 @@ const submitRoleMenus = async () => {
     message.success('菜单分配已保存');
     menuModalVisible.value = false;
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '保存菜单失败');
+    message.error(getMappedErrorMessage(error, '保存菜单失败'));
   } finally {
     saving.value = false;
   }

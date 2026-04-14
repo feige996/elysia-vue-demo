@@ -26,6 +26,7 @@ import {
   updateUserMethod,
   type User,
 } from '../api/modules/user';
+import { getMappedErrorMessage } from '../api/error-map';
 
 type UserRow = User;
 
@@ -140,7 +141,7 @@ const fetchUsers = async () => {
     users.value = response.data.list;
     total.value = response.data.total;
   } catch (error) {
-    errorText.value = error instanceof Error ? error.message : '加载失败';
+    errorText.value = getMappedErrorMessage(error, '加载失败');
     users.value = [];
     total.value = 0;
   } finally {
@@ -197,7 +198,7 @@ const submitUserForm = async () => {
     userModalVisible.value = false;
     await fetchUsers();
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '保存失败');
+    message.error(getMappedErrorMessage(error, '保存失败'));
   } finally {
     saving.value = false;
   }
@@ -215,7 +216,7 @@ const deleteOneUser = (row: UserRow) => {
         message.success('删除成功');
         await fetchUsers();
       } catch (error) {
-        message.error(error instanceof Error ? error.message : '删除失败');
+        message.error(getMappedErrorMessage(error, '删除失败'));
       }
     },
   });
@@ -239,7 +240,7 @@ const deleteBatchUsers = () => {
         message.success('批量删除成功');
         await fetchUsers();
       } catch (error) {
-        message.error(error instanceof Error ? error.message : '批量删除失败');
+        message.error(getMappedErrorMessage(error, '批量删除失败'));
       }
     },
   });

@@ -6,7 +6,7 @@ import Login from './Login.vue';
 import type { LoginResult } from '../api/modules/auth';
 import { useAuthStore } from '../store/auth';
 import { ensureAuthDynamicRoutes } from '../router';
-import { ApiRequestError } from '../../../shared/request/eden';
+import { getMappedErrorMessage } from '../api/error-map';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -23,18 +23,7 @@ const onLoginSuccess = async (payload: LoginResult) => {
     await router.replace('/system/user');
   } catch (error) {
     authStore.clearAuthState();
-    if (error instanceof ApiRequestError) {
-      if (error.code === 401000) {
-        errorText.value = '登录状态已失效，请重新登录';
-        return;
-      }
-      if (error.code === 403000) {
-        errorText.value = '当前账号无后台访问权限';
-        return;
-      }
-    }
-    errorText.value =
-      error instanceof Error ? error.message : '初始化登录上下文失败';
+    errorText.value = getMappedErrorMessage(error, '初始化登录上下文失败');
   } finally {
     loading.value = false;
   }

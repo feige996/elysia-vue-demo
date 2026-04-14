@@ -6,20 +6,21 @@ import {
 } from 'vue-router';
 import { ADMIN_TOKEN_KEY } from '../../../shared/auth/storage-keys';
 import type { MenuTreeEntity } from '../../../api/src/shared/types/entities';
-import ConsoleLayout from '../layouts/ConsoleLayout.vue';
-import Forbidden from '../views/Forbidden.vue';
-import LoginPage from '../views/LoginPage.vue';
-import MenuManagement from '../views/MenuManagement.vue';
-import RoleManagement from '../views/RoleManagement.vue';
-import UserManagement from '../views/UserManagement.vue';
-import DictConfigManagement from '../views/DictConfigManagement.vue';
-import AuditLogManagement from '../views/AuditLogManagement.vue';
 import { pinia } from '../store';
 import { useAuthStore } from '../store/auth';
 
 const DYNAMIC_ROUTE_NAME_PREFIX = 'dynamic:';
 
 const dynamicRouteNames = new Set<string>();
+
+const ConsoleLayout = () => import('../layouts/ConsoleLayout.vue');
+const Forbidden = () => import('../views/Forbidden.vue');
+const LoginPage = () => import('../views/LoginPage.vue');
+const MenuManagement = () => import('../views/MenuManagement.vue');
+const RoleManagement = () => import('../views/RoleManagement.vue');
+const UserManagement = () => import('../views/UserManagement.vue');
+const DictConfigManagement = () => import('../views/DictConfigManagement.vue');
+const AuditLogManagement = () => import('../views/AuditLogManagement.vue');
 
 const resolveMenuComponent = (menu: MenuTreeEntity) => {
   const componentKey = menu.component ?? '';

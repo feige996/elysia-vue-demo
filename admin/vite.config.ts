@@ -12,5 +12,16 @@ export default defineConfig(({ mode }) => {
     server: {
       port,
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-vue': ['vue', 'vue-router', 'pinia'],
+            'vendor-ui': ['naive-ui'],
+            'vendor-eden': ['@elysiajs/eden'],
+          },
+        },
+      },
+    },
   };
 });

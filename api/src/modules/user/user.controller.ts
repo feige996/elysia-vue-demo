@@ -22,15 +22,20 @@ import type { UserRepository } from './user.repository';
 import type { UserEntity } from '../../shared/types/entities';
 import type { PaginatedData } from '../../shared/types/http';
 
+type TokenIdentity = {
+  role: AuthorizedRole;
+  userId?: number;
+  account?: string;
+};
+
 export const createUserController = (
   userService: UserService,
   userRepository: UserRepository,
-  issueTokens?: (
-    role: AuthorizedRole,
-  ) => Promise<{ accessToken: string; refreshToken: string }>,
-  consumeRefreshToken?: (
-    refreshToken: string,
-  ) => Promise<AuthorizedRole | null>,
+  issueTokens?: (identity: TokenIdentity) => Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }>,
+  consumeRefreshToken?: (refreshToken: string) => Promise<TokenIdentity | null>,
   revokeRefreshToken?: (refreshToken: string) => Promise<boolean>,
 ) => ({
   login: async (body: unknown, request: Request) => {
@@ -59,7 +64,11 @@ export const createUserController = (
         'Auth token issuer is not configured',
       );
     }
-    const tokens = await issueTokens(user.role);
+    const tokens = await issueTokens({
+      role: user.role,
+      userId: user.id,
+      account: user.account,
+    });
 
     return {
       status: 200,
@@ -450,15 +459,15 @@ export const createUserController = (
         'Refresh token handler is not configured',
       );
     }
-    const role = await consumeRefreshToken(parsedBody.data.refreshToken);
-    if (!role) {
+    const identity = await consumeRefreshToken(parsedBody.data.refreshToken);
+    if (!identity) {
       return failByKey(
         requestId,
         ErrorKey.UNAUTHORIZED,
         'Invalid refresh token',
       );
     }
-    const tokens = await issueTokens(role);
+    const tokens = await issueTokens(identity);
     return {
       status: 200,
       payload: ok(
