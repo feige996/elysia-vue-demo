@@ -40,6 +40,6 @@
     "@types/ali-oss": "^6.23.3",
     "@types/bun": "^1.3.0",
     "drizzle-kit": "^0.31.4",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.2"
   }
 }
