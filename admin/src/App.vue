@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { NConfigProvider, darkTheme } from 'naive-ui';
+import {
+  NConfigProvider,
+  NDialogProvider,
+  NMessageProvider,
+  darkTheme,
+} from 'naive-ui';
 import { computed } from 'vue';
 import { useUiStore } from './store/ui';
 
@@ -17,6 +22,10 @@ const themeOverrides = computed(() => ({
 
 <template>
   <NConfigProvider :theme="theme" :theme-overrides="themeOverrides">
-    <RouterView />
+    <NMessageProvider>
+      <NDialogProvider>
+        <RouterView />
+      </NDialogProvider>
+    </NMessageProvider>
   </NConfigProvider>
 </template>
