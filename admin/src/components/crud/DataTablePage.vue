@@ -5,7 +5,6 @@ import {
   NSpace,
   type DataTableColumns,
   type DataTableProps,
-  type DataTableRowKey,
   type PaginationProps,
 } from 'naive-ui';
 import TableToolbar from './TableToolbar.vue';
@@ -21,10 +20,6 @@ type Props = {
   data: Record<string, unknown>[];
   pagination?: false | PaginationProps;
   rowKey?: NonNullable<DataTableProps['rowKey']>;
-  rowSelection?: {
-    checkedRowKeys?: DataTableRowKey[];
-    onUpdateCheckedRowKeys?: (keys: DataTableRowKey[]) => void;
-  };
   tableProps?: Partial<DataTableProps>;
   bordered?: boolean;
 };
@@ -63,7 +58,6 @@ const props = withDefaults(defineProps<Props>(), {
           :loading="props.loading"
           :pagination="props.pagination"
           :row-key="props.rowKey"
-          :row-selection="props.rowSelection"
         />
       </UnifiedState>
     </NSpace>

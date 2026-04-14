@@ -19,6 +19,36 @@ const users = [
   { id: 3, account: 'alice', name: 'Alice', role: 'editor' as const },
 ];
 
+const roles: Array<{
+  id: number;
+  code: string;
+  name: string;
+  description: string | null;
+  status: number;
+}> = [
+  {
+    id: 1,
+    code: 'admin',
+    name: '管理员',
+    description: '系统管理员',
+    status: 1,
+  },
+  {
+    id: 2,
+    code: 'editor',
+    name: '编辑',
+    description: '内容编辑',
+    status: 1,
+  },
+  {
+    id: 3,
+    code: 'viewer',
+    name: '访客',
+    description: '只读角色',
+    status: 1,
+  },
+];
+
 const articles = [
   { id: 1, title: 'Elysia + Bun 快速启动', author: 'Admin' },
   { id: 2, title: 'Vue3 + Alova 请求实践', author: 'Editor' },
@@ -59,6 +89,66 @@ const userRepository = {
       list: source.slice(offset, offset + pageSize),
       total: source.length,
     };
+  },
+  async findRoles() {
+    return roles.filter((role) => role.status !== -1);
+  },
+  async findRoleById(id: number) {
+    return roles.find((role) => role.id === id && role.status !== -1);
+  },
+  async findRoleByCode(code: string) {
+    return roles.find((role) => role.code === code);
+  },
+  async createRole(input: {
+    code: string;
+    name: string;
+    description?: string | null;
+    status?: number;
+  }) {
+    const id = Math.max(...roles.map((item) => item.id)) + 1;
+    const created = {
+      id,
+      code: input.code,
+      name: input.name,
+      description: input.description ?? null,
+      status: input.status ?? 1,
+    };
+    roles.push(created);
+    return created;
+  },
+  async updateRole(
+    id: number,
+    input: Partial<{ code: string; name: string; description: string | null }>,
+  ) {
+    const target = roles.find((item) => item.id === id && item.status !== -1);
+    if (!target) return undefined;
+    if (input.code !== undefined) target.code = input.code;
+    if (input.name !== undefined) target.name = input.name;
+    if (input.description !== undefined) target.description = input.description;
+    return target;
+  },
+  async updateRoleStatus(id: number, status: number) {
+    const target = roles.find((item) => item.id === id && item.status !== -1);
+    if (!target) return undefined;
+    target.status = status;
+    return target;
+  },
+  async deleteRoleById(id: number) {
+    const target = roles.find((item) => item.id === id && item.status !== -1);
+    if (!target) return false;
+    target.status = -1;
+    return true;
+  },
+  async replaceRolePermissions() {
+    return;
+  },
+  async replaceRoleMenus() {
+    return;
+  },
+  async countUsersByRoleId(roleId: number) {
+    const targetRole = roles.find((role) => role.id === roleId);
+    if (!targetRole) return 0;
+    return users.filter((user) => user.role === targetRole.code).length;
   },
   async create(input: {
     account: string;
@@ -103,6 +193,28 @@ const userRepository = {
       return ['system:user:view', 'system:role:view', 'system:menu:view'];
     }
     return ['system:user:view'];
+  },
+  async findPermissions() {
+    return [
+      {
+        id: 1,
+        code: 'system:user:view',
+        name: '查看用户',
+        module: 'system',
+        status: 1,
+      },
+    ];
+  },
+  async findMenus() {
+    return [
+      {
+        id: 1,
+        parentId: 0,
+        name: '系统管理',
+        path: '/system',
+        status: 1,
+      },
+    ];
   },
   async findMenuTreeByRole(role: 'admin' | 'editor') {
     const baseTree = [
@@ -531,5 +643,38 @@ describe('HTTP integration', () => {
     };
     expect(batchDeleteResponse.status).toBe(200);
     expect(batchDeletePayload.data?.deleted).toBe(1);
+  });
+
+  it('prevents deleting protected seed roles', async () => {
+    const loginResponse = await sendJson(
+      'http://localhost/api/auth/login',
+      'POST',
+      {
+        account: 'admin',
+        password: 'admin123',
+      },
+    );
+    const loginPayload = (await loginResponse.json()) as {
+      data?: { accessToken: string };
+    };
+    const authHeaders = {
+      authorization: `Bearer ${loginPayload.data?.accessToken ?? ''}`,
+    };
+
+    const deleteProtectedRoleResponse = await sendJson(
+      'http://localhost/api/roles/1',
+      'DELETE',
+      undefined,
+      authHeaders,
+    );
+    const deleteProtectedRolePayload =
+      (await deleteProtectedRoleResponse.json()) as {
+        code: number;
+        message: string;
+      };
+
+    expect(deleteProtectedRoleResponse.status).toBe(409);
+    expect(deleteProtectedRolePayload.code).toBe(AppCode.CONFLICT);
+    expect(deleteProtectedRolePayload.message.includes('不可删除')).toBeTrue();
   });
 });

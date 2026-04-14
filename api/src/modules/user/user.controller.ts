@@ -28,6 +28,8 @@ type TokenIdentity = {
   account?: string;
 };
 
+const PROTECTED_ROLE_CODES = new Set<string>(['admin', 'editor']);
+
 export const createUserController = (
   userService: UserService,
   userRepository: UserRepository,
@@ -191,6 +193,33 @@ export const createUserController = (
         parsedBody.error.issues[0]?.message ?? 'Invalid role status payload',
       );
     }
+    const currentRole = await userRepository.findRoleById(parsedId.data.id);
+    if (!currentRole) {
+      return failByKey(requestId, ErrorKey.NOT_FOUND, 'Role not found');
+    }
+    if (
+      parsedBody.data.status === 0 &&
+      PROTECTED_ROLE_CODES.has(currentRole.code)
+    ) {
+      return failByKey(
+        requestId,
+        ErrorKey.CONFLICT,
+        `系统保留角色「${currentRole.code}」不可禁用`,
+      );
+    }
+    if (parsedBody.data.status === 0) {
+      const activeUsersCount = await userRepository.countUsersByRoleId(
+        parsedId.data.id,
+      );
+      if (activeUsersCount > 0) {
+        return failByKey(
+          requestId,
+          ErrorKey.CONFLICT,
+          `当前角色仍绑定 ${activeUsersCount} 个启用用户，请先调整用户角色`,
+        );
+      }
+    }
+
     const updated = await userRepository.updateRoleStatus(
       parsedId.data.id,
       parsedBody.data.status,
@@ -211,6 +240,27 @@ export const createUserController = (
         requestId,
         ErrorKey.VALIDATION_ERROR,
         parsedId.error.issues[0]?.message ?? 'Invalid id',
+      );
+    }
+    const role = await userRepository.findRoleById(parsedId.data.id);
+    if (!role) {
+      return failByKey(requestId, ErrorKey.NOT_FOUND, 'Role not found');
+    }
+    if (PROTECTED_ROLE_CODES.has(role.code)) {
+      return failByKey(
+        requestId,
+        ErrorKey.CONFLICT,
+        `系统保留角色「${role.code}」不可删除`,
+      );
+    }
+    const activeUsersCount = await userRepository.countUsersByRoleId(
+      parsedId.data.id,
+    );
+    if (activeUsersCount > 0) {
+      return failByKey(
+        requestId,
+        ErrorKey.CONFLICT,
+        `当前角色仍绑定 ${activeUsersCount} 个启用用户，请先调整用户角色`,
       );
     }
     const removed = await userRepository.deleteRoleById(parsedId.data.id);

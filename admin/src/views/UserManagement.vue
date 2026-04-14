@@ -57,6 +57,10 @@ const roleOptions = [
 
 const columns: DataTableColumns<UserRow> = [
   {
+    type: 'selection',
+    width: 48,
+  },
+  {
     title: 'ID',
     key: 'id',
     width: 80,
@@ -246,7 +250,7 @@ const deleteBatchUsers = () => {
 
 const rowKey = (row: UserRow) => row.id;
 
-const rowSelection = computed(() => ({
+const userTableProps = computed(() => ({
   checkedRowKeys: checkedRowKeys.value,
   onUpdateCheckedRowKeys: (keys: DataTableRowKey[]) => {
     checkedRowKeys.value = keys;
@@ -269,7 +273,7 @@ onMounted(() => {
     :data="users"
     :pagination="pagination"
     :row-key="rowKey"
-    :row-selection="rowSelection"
+    :table-props="userTableProps"
   >
     <template #toolbar-left>
       <SearchBar>
@@ -296,6 +300,7 @@ onMounted(() => {
         v-permission="'system:user:delete'"
         type="warning"
         ghost
+        :disabled="checkedRowKeys.length === 0"
         @click="deleteBatchUsers"
         >批量删除</NButton
       >

@@ -260,6 +260,21 @@ export class UserRepository {
     return rows.length > 0;
   }
 
+  async countUsersByRoleId(roleId: number) {
+    const rows = await db
+      .select({ total: count() })
+      .from(sysUserRolesTable)
+      .innerJoin(sysUsersTable, eq(sysUsersTable.id, sysUserRolesTable.userId))
+      .where(
+        and(
+          eq(sysUserRolesTable.roleId, roleId),
+          isNull(sysUsersTable.deletedAt),
+          eq(sysUsersTable.status, 1),
+        ),
+      );
+    return Number(rows[0]?.total ?? 0);
+  }
+
   async replaceRolePermissions(roleId: number, permissionIds: number[]) {
     await db.transaction(async (tx) => {
       await tx
