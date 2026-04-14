@@ -13,7 +13,7 @@ export type UserPageData = {
 export type SaveUserPayload = {
   account: string;
   name: string;
-  role: 'admin' | 'editor';
+  role: string;
 };
 
 export const getUsersPageMethod = (params: {

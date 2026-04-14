@@ -2,7 +2,7 @@ export type UserEntity = {
   id: number;
   account: string;
   name: string;
-  role: 'admin' | 'editor';
+  role: string;
 };
 
 export type MenuEntity = {

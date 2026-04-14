@@ -16,7 +16,7 @@ import type {
 } from '../../shared/types/entities';
 
 const toUserRole = (role?: string | null): UserEntity['role'] =>
-  role === 'admin' ? 'admin' : 'editor';
+  role && role.length > 0 ? role : 'editor';
 
 type UserWithRoleRow = {
   id: number;

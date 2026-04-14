@@ -13,7 +13,7 @@ import { env } from '../../src/shared/config/env';
 import { ok, AppCode } from '../../src/shared/types/http';
 import { ensureRequestContext } from '../../src/shared/types/request-context';
 
-const users = [
+const users: Array<{ id: number; account: string; name: string; role: string }> = [
   { id: 1, account: 'admin', name: 'Admin', role: 'admin' as const },
   { id: 2, account: 'editor', name: 'Editor', role: 'editor' as const },
   { id: 3, account: 'alice', name: 'Alice', role: 'editor' as const },
@@ -153,7 +153,7 @@ const userRepository = {
   async create(input: {
     account: string;
     name: string;
-    role: 'admin' | 'editor';
+    role: string;
   }) {
     const id = Math.max(...users.map((item) => item.id)) + 1;
     const created = { id, ...input };
@@ -162,7 +162,7 @@ const userRepository = {
   },
   async update(
     id: number,
-    input: Partial<{ account: string; name: string; role: 'admin' | 'editor' }>,
+    input: Partial<{ account: string; name: string; role: string }>,
   ) {
     const target = users.find((item) => item.id === id);
     if (!target) return undefined;
@@ -188,7 +188,7 @@ const userRepository = {
     }
     return deleted;
   },
-  async findPermissionCodesByRole(role: 'admin' | 'editor') {
+  async findPermissionCodesByRole(role: string) {
     if (role === 'admin') {
       return ['system:user:view', 'system:role:view', 'system:menu:view'];
     }
@@ -216,7 +216,7 @@ const userRepository = {
       },
     ];
   },
-  async findMenuTreeByRole(role: 'admin' | 'editor') {
+  async findMenuTreeByRole(role: string) {
     const baseTree = [
       {
         id: 1,

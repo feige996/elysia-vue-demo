@@ -1,7 +1,7 @@
 type RequestContext = {
   requestId: string;
   requestStartedAt: number;
-  authorizedRole?: 'admin' | 'editor';
+  authorizedRole?: string;
   authorizedUserId?: number;
   authorizedAccount?: string;
 };
@@ -22,7 +22,7 @@ export const ensureRequestContext = (request: Request): RequestContext => {
 
 export const setAuthorizedRoleInContext = (
   request: Request,
-  role: 'admin' | 'editor',
+  role: string,
 ) => {
   const context = ensureRequestContext(request);
   context.authorizedRole = role;

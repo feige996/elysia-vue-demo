@@ -18,13 +18,13 @@ export const pageQuerySchema = z.object({
 export const createUserSchema = z.object({
   account: z.string().min(1).max(64),
   name: z.string().min(1).max(64),
-  role: z.enum(['admin', 'editor']),
+  role: z.string().min(1).max(64),
 });
 
 export const updateUserSchema = z.object({
   account: z.string().min(1).max(64).optional(),
   name: z.string().min(1).max(64).optional(),
-  role: z.enum(['admin', 'editor']).optional(),
+  role: z.string().min(1).max(64).optional(),
 });
 
 export const idParamSchema = z.object({

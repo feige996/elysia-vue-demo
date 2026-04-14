@@ -21,6 +21,7 @@ import {
   updateUserMethod,
   type User,
 } from '../api/modules/user';
+import { getRolesMethod } from '../api/modules/role';
 import { getMappedErrorMessage } from '../api/error-map';
 import SearchBar from '../components/crud/SearchBar.vue';
 import FormDrawer from '../components/crud/FormDrawer.vue';
@@ -47,13 +48,20 @@ const userForm = ref({
   id: 0,
   account: '',
   name: '',
-  role: 'editor' as User['role'],
+  role: '' as User['role'],
 });
 
-const roleOptions = [
-  { label: '管理员', value: 'admin' },
-  { label: '编辑', value: 'editor' },
-];
+const roleOptions = ref<Array<{ label: string; value: User['role'] }>>([]);
+const roleLabelMap = computed<Record<User['role'], string>>(() => {
+  const defaults: Record<User['role'], string> = {
+    admin: '管理员',
+    editor: '编辑',
+  };
+  for (const item of roleOptions.value) {
+    defaults[item.value] = item.label;
+  }
+  return defaults;
+});
 
 const columns: DataTableColumns<UserRow> = [
   {
@@ -80,7 +88,7 @@ const columns: DataTableColumns<UserRow> = [
       h(
         NTag,
         { type: row.role === 'admin' ? 'error' : 'info' },
-        { default: () => row.role },
+        { default: () => roleLabelMap.value[row.role] ?? row.role },
       ),
   },
   {
@@ -151,13 +159,31 @@ const fetchUsers = async () => {
   }
 };
 
+const fetchRoleOptions = async () => {
+  try {
+    const response = await getRolesMethod();
+    roleOptions.value = response.data
+      .filter((item): item is typeof item & { code: User['role'] } => item.status === 1)
+      .map((item) => ({
+        label: item.name,
+        value: item.code,
+      }));
+    if (roleOptions.value.length > 0 && !roleOptions.value.some((item) => item.value === userForm.value.role)) {
+      userForm.value.role = roleOptions.value[0].value;
+    }
+  } catch (error) {
+    roleOptions.value = [];
+    message.error(getMappedErrorMessage(error, '加载角色选项失败'));
+  }
+};
+
 const openCreateUserModal = () => {
   userModalMode.value = 'create';
   userForm.value = {
     id: 0,
     account: '',
     name: '',
-    role: 'editor',
+    role: roleOptions.value[0]?.value ?? '',
   };
   userModalVisible.value = true;
 };
@@ -176,8 +202,9 @@ const openEditUserModal = (row: UserRow) => {
 const submitUserForm = async () => {
   const account = userForm.value.account.trim();
   const name = userForm.value.name.trim();
-  if (!account || !name) {
-    message.error('请填写账号与姓名');
+  const role = userForm.value.role.trim();
+  if (!account || !name || !role) {
+    message.error('请填写账号、姓名并选择角色');
     return;
   }
   saving.value = true;
@@ -258,6 +285,7 @@ const userTableProps = computed(() => ({
 }));
 
 onMounted(() => {
+  void fetchRoleOptions();
   void fetchUsers();
 });
 </script>
@@ -322,6 +350,7 @@ onMounted(() => {
           <NSelect
             v-model:value="userForm.role"
             :options="roleOptions"
+            :disabled="roleOptions.length === 0"
             placeholder="请选择角色"
           />
         </NFormItem>

@@ -10,7 +10,7 @@ import type { UserService } from './user.service';
 import { createUserController } from './user.controller';
 import type { UserRepository } from './user.repository';
 
-const roleSchema = t.Union([t.Literal('admin'), t.Literal('editor')]);
+const roleSchema = t.String({ minLength: 1, maxLength: 64 });
 
 const apiErrorSchema = t.Object({
   code: t.Number(),

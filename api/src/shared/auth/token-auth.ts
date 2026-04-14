@@ -7,7 +7,7 @@ import {
 
 const TOKEN_PREFIX = 'Bearer ';
 
-export type AuthorizedRole = 'admin' | 'editor';
+export type AuthorizedRole = string;
 type TokenType = 'access' | 'refresh';
 type AuthorizedIdentity = {
   role: AuthorizedRole;
@@ -35,7 +35,7 @@ const extractBearerToken = (authorizationHeader: string | null) => {
 };
 
 const isRole = (value: unknown): value is AuthorizedRole =>
-  value === 'admin' || value === 'editor';
+  typeof value === 'string' && value.length > 0;
 const isTokenType = (value: unknown): value is TokenType =>
   value === 'access' || value === 'refresh';
 

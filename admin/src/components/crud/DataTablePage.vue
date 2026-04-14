@@ -60,6 +60,7 @@ const props = withDefaults(defineProps<Props>(), {
           :row-key="props.rowKey"
         />
       </UnifiedState>
+      <slot />
     </NSpace>
   </NCard>
 </template>
