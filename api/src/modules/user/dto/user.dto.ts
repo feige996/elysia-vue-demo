@@ -42,3 +42,28 @@ export const refreshTokenSchema = z.object({
 export const logoutSchema = z.object({
   refreshToken: z.string().min(1),
 });
+
+export const createRoleSchema = z.object({
+  code: z.string().min(1).max(64),
+  name: z.string().min(1).max(64),
+  description: z.string().max(255).nullable().optional(),
+  status: z.coerce.number().int().min(0).max(1).optional(),
+});
+
+export const updateRoleSchema = z.object({
+  code: z.string().min(1).max(64).optional(),
+  name: z.string().min(1).max(64).optional(),
+  description: z.string().max(255).nullable().optional(),
+});
+
+export const updateRoleStatusSchema = z.object({
+  status: z.coerce.number().int().min(0).max(1),
+});
+
+export const assignRolePermissionsSchema = z.object({
+  permissionIds: z.array(z.coerce.number().int().min(1)),
+});
+
+export const assignRoleMenusSchema = z.object({
+  menuIds: z.array(z.coerce.number().int().min(1)),
+});

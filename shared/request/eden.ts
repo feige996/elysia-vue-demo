@@ -4,7 +4,7 @@ type EdenResult = {
 };
 
 type RequestOptions = {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   query?: Record<string, unknown>;
   body?: unknown;
   headers?: Record<string, string>;

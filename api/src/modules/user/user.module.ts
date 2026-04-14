@@ -137,6 +137,36 @@ const permissionCodesSuccessSchema = t.Object({
   data: t.Array(t.String()),
 });
 
+const permissionItemSchema = t.Object({
+  id: t.Number(),
+  code: t.String(),
+  name: t.String(),
+  module: t.String(),
+  status: t.Number(),
+});
+
+const permissionsListSuccessSchema = t.Object({
+  code: t.Literal(0),
+  message: t.String(),
+  requestId: t.String(),
+  data: t.Array(permissionItemSchema),
+});
+
+const menuListItemSchema = t.Object({
+  id: t.Number(),
+  parentId: t.Number(),
+  name: t.String(),
+  path: t.String(),
+  status: t.Number(),
+});
+
+const menusListSuccessSchema = t.Object({
+  code: t.Literal(0),
+  message: t.String(),
+  requestId: t.String(),
+  data: t.Array(menuListItemSchema),
+});
+
 const menuTreeSuccessSchema = t.Object({
   code: t.Literal(0),
   message: t.String(),
@@ -157,6 +187,31 @@ const rolesListSuccessSchema = t.Object({
   message: t.String(),
   requestId: t.String(),
   data: t.Array(roleListItemSchema),
+});
+
+const roleBodySchema = t.Object({
+  code: t.String({ minLength: 1, maxLength: 64 }),
+  name: t.String({ minLength: 1, maxLength: 64 }),
+  description: t.Optional(t.Union([t.String({ maxLength: 255 }), t.Null()])),
+  status: t.Optional(t.Numeric({ minimum: 0, maximum: 1 })),
+});
+
+const roleUpdateBodySchema = t.Object({
+  code: t.Optional(t.String({ minLength: 1, maxLength: 64 })),
+  name: t.Optional(t.String({ minLength: 1, maxLength: 64 })),
+  description: t.Optional(t.Union([t.String({ maxLength: 255 }), t.Null()])),
+});
+
+const roleStatusBodySchema = t.Object({
+  status: t.Numeric({ minimum: 0, maximum: 1 }),
+});
+
+const roleAssignPermissionsBodySchema = t.Object({
+  permissionIds: t.Array(t.Numeric({ minimum: 1 })),
+});
+
+const roleAssignMenusBodySchema = t.Object({
+  menuIds: t.Array(t.Numeric({ minimum: 1 })),
 });
 
 const userSuccessSchema = t.Object({
@@ -367,6 +422,31 @@ export const userModule = new Elysia({
     },
   )
   .get(
+    '/permissions',
+    async (ctx) => {
+      const { set } = ctx;
+      const { userService, userRepository } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+      };
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.listPermissions(ctx.request);
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      detail: {
+        summary: '系统权限列表',
+        description: '返回系统权限列表（需登录）。',
+        security: [{ bearerAuth: [] }],
+      },
+      response: {
+        200: permissionsListSuccessSchema,
+        401: apiErrorSchema,
+      },
+    },
+  )
+  .get(
     '/menus/tree',
     async (ctx) => {
       const { set } = ctx;
@@ -405,6 +485,31 @@ export const userModule = new Elysia({
     },
   )
   .get(
+    '/menus',
+    async (ctx) => {
+      const { set } = ctx;
+      const { userService, userRepository } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+      };
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.listMenus(ctx.request);
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      detail: {
+        summary: '系统菜单列表',
+        description: '返回系统菜单列表（需登录）。',
+        security: [{ bearerAuth: [] }],
+      },
+      response: {
+        200: menusListSuccessSchema,
+        401: apiErrorSchema,
+      },
+    },
+  )
+  .get(
     '/roles',
     async (ctx) => {
       const { set } = ctx;
@@ -427,6 +532,226 @@ export const userModule = new Elysia({
       response: {
         200: rolesListSuccessSchema,
         401: apiErrorSchema,
+      },
+    },
+  )
+  .post(
+    '/roles',
+    async (ctx) => {
+      const { body, set } = ctx;
+      const { userService, userRepository } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+      };
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.createRole(body, ctx.request);
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      detail: {
+        summary: '创建角色',
+        description: '创建系统角色。',
+        tags: ['Role'],
+        security: [{ bearerAuth: [] }],
+      },
+      body: roleBodySchema,
+      response: {
+        201: t.Object({
+          code: t.Literal(0),
+          message: t.String(),
+          requestId: t.String(),
+          data: roleListItemSchema,
+        }),
+        400: apiErrorSchema,
+        401: apiErrorSchema,
+        409: apiErrorSchema,
+      },
+    },
+  )
+  .put(
+    '/roles/:id',
+    async (ctx) => {
+      const { body, params, set } = ctx;
+      const { userService, userRepository } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+      };
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.updateRole(params, body, ctx.request);
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      detail: {
+        summary: '更新角色',
+        description: '按角色 ID 更新角色信息。',
+        tags: ['Role'],
+        security: [{ bearerAuth: [] }],
+      },
+      params: idParamSchema,
+      body: roleUpdateBodySchema,
+      response: {
+        200: t.Object({
+          code: t.Literal(0),
+          message: t.String(),
+          requestId: t.String(),
+          data: roleListItemSchema,
+        }),
+        400: apiErrorSchema,
+        401: apiErrorSchema,
+        404: apiErrorSchema,
+        409: apiErrorSchema,
+      },
+    },
+  )
+  .patch(
+    '/roles/:id/status',
+    async (ctx) => {
+      const { body, params, set } = ctx;
+      const { userService, userRepository } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+      };
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.updateRoleStatus(
+        params,
+        body,
+        ctx.request,
+      );
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      detail: {
+        summary: '更新角色状态',
+        description: '启用或禁用角色。',
+        tags: ['Role'],
+        security: [{ bearerAuth: [] }],
+      },
+      params: idParamSchema,
+      body: roleStatusBodySchema,
+      response: {
+        200: t.Object({
+          code: t.Literal(0),
+          message: t.String(),
+          requestId: t.String(),
+          data: roleListItemSchema,
+        }),
+        400: apiErrorSchema,
+        401: apiErrorSchema,
+        404: apiErrorSchema,
+      },
+    },
+  )
+  .delete(
+    '/roles/:id',
+    async (ctx) => {
+      const { params, set } = ctx;
+      const { userService, userRepository } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+      };
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.removeRoleOne(params, ctx.request);
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      detail: {
+        summary: '删除角色',
+        description: '按角色 ID 软删除角色。',
+        tags: ['Role'],
+        security: [{ bearerAuth: [] }],
+      },
+      params: idParamSchema,
+      response: {
+        200: deletedSuccessSchema,
+        400: apiErrorSchema,
+        401: apiErrorSchema,
+        404: apiErrorSchema,
+      },
+    },
+  )
+  .put(
+    '/roles/:id/permissions',
+    async (ctx) => {
+      const { body, params, set } = ctx;
+      const { userService, userRepository } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+      };
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.assignRolePermissions(
+        params,
+        body,
+        ctx.request,
+      );
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      detail: {
+        summary: '分配角色权限',
+        description: '覆盖写入角色权限关系。',
+        tags: ['Role'],
+        security: [{ bearerAuth: [] }],
+      },
+      params: idParamSchema,
+      body: roleAssignPermissionsBodySchema,
+      response: {
+        200: t.Object({
+          code: t.Literal(0),
+          message: t.String(),
+          requestId: t.String(),
+          data: t.Object({
+            roleId: t.Number(),
+          }),
+        }),
+        400: apiErrorSchema,
+        401: apiErrorSchema,
+        404: apiErrorSchema,
+      },
+    },
+  )
+  .put(
+    '/roles/:id/menus',
+    async (ctx) => {
+      const { body, params, set } = ctx;
+      const { userService, userRepository } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+      };
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.assignRoleMenus(
+        params,
+        body,
+        ctx.request,
+      );
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      detail: {
+        summary: '分配角色菜单',
+        description: '覆盖写入角色菜单关系。',
+        tags: ['Role'],
+        security: [{ bearerAuth: [] }],
+      },
+      params: idParamSchema,
+      body: roleAssignMenusBodySchema,
+      response: {
+        200: t.Object({
+          code: t.Literal(0),
+          message: t.String(),
+          requestId: t.String(),
+          data: t.Object({
+            roleId: t.Number(),
+          }),
+        }),
+        400: apiErrorSchema,
+        401: apiErrorSchema,
+        404: apiErrorSchema,
       },
     },
   )

@@ -39,6 +39,14 @@ type SaveUserInput = {
 };
 
 type UpdateUserInput = Partial<SaveUserInput>;
+type SaveRoleInput = {
+  code: string;
+  name: string;
+  description?: string | null;
+  status?: number;
+};
+
+type UpdateRoleInput = Partial<Omit<SaveRoleInput, 'status'>>;
 
 type FindUserOptions = {
   keyword?: string;
@@ -159,6 +167,127 @@ export class UserRepository {
       .where(isNull(sysRolesTable.deletedAt))
       .orderBy(asc(sysRolesTable.id));
     return rows;
+  }
+
+  async findRoleById(id: number) {
+    const rows = await db
+      .select({
+        id: sysRolesTable.id,
+        code: sysRolesTable.code,
+        name: sysRolesTable.name,
+        description: sysRolesTable.description,
+        status: sysRolesTable.status,
+      })
+      .from(sysRolesTable)
+      .where(and(eq(sysRolesTable.id, id), isNull(sysRolesTable.deletedAt)))
+      .limit(1);
+    return rows[0];
+  }
+
+  async findRoleByCode(code: string) {
+    const rows = await db
+      .select({
+        id: sysRolesTable.id,
+        code: sysRolesTable.code,
+        name: sysRolesTable.name,
+        description: sysRolesTable.description,
+        status: sysRolesTable.status,
+        deletedAt: sysRolesTable.deletedAt,
+      })
+      .from(sysRolesTable)
+      .where(eq(sysRolesTable.code, code))
+      .limit(1);
+    return rows[0];
+  }
+
+  async createRole(input: SaveRoleInput) {
+    const rows = await db
+      .insert(sysRolesTable)
+      .values({
+        code: input.code,
+        name: input.name,
+        description: input.description ?? null,
+        status: input.status ?? 1,
+      })
+      .returning({
+        id: sysRolesTable.id,
+        code: sysRolesTable.code,
+        name: sysRolesTable.name,
+        description: sysRolesTable.description,
+        status: sysRolesTable.status,
+      });
+    return rows[0];
+  }
+
+  async updateRole(id: number, input: UpdateRoleInput) {
+    if (Object.keys(input).length === 0) {
+      return this.findRoleById(id);
+    }
+    const rows = await db
+      .update(sysRolesTable)
+      .set({
+        code: input.code,
+        name: input.name,
+        description: input.description,
+      })
+      .where(and(eq(sysRolesTable.id, id), isNull(sysRolesTable.deletedAt)))
+      .returning({
+        id: sysRolesTable.id,
+      });
+    if (rows.length === 0) return undefined;
+    return this.findRoleById(id);
+  }
+
+  async updateRoleStatus(id: number, status: number) {
+    const rows = await db
+      .update(sysRolesTable)
+      .set({ status })
+      .where(and(eq(sysRolesTable.id, id), isNull(sysRolesTable.deletedAt)))
+      .returning({ id: sysRolesTable.id });
+    if (rows.length === 0) return undefined;
+    return this.findRoleById(id);
+  }
+
+  async deleteRoleById(id: number) {
+    const rows = await db
+      .update(sysRolesTable)
+      .set({
+        status: 0,
+        deletedAt: new Date(),
+      })
+      .where(and(eq(sysRolesTable.id, id), isNull(sysRolesTable.deletedAt)))
+      .returning({ id: sysRolesTable.id });
+    return rows.length > 0;
+  }
+
+  async replaceRolePermissions(roleId: number, permissionIds: number[]) {
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(sysRolePermissionsTable)
+        .where(eq(sysRolePermissionsTable.roleId, roleId));
+      if (permissionIds.length === 0) return;
+      await tx.insert(sysRolePermissionsTable).values(
+        permissionIds.map((permissionId) => ({
+          roleId,
+          permissionId,
+        })),
+      );
+    });
+  }
+
+  async replaceRoleMenus(roleId: number, menuIds: number[]) {
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(sysRoleMenusTable)
+        .where(eq(sysRoleMenusTable.roleId, roleId));
+      if (menuIds.length === 0) return;
+      await tx.insert(sysRoleMenusTable).values(
+        menuIds.map((menuId) => ({
+          roleId,
+          menuId,
+        })),
+      );
+    });
   }
 
   async findPage(page: number, pageSize: number, keyword?: string) {
@@ -361,6 +490,40 @@ export class UserRepository {
       .orderBy(asc(sysPermissionsTable.id));
 
     return Array.from(new Set(rows.map((row) => row.code)));
+  }
+
+  async findPermissions() {
+    const rows = await db
+      .select({
+        id: sysPermissionsTable.id,
+        code: sysPermissionsTable.code,
+        name: sysPermissionsTable.name,
+        module: sysPermissionsTable.module,
+        status: sysPermissionsTable.status,
+      })
+      .from(sysPermissionsTable)
+      .where(isNull(sysPermissionsTable.deletedAt))
+      .orderBy(asc(sysPermissionsTable.id));
+    return rows;
+  }
+
+  async findMenus() {
+    const rows = await db
+      .select({
+        id: sysMenusTable.id,
+        parentId: sysMenusTable.parentId,
+        name: sysMenusTable.name,
+        path: sysMenusTable.path,
+        status: sysMenusTable.status,
+      })
+      .from(sysMenusTable)
+      .where(isNull(sysMenusTable.deletedAt))
+      .orderBy(
+        asc(sysMenusTable.parentId),
+        asc(sysMenusTable.sort),
+        asc(sysMenusTable.id),
+      );
+    return rows;
   }
 
   async findMenuTreeByRole(role: UserEntity['role']) {

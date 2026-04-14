@@ -3,7 +3,10 @@ import type { AuthorizedRole } from '../../shared/auth/token-auth';
 import { ErrorKey, failByKey, ok } from '../../shared/types/http';
 import { ensureRequestContext } from '../../shared/types/request-context';
 import {
+  assignRoleMenusSchema,
+  assignRolePermissionsSchema,
   batchDeleteSchema,
+  createRoleSchema,
   createUserSchema,
   idParamSchema,
   listQuerySchema,
@@ -11,6 +14,8 @@ import {
   logoutSchema,
   pageQuerySchema,
   refreshTokenSchema,
+  updateRoleSchema,
+  updateRoleStatusSchema,
   updateUserSchema,
 } from './dto/user.dto';
 import type { UserRepository } from './user.repository';
@@ -89,6 +94,196 @@ export const createUserController = (
       payload: ok(requestId, roles, 'OK'),
     };
   },
+  createRole: async (body: unknown, request: Request) => {
+    const { requestId } = ensureRequestContext(request);
+    const parsedBody = createRoleSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return failByKey(
+        requestId,
+        ErrorKey.VALIDATION_ERROR,
+        parsedBody.error.issues[0]?.message ?? 'Invalid role payload',
+      );
+    }
+    const existing = await userRepository.findRoleByCode(parsedBody.data.code);
+    if (existing) {
+      return failByKey(
+        requestId,
+        ErrorKey.CONFLICT,
+        'Role code already exists',
+      );
+    }
+    const created = await userRepository.createRole(parsedBody.data);
+    return {
+      status: 201,
+      payload: ok(requestId, created, 'Created'),
+    };
+  },
+  updateRole: async (idParam: unknown, body: unknown, request: Request) => {
+    const { requestId } = ensureRequestContext(request);
+    const parsedId = idParamSchema.safeParse(idParam);
+    if (!parsedId.success) {
+      return failByKey(
+        requestId,
+        ErrorKey.VALIDATION_ERROR,
+        parsedId.error.issues[0]?.message ?? 'Invalid id',
+      );
+    }
+    const parsedBody = updateRoleSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return failByKey(
+        requestId,
+        ErrorKey.VALIDATION_ERROR,
+        parsedBody.error.issues[0]?.message ?? 'Invalid role payload',
+      );
+    }
+    if (parsedBody.data.code) {
+      const roleWithCode = await userRepository.findRoleByCode(
+        parsedBody.data.code,
+      );
+      if (roleWithCode && roleWithCode.id !== parsedId.data.id) {
+        return failByKey(
+          requestId,
+          ErrorKey.CONFLICT,
+          'Role code already exists',
+        );
+      }
+    }
+    const updated = await userRepository.updateRole(
+      parsedId.data.id,
+      parsedBody.data,
+    );
+    if (!updated) {
+      return failByKey(requestId, ErrorKey.NOT_FOUND, 'Role not found');
+    }
+    return {
+      status: 200,
+      payload: ok(requestId, updated, 'Updated'),
+    };
+  },
+  updateRoleStatus: async (
+    idParam: unknown,
+    body: unknown,
+    request: Request,
+  ) => {
+    const { requestId } = ensureRequestContext(request);
+    const parsedId = idParamSchema.safeParse(idParam);
+    if (!parsedId.success) {
+      return failByKey(
+        requestId,
+        ErrorKey.VALIDATION_ERROR,
+        parsedId.error.issues[0]?.message ?? 'Invalid id',
+      );
+    }
+    const parsedBody = updateRoleStatusSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return failByKey(
+        requestId,
+        ErrorKey.VALIDATION_ERROR,
+        parsedBody.error.issues[0]?.message ?? 'Invalid role status payload',
+      );
+    }
+    const updated = await userRepository.updateRoleStatus(
+      parsedId.data.id,
+      parsedBody.data.status,
+    );
+    if (!updated) {
+      return failByKey(requestId, ErrorKey.NOT_FOUND, 'Role not found');
+    }
+    return {
+      status: 200,
+      payload: ok(requestId, updated, 'Updated'),
+    };
+  },
+  removeRoleOne: async (idParam: unknown, request: Request) => {
+    const { requestId } = ensureRequestContext(request);
+    const parsedId = idParamSchema.safeParse(idParam);
+    if (!parsedId.success) {
+      return failByKey(
+        requestId,
+        ErrorKey.VALIDATION_ERROR,
+        parsedId.error.issues[0]?.message ?? 'Invalid id',
+      );
+    }
+    const removed = await userRepository.deleteRoleById(parsedId.data.id);
+    if (!removed) {
+      return failByKey(requestId, ErrorKey.NOT_FOUND, 'Role not found');
+    }
+    return {
+      status: 200,
+      payload: ok(requestId, { deleted: 1 }, 'Deleted'),
+    };
+  },
+  assignRolePermissions: async (
+    idParam: unknown,
+    body: unknown,
+    request: Request,
+  ) => {
+    const { requestId } = ensureRequestContext(request);
+    const parsedId = idParamSchema.safeParse(idParam);
+    if (!parsedId.success) {
+      return failByKey(
+        requestId,
+        ErrorKey.VALIDATION_ERROR,
+        parsedId.error.issues[0]?.message ?? 'Invalid id',
+      );
+    }
+    const parsedBody = assignRolePermissionsSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return failByKey(
+        requestId,
+        ErrorKey.VALIDATION_ERROR,
+        parsedBody.error.issues[0]?.message ??
+          'Invalid role permissions payload',
+      );
+    }
+    const role = await userRepository.findRoleById(parsedId.data.id);
+    if (!role) {
+      return failByKey(requestId, ErrorKey.NOT_FOUND, 'Role not found');
+    }
+    await userRepository.replaceRolePermissions(
+      parsedId.data.id,
+      parsedBody.data.permissionIds,
+    );
+    return {
+      status: 200,
+      payload: ok(requestId, { roleId: parsedId.data.id }, 'Updated'),
+    };
+  },
+  assignRoleMenus: async (
+    idParam: unknown,
+    body: unknown,
+    request: Request,
+  ) => {
+    const { requestId } = ensureRequestContext(request);
+    const parsedId = idParamSchema.safeParse(idParam);
+    if (!parsedId.success) {
+      return failByKey(
+        requestId,
+        ErrorKey.VALIDATION_ERROR,
+        parsedId.error.issues[0]?.message ?? 'Invalid id',
+      );
+    }
+    const parsedBody = assignRoleMenusSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return failByKey(
+        requestId,
+        ErrorKey.VALIDATION_ERROR,
+        parsedBody.error.issues[0]?.message ?? 'Invalid role menus payload',
+      );
+    }
+    const role = await userRepository.findRoleById(parsedId.data.id);
+    if (!role) {
+      return failByKey(requestId, ErrorKey.NOT_FOUND, 'Role not found');
+    }
+    await userRepository.replaceRoleMenus(
+      parsedId.data.id,
+      parsedBody.data.menuIds,
+    );
+    return {
+      status: 200,
+      payload: ok(requestId, { roleId: parsedId.data.id }, 'Updated'),
+    };
+  },
   list: async (query: unknown, request: Request) => {
     const { requestId } = ensureRequestContext(request);
     const parsedQuery = pageQuerySchema.safeParse(query);
@@ -113,6 +308,22 @@ export const createUserController = (
         } satisfies PaginatedData<UserEntity>,
         'OK',
       ),
+    };
+  },
+  listPermissions: async (request: Request) => {
+    const { requestId } = ensureRequestContext(request);
+    const permissions = await userRepository.findPermissions();
+    return {
+      status: 200,
+      payload: ok(requestId, permissions, 'OK'),
+    };
+  },
+  listMenus: async (request: Request) => {
+    const { requestId } = ensureRequestContext(request);
+    const menus = await userRepository.findMenus();
+    return {
+      status: 200,
+      payload: ok(requestId, menus, 'OK'),
     };
   },
   create: async (body: unknown, request: Request) => {

@@ -111,7 +111,7 @@ jobs:
           echo "API failed to become ready"
           exit 1
 
-      - name: Admin E2E (auth API smoke)
+      - name: Admin E2E (auth + write smoke)
         run: bun run test:e2e:admin
 
       - name: Stop API

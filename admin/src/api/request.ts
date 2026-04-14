@@ -20,7 +20,7 @@ const edenClient = createEdenRequestClient(
       edenFetch<AppType>(origin) as unknown as (
         requestPath: string,
         requestOptions: {
-          method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+          method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
           query?: Record<string, unknown>;
           body?: unknown;
           headers?: Record<string, string>;
