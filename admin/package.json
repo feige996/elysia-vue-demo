@@ -1,5 +1,5 @@
 {
-  "name": "alova-elysia-demo-admin",
+  "name": "harbor-admin",
   "private": true,
   "type": "module",
   "scripts": {

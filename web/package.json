@@ -1,5 +1,5 @@
 {
-  "name": "alova-elysia-demo-web",
+  "name": "harbor-web",
   "private": true,
   "type": "module",
   "scripts": {

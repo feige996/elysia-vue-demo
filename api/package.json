@@ -1,5 +1,5 @@
 {
-  "name": "alova-elysia-demo-api",
+  "name": "harbor-api",
   "private": true,
   "type": "module",
   "scripts": {

@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "alova-elysia-demo",
+      "name": "harbor",
       "devDependencies": {
         "concurrently": "^9.2.1",
         "oxfmt": "^0.45.0",
@@ -12,7 +12,7 @@
       },
     },
     "admin": {
-      "name": "alova-elysia-demo-admin",
+      "name": "harbor-admin",
       "dependencies": {
         "@elysiajs/eden": "^1.4.2",
         "naive-ui": "^2.40.3",
@@ -29,7 +29,7 @@
       },
     },
     "api": {
-      "name": "alova-elysia-demo-api",
+      "name": "harbor-api",
       "dependencies": {
         "@elysiajs/cors": "^1.4.1",
         "@elysiajs/jwt": "^1.4.0",
@@ -54,7 +54,7 @@
       },
     },
     "web": {
-      "name": "alova-elysia-demo-web",
+      "name": "harbor-web",
       "dependencies": {
         "@elysiajs/eden": "^1.4.2",
         "vue": "^3.5.22",
@@ -351,12 +351,6 @@
 
     "alien-signals": ["alien-signals@3.1.2", "", {}, "sha512-d9dYqZTS90WLiU0I5c6DHj/HcKkF8ZyGN3G5x8wSbslulz70KOxaqCT0hQCo9KOyhVqzqGojvNdJXoTumZOtcw=="],
 
-    "alova-elysia-demo-admin": ["alova-elysia-demo-admin@workspace:admin"],
-
-    "alova-elysia-demo-api": ["alova-elysia-demo-api@workspace:api"],
-
-    "alova-elysia-demo-web": ["alova-elysia-demo-web@workspace:web"],
-
     "ansi-regex": ["ansi-regex@5.0.1", "", {}, "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="],
 
     "ansi-styles": ["ansi-styles@4.3.0", "", { "dependencies": { "color-convert": "^2.0.1" } }, "sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg=="],
@@ -510,6 +504,12 @@
     "get-uri": ["get-uri@8.0.0", "", { "dependencies": { "basic-ftp": "^5.2.0", "data-uri-to-buffer": "8.0.0", "debug": "^4.3.4" } }, "sha512-CqtZlMKvfJeY0Zxv8wazDwXmSKmnMnsmNy8j8+wudi8EyG/pMUB1NqHc+Tv1QaNtpYsK9nOYjb7r7Ufu32RPSw=="],
 
     "gopd": ["gopd@1.2.0", "", {}, "sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg=="],
+
+    "harbor-admin": ["harbor-admin@workspace:admin"],
+
+    "harbor-api": ["harbor-api@workspace:api"],
+
+    "harbor-web": ["harbor-web@workspace:web"],
 
     "has-flag": ["has-flag@4.0.0", "", {}, "sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ=="],
 

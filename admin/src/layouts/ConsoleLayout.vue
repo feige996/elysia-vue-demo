@@ -56,7 +56,7 @@ const logout = () => {
   <NLayout class="layout">
     <NLayoutHeader bordered class="header">
       <NSpace justify="space-between" align="center">
-        <NText strong>Admin Console</NText>
+        <NText strong>Harbor Admin</NText>
         <NSpace align="center">
           <NText>{{ welcomeText }}</NText>
           <NButton tertiary @click="collapsed = !collapsed">折叠菜单</NButton>

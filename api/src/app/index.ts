@@ -40,7 +40,7 @@ export const app = new Elysia()
       specPath: '/openapi.json',
       documentation: {
         info: {
-          title: 'Elysia Demo API',
+          title: 'Harbor API',
           version: '1.0.0',
         },
         servers: [{ url: `http://localhost:${env.API_PORT}` }],
@@ -62,7 +62,7 @@ export const app = new Elysia()
     ok(
       ensureRequestContext(request).requestId,
       {
-        name: 'Elysia Demo API',
+        name: 'Harbor API',
         docs: '/docs',
         openapi: '/openapi.json',
         health: '/health',

@@ -1,6 +1,6 @@
-# vue3-bun-elysia-demo
+# Harbor
 
-一个开箱即用的全栈模板，技术栈为 `Vue3 + Elysia + Bun + Eden`，采用三端分离目录：
+**港湾** — 开箱即用的全栈 Monorepo 模板，技术栈为 **Vue 3 + Elysia + Bun + Eden**，三端目录：
 
 - `api`：后端项目（Elysia + Bun + TypeScript + elysia-di + Zod）
 - `admin`：后台项目（Vue3 + Vite + TypeScript + Eden + Naive UI + Zod）
