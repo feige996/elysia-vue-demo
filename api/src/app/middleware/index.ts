@@ -35,14 +35,26 @@ const isPublicRoute = (method: string, path: string) => {
   return false;
 };
 
-const requireAdminRoute = (path: string) =>
-  path.startsWith('/api/users') ||
-  path.startsWith('/api/dicts') ||
-  path.startsWith('/api/configs') ||
-  path.startsWith('/api/audit-logs') ||
-  (path.startsWith('/api/articles') &&
+const requireAdminRoute = (method: string, path: string) => {
+  if (path.startsWith('/api/dicts')) return true;
+  if (path.startsWith('/api/configs')) return true;
+  if (path.startsWith('/api/audit-logs')) return true;
+  if (path.startsWith('/api/roles')) return false;
+  if (path.startsWith('/api/users')) {
+    if (
+      method === 'GET' &&
+      (path === '/api/users' || path === '/api/users/all')
+    ) {
+      return false;
+    }
+    return true;
+  }
+  return (
+    path.startsWith('/api/articles') &&
     path !== '/api/articles' &&
-    path !== '/api/articles/all');
+    path !== '/api/articles/all'
+  );
+};
 
 const resolveAuditModule = (path: string) => {
   const normalized = path.replace(/^\/api\//, '');
@@ -121,7 +133,7 @@ export const authMiddleware = new Elysia({ name: 'auth-middleware' }).onRequest(
       return unauthorized.payload;
     }
     setAuthorizedRoleInContext(request, role);
-    if (requireAdminRoute(path) && role !== 'admin') {
+    if (requireAdminRoute(method, path) && role !== 'admin') {
       const { requestId } = ensureRequestContext(request);
       const forbidden = failByKey(requestId, ErrorKey.FORBIDDEN);
       set.status = forbidden.status;

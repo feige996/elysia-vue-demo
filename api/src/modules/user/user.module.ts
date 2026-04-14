@@ -144,6 +144,21 @@ const menuTreeSuccessSchema = t.Object({
   data: t.Array(menuSchema),
 });
 
+const roleListItemSchema = t.Object({
+  id: t.Number(),
+  code: t.String(),
+  name: t.String(),
+  description: t.Union([t.String(), t.Null()]),
+  status: t.Number(),
+});
+
+const rolesListSuccessSchema = t.Object({
+  code: t.Literal(0),
+  message: t.String(),
+  requestId: t.String(),
+  data: t.Array(roleListItemSchema),
+});
+
 const userSuccessSchema = t.Object({
   code: t.Literal(0),
   message: t.String(),
@@ -385,6 +400,32 @@ export const userModule = new Elysia({
       },
       response: {
         200: menuTreeSuccessSchema,
+        401: apiErrorSchema,
+      },
+    },
+  )
+  .get(
+    '/roles',
+    async (ctx) => {
+      const { set } = ctx;
+      const { userService, userRepository } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+      };
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.listRoles(ctx.request);
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      detail: {
+        summary: '系统角色列表',
+        description: '返回未删除的系统角色（需登录）。',
+        tags: ['Role'],
+        security: [{ bearerAuth: [] }],
+      },
+      response: {
+        200: rolesListSuccessSchema,
         401: apiErrorSchema,
       },
     },

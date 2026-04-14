@@ -81,6 +81,14 @@ export const createUserController = (
       payload: ok(requestId, users, 'OK'),
     };
   },
+  listRoles: async (request: Request) => {
+    const { requestId } = ensureRequestContext(request);
+    const roles = await userRepository.findRoles();
+    return {
+      status: 200,
+      payload: ok(requestId, roles, 'OK'),
+    };
+  },
   list: async (query: unknown, request: Request) => {
     const { requestId } = ensureRequestContext(request);
     const parsedQuery = pageQuerySchema.safeParse(query);

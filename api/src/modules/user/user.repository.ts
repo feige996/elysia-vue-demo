@@ -146,6 +146,21 @@ export class UserRepository {
     return this.mergeRowsToUsers(rows);
   }
 
+  async findRoles() {
+    const rows = await db
+      .select({
+        id: sysRolesTable.id,
+        code: sysRolesTable.code,
+        name: sysRolesTable.name,
+        description: sysRolesTable.description,
+        status: sysRolesTable.status,
+      })
+      .from(sysRolesTable)
+      .where(isNull(sysRolesTable.deletedAt))
+      .orderBy(asc(sysRolesTable.id));
+    return rows;
+  }
+
   async findPage(page: number, pageSize: number, keyword?: string) {
     const offset = (page - 1) * pageSize;
     const filters = [

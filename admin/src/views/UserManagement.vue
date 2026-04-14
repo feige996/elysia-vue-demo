@@ -4,13 +4,13 @@ import {
   NButton,
   NCard,
   NDataTable,
+  NEmpty,
   NInput,
   NSpace,
   NTag,
   NText,
   type DataTableColumns,
 } from 'naive-ui';
-import { requestState } from '../api/request';
 import { getUsersPageMethod, type User } from '../api/modules/user';
 
 type UserRow = User;
@@ -20,19 +20,8 @@ const page = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
 const users = ref<UserRow[]>([]);
+const loading = ref(false);
 const errorText = ref('');
-
-const { loading, send } = requestState.useRequest(
-  () =>
-    getUsersPageMethod({
-      page: page.value,
-      pageSize: pageSize.value,
-      keyword: keyword.value || undefined,
-    }),
-  {
-    immediate: false,
-  },
-);
 
 const columns: DataTableColumns<UserRow> = [
   {
@@ -79,12 +68,21 @@ const pagination = computed(() => ({
 
 const fetchUsers = async () => {
   errorText.value = '';
+  loading.value = true;
   try {
-    const response = await send();
+    const response = await getUsersPageMethod({
+      page: page.value,
+      pageSize: pageSize.value,
+      keyword: keyword.value || undefined,
+    });
     users.value = response.data.list;
     total.value = response.data.total;
   } catch (error) {
     errorText.value = error instanceof Error ? error.message : '加载失败';
+    users.value = [];
+    total.value = 0;
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -114,7 +112,12 @@ onMounted(() => {
         >
       </NSpace>
       <NText v-if="errorText" type="error">{{ errorText }}</NText>
+      <NEmpty
+        v-if="!loading && !errorText && users.length === 0"
+        description="暂无用户数据"
+      />
       <NDataTable
+        v-else
         :columns="columns"
         :data="users"
         :loading="loading"

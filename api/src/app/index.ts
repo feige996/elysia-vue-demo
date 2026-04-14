@@ -46,6 +46,7 @@ export const app = new Elysia()
         servers: [{ url: `http://localhost:${env.API_PORT}` }],
         tags: [
           { name: 'User', description: 'User and auth APIs' },
+          { name: 'Role', description: 'RBAC role APIs' },
           { name: 'Article', description: 'Article CRUD APIs' },
           { name: 'File', description: 'File management APIs' },
           { name: 'System', description: 'System dict/config/audit APIs' },
