@@ -132,13 +132,19 @@ onMounted(() => {
     :table-props="{ striped: true, maxHeight: 560 }"
   >
     <template #toolbar-left>
-      <NText depth="3">
-        开关状态：
-        <NTag :type="enabled ? 'success' : 'warning'" size="small">
-          {{ enabled ? '已启用' : '未启用' }}
-        </NTag>
-        {{ summary }}
-      </NText>
+      <div>
+        <NText depth="3">
+          开关状态：
+          <NTag :type="enabled ? 'success' : 'warning'" size="small">
+            {{ enabled ? '已启用' : '未启用' }}
+          </NTag>
+          {{ summary }}
+        </NText>
+        <NText type="warning">
+          第三个字段的数字表示过期分钟，表示自动解封时间，留空表示不过期（默认
+          60 分钟）。
+        </NText>
+      </div>
     </template>
     <template #toolbar-right>
       <SearchBar>
@@ -156,9 +162,10 @@ onMounted(() => {
         />
         <NInputNumber
           v-model:value="expiresInMinutesInput"
+          clearable
           :min="1"
           :max="10080"
-          placeholder="过期分钟（可选）"
+          placeholder="过期分钟（自动解封）"
           style="width: 180px"
         />
         <NButton type="primary" :loading="loading" @click="addRule">
