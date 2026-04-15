@@ -358,6 +358,37 @@ export const sysAuditLogsTable = pgTable(
   }),
 );
 
+// P0: login log
+export const sysLoginLogsTable = pgTable(
+  'sys_login_logs',
+  {
+    id: serial('id').primaryKey(),
+    account: varchar('account', { length: 64 }),
+    userId: integer('user_id'),
+    success: smallint('success').notNull(), // 1: success, 0: failed
+    reason: varchar('reason', { length: 255 }),
+    requestIp: varchar('request_ip', { length: 64 }),
+    userAgent: varchar('user_agent', { length: 512 }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    accountTimeIdx: index('idx_sys_login_logs_account_time').on(
+      table.account,
+      table.createdAt,
+    ),
+    userTimeIdx: index('idx_sys_login_logs_user_time').on(
+      table.userId,
+      table.createdAt,
+    ),
+    successTimeIdx: index('idx_sys_login_logs_success_time').on(
+      table.success,
+      table.createdAt,
+    ),
+  }),
+);
+
 // P0: monitor job center
 export const sysJobsTable = pgTable(
   'sys_jobs',
@@ -368,6 +399,7 @@ export const sysJobsTable = pgTable(
     status: smallint('status').notNull().default(1), // 1: enabled, 0: disabled
     args: text('args'),
     runCount: integer('run_count').notNull().default(0),
+    nextRunAt: timestamp('next_run_at', { withTimezone: true }),
     lastRunAt: timestamp('last_run_at', { withTimezone: true }),
     lastRunStatus: smallint('last_run_status'),
     lastRunMessage: varchar('last_run_message', { length: 255 }),

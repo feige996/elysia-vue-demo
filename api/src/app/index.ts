@@ -6,6 +6,7 @@ import { checkDatabaseHealth } from '../infra/db/client';
 import { checkRedisHealth } from '../shared/auth/refresh-token-store';
 import { env, features } from '../shared/config/env';
 import { logService } from '../shared/logger/log.service';
+import { startJobScheduler } from '../shared/monitor/job-scheduler';
 import { failByKey, ok } from '../shared/types/http';
 import { ensureRequestContext } from '../shared/types/request-context';
 import {
@@ -196,6 +197,9 @@ if (import.meta.main) {
       });
     }
     app.listen(port);
+    if (features.monitor && features.cron) {
+      await startJobScheduler();
+    }
     logService.info('API server is running', {
       url: `http://localhost:${port}`,
     });

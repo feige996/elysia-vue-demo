@@ -160,6 +160,12 @@ const columns: DataTableColumns<JobItem> = [
     render: (row) => row.lastRunAt ?? '-',
   },
   {
+    title: '下次执行',
+    key: 'nextRunAt',
+    width: 170,
+    render: (row) => row.nextRunAt ?? '-',
+  },
+  {
     title: '结果',
     key: 'lastRunMessage',
     ellipsis: { tooltip: true },

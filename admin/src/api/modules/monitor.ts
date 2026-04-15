@@ -80,6 +80,7 @@ export type JobItem = {
   status: number;
   args: string | null;
   runCount: number;
+  nextRunAt: string | null;
   lastRunAt: string | null;
   lastRunStatus: number | null;
   lastRunMessage: string | null;
@@ -122,3 +123,87 @@ export const runJobMethod = (id: number) =>
   apiClient.authRequest<JobItem>(`/api/monitor/jobs/${id}/run`, {
     method: 'POST',
   });
+
+export type DashboardSummary = {
+  todayLoginCount: number;
+  totalLoginCount: number;
+  onlineUserCount: number;
+  totalJobCount: number;
+  cacheKeyCount: number;
+  cacheEnabled: boolean;
+};
+
+export type OperationTrendItem = {
+  date: string;
+  success: number;
+  failed: number;
+};
+
+export const getDashboardSummaryMethod = () =>
+  apiClient.authRequest<DashboardSummary>('/api/monitor/dashboard/summary', {
+    method: 'GET',
+  });
+
+export const getOperationTrendMethod = (days: number = 7) =>
+  apiClient.authRequest<OperationTrendItem[]>(
+    `/api/monitor/dashboard/operation-trend?days=${days}`,
+    {
+      method: 'GET',
+    },
+  );
+
+export type StorageConfigPayload = {
+  type: 'local' | 'oss' | 'cos';
+  local: {
+    baseDir: string;
+    baseUrl: string;
+  };
+  oss: {
+    region: string;
+    accessKeyId: string;
+    accessKeySecret: string;
+    bucket: string;
+    cdnUrl: string;
+  };
+  cos: {
+    secretId: string;
+    secretKey: string;
+    bucket: string;
+    region: string;
+    cdnUrl: string;
+  };
+};
+
+export type StorageConfigView = {
+  featureEnabled: boolean;
+  providerReady: boolean;
+  source: {
+    type: 'env' | 'db';
+  };
+  effective: StorageConfigPayload;
+  masked: StorageConfigPayload;
+};
+
+export const getStorageConfigMethod = () =>
+  apiClient.authRequest<StorageConfigView>('/api/monitor/storage/config', {
+    method: 'GET',
+  });
+
+export const updateStorageConfigMethod = (payload: StorageConfigPayload) =>
+  apiClient.authRequest<{
+    source: { type: 'env' | 'db' };
+    effective: StorageConfigPayload;
+    masked: StorageConfigPayload;
+  }>('/api/monitor/storage/config', {
+    method: 'PUT',
+    body: payload,
+  });
+
+export const testStorageConfigMethod = (payload?: StorageConfigPayload) =>
+  apiClient.authRequest<{ success: boolean; message: string; type: string }>(
+    '/api/monitor/storage/test',
+    {
+      method: 'POST',
+      body: payload,
+    },
+  );
