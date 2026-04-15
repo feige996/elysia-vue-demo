@@ -11,6 +11,7 @@ export const listQuerySchema = z.object({
 
 export const pageQuerySchema = z.object({
   keyword: z.string().optional(),
+  deptId: z.coerce.number().int().min(1).optional(),
   page: z.coerce.number().min(1).default(1),
   pageSize: z.coerce.number().min(1).max(50).default(10),
 });
@@ -19,12 +20,14 @@ export const createUserSchema = z.object({
   account: z.string().min(1).max(64),
   name: z.string().min(1).max(64),
   role: z.string().min(1).max(64),
+  deptId: z.coerce.number().int().min(1).optional(),
 });
 
 export const updateUserSchema = z.object({
   account: z.string().min(1).max(64).optional(),
   name: z.string().min(1).max(64).optional(),
   role: z.string().min(1).max(64).optional(),
+  deptId: z.coerce.number().int().min(1).nullable().optional(),
 });
 
 export const idParamSchema = z.object({

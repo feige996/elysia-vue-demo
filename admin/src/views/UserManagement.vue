@@ -21,6 +21,7 @@ import {
   updateUserMethod,
   type User,
 } from '../api/modules/user';
+import { getDeptTreeMethod, type DeptNode } from '../api/modules/dept';
 import { getRolesMethod } from '../api/modules/role';
 import { getMappedErrorMessage } from '../api/error-map';
 import SearchBar from '../components/crud/SearchBar.vue';
@@ -49,9 +50,12 @@ const userForm = ref({
   account: '',
   name: '',
   role: '' as User['role'],
+  deptId: undefined as number | undefined,
 });
 
 const roleOptions = ref<Array<{ label: string; value: User['role'] }>>([]);
+const deptFilterId = ref<number | null>(null);
+const deptOptions = ref<Array<{ label: string; value: number }>>([]);
 const roleLabelMap = computed<Record<User['role'], string>>(() => {
   const defaults: Record<User['role'], string> = {
     admin: '管理员',
@@ -61,6 +65,14 @@ const roleLabelMap = computed<Record<User['role'], string>>(() => {
     defaults[item.value] = item.label;
   }
   return defaults;
+});
+
+const deptLabelMap = computed(() => {
+  const map = new Map<number, string>();
+  for (const item of deptOptions.value) {
+    map.set(item.value, item.label);
+  }
+  return map;
 });
 
 const columns: DataTableColumns<UserRow> = [
@@ -90,6 +102,14 @@ const columns: DataTableColumns<UserRow> = [
         { type: row.role === 'admin' ? 'error' : 'info' },
         { default: () => roleLabelMap.value[row.role] ?? row.role },
       ),
+  },
+  {
+    title: '部门',
+    key: 'deptName',
+    render: (row) =>
+      row.deptId
+        ? (deptLabelMap.value.get(row.deptId) ?? row.deptName ?? '-')
+        : '-',
   },
   {
     title: '操作',
@@ -147,6 +167,7 @@ const fetchUsers = async () => {
       page: page.value,
       pageSize: pageSize.value,
       keyword: keyword.value || undefined,
+      deptId: deptFilterId.value ?? undefined,
     });
     users.value = response.data.list;
     total.value = response.data.total;
@@ -183,6 +204,34 @@ const fetchRoleOptions = async () => {
   }
 };
 
+const walkDeptNodes = (
+  nodes: DeptNode[],
+  collector: Array<{ label: string; value: number }>,
+  prefix = '',
+) => {
+  for (const node of nodes) {
+    collector.push({
+      label: `${prefix}${node.name}`,
+      value: node.id,
+    });
+    if (node.children.length > 0) {
+      walkDeptNodes(node.children, collector, `${prefix}${node.name} / `);
+    }
+  }
+};
+
+const fetchDeptOptions = async () => {
+  try {
+    const response = await getDeptTreeMethod();
+    const options: Array<{ label: string; value: number }> = [];
+    walkDeptNodes(response.data, options);
+    deptOptions.value = options;
+  } catch (error) {
+    deptOptions.value = [];
+    message.error(getMappedErrorMessage(error, '加载部门选项失败'));
+  }
+};
+
 const openCreateUserModal = () => {
   userModalMode.value = 'create';
   userForm.value = {
@@ -190,6 +239,7 @@ const openCreateUserModal = () => {
     account: '',
     name: '',
     role: roleOptions.value[0]?.value ?? '',
+    deptId: deptOptions.value[0]?.value,
   };
   userModalVisible.value = true;
 };
@@ -201,6 +251,7 @@ const openEditUserModal = (row: UserRow) => {
     account: row.account,
     name: row.name,
     role: row.role,
+    deptId: row.deptId ?? undefined,
   };
   userModalVisible.value = true;
 };
@@ -220,6 +271,7 @@ const submitUserForm = async () => {
         account,
         name,
         role: userForm.value.role,
+        deptId: userForm.value.deptId,
       });
       message.success('用户创建成功');
     } else {
@@ -227,6 +279,7 @@ const submitUserForm = async () => {
         account,
         name,
         role: userForm.value.role,
+        deptId: userForm.value.deptId ?? null,
       });
       message.success('用户更新成功');
     }
@@ -292,6 +345,7 @@ const userTableProps = computed(() => ({
 
 onMounted(() => {
   void fetchRoleOptions();
+  void fetchDeptOptions();
   void fetchUsers();
 });
 </script>
@@ -316,6 +370,13 @@ onMounted(() => {
           clearable
           placeholder="按账号或姓名搜索"
           style="width: 280px"
+        />
+        <NSelect
+          v-model:value="deptFilterId"
+          :options="deptOptions"
+          clearable
+          placeholder="按部门筛选"
+          style="width: 240px"
         />
         <NButton type="primary" :loading="loading" @click="fetchUsers"
           >查询</NButton
@@ -358,6 +419,14 @@ onMounted(() => {
             :options="roleOptions"
             :disabled="roleOptions.length === 0"
             placeholder="请选择角色"
+          />
+        </NFormItem>
+        <NFormItem label="部门">
+          <NSelect
+            v-model:value="userForm.deptId"
+            :options="deptOptions"
+            clearable
+            placeholder="请选择部门"
           />
         </NFormItem>
       </NForm>

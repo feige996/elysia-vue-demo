@@ -1,9 +1,21 @@
-import { and, asc, count, desc, eq, gte, ilike, lte } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  isNull,
+  lte,
+  ne,
+} from 'drizzle-orm';
 import { Elysia, t } from 'elysia';
 import { db } from '../../infra/db/client';
 import {
   sysAuditLogsTable,
   sysConfigsTable,
+  sysDeptsTable,
   sysDictItemsTable,
   sysDictTypesTable,
 } from '../../infra/db/schema';
@@ -33,6 +45,117 @@ const dictItemsSuccessSchema = t.Object({
   requestId: t.String(),
   data: t.Array(dictItemSchema),
 });
+
+const dictTypeSchema = t.Object({
+  id: t.Number(),
+  code: t.String(),
+  name: t.String(),
+  status: t.Number(),
+  remark: t.Nullable(t.String()),
+});
+
+const dictTypeListSuccessSchema = t.Object({
+  code: t.Number(),
+  message: t.String(),
+  requestId: t.String(),
+  data: t.Array(dictTypeSchema),
+});
+
+const dictItemListSuccessSchema = t.Object({
+  code: t.Number(),
+  message: t.String(),
+  requestId: t.String(),
+  data: t.Array(
+    t.Intersect([
+      dictItemSchema,
+      t.Object({
+        dictTypeId: t.Number(),
+      }),
+    ]),
+  ),
+});
+
+const dictTypeBodySchema = t.Object({
+  code: t.String({ minLength: 1, maxLength: 64 }),
+  name: t.String({ minLength: 1, maxLength: 64 }),
+  status: t.Optional(t.Numeric({ minimum: 0, maximum: 1 })),
+  remark: t.Optional(t.String({ maxLength: 255 })),
+});
+
+const dictItemBodySchema = t.Object({
+  dictTypeId: t.Numeric({ minimum: 1 }),
+  label: t.String({ minLength: 1, maxLength: 64 }),
+  value: t.String({ minLength: 1, maxLength: 64 }),
+  tagType: t.Optional(t.String({ maxLength: 32 })),
+  sort: t.Optional(t.Numeric({ minimum: 0, maximum: 9999 })),
+  status: t.Optional(t.Numeric({ minimum: 0, maximum: 1 })),
+  isDefault: t.Optional(t.Numeric({ minimum: 0, maximum: 1 })),
+  remark: t.Optional(t.String({ maxLength: 255 })),
+});
+
+const toggleBodySchema = t.Object({
+  status: t.Numeric({ minimum: 0, maximum: 1 }),
+});
+
+const deptSchema = t.Object({
+  id: t.Number(),
+  parentId: t.Number(),
+  name: t.String(),
+  code: t.String(),
+  sort: t.Number(),
+  status: t.Number(),
+  leader: t.Nullable(t.String()),
+  phone: t.Nullable(t.String()),
+  email: t.Nullable(t.String()),
+});
+
+const deptBodySchema = t.Object({
+  parentId: t.Optional(t.Numeric({ minimum: 0 })),
+  name: t.String({ minLength: 1, maxLength: 64 }),
+  code: t.String({ minLength: 1, maxLength: 64 }),
+  sort: t.Optional(t.Numeric({ minimum: 0, maximum: 9999 })),
+  status: t.Optional(t.Numeric({ minimum: 0, maximum: 1 })),
+  leader: t.Optional(t.String({ maxLength: 64 })),
+  phone: t.Optional(t.String({ maxLength: 32 })),
+  email: t.Optional(t.String({ maxLength: 128 })),
+});
+
+type DeptRow = {
+  id: number;
+  parentId: number;
+  name: string;
+  code: string;
+  sort: number;
+  status: number;
+  leader: string | null;
+  phone: string | null;
+  email: string | null;
+};
+
+const buildDeptTree = (rows: DeptRow[]) => {
+  const nodeMap = new Map<
+    number,
+    DeptRow & { children: Array<DeptRow & { children: unknown[] }> }
+  >();
+  const roots: Array<
+    DeptRow & { children: Array<DeptRow & { children: unknown[] }> }
+  > = [];
+
+  for (const item of rows) {
+    nodeMap.set(item.id, { ...item, children: [] });
+  }
+  for (const item of rows) {
+    const current = nodeMap.get(item.id);
+    if (!current) continue;
+    const parent = nodeMap.get(item.parentId);
+    if (!parent || item.parentId === 0) {
+      roots.push(current);
+      continue;
+    }
+    parent.children.push(current);
+  }
+  return roots;
+};
 
 const configValueSchema = t.Union([
   t.String(),
@@ -172,6 +295,7 @@ export const systemModule = new Elysia({
           and(
             eq(sysDictTypesTable.code, code),
             eq(sysDictTypesTable.status, 1),
+            isNull(sysDictTypesTable.deletedAt),
           ),
         )
         .limit(1);
@@ -196,6 +320,7 @@ export const systemModule = new Elysia({
           and(
             eq(sysDictItemsTable.dictTypeId, dictType[0].id),
             eq(sysDictItemsTable.status, 1),
+            isNull(sysDictItemsTable.deletedAt),
           ),
         )
         .orderBy(asc(sysDictItemsTable.sort), asc(sysDictItemsTable.id));
@@ -213,6 +338,961 @@ export const systemModule = new Elysia({
         200: dictItemsSuccessSchema,
         404: apiErrorSchema,
       },
+    },
+  )
+  .get(
+    '/dict-types',
+    async ({ request }) => {
+      const { requestId } = ensureRequestContext(request);
+      const rows = await db
+        .select({
+          id: sysDictTypesTable.id,
+          code: sysDictTypesTable.code,
+          name: sysDictTypesTable.name,
+          status: sysDictTypesTable.status,
+          remark: sysDictTypesTable.remark,
+        })
+        .from(sysDictTypesTable)
+        .where(isNull(sysDictTypesTable.deletedAt))
+        .orderBy(asc(sysDictTypesTable.id));
+      return ok(requestId, rows, 'OK');
+    },
+    {
+      detail: {
+        summary: '查询字典类型列表',
+        description: '需要管理员权限，返回全部未删除字典类型。',
+        security: [{ bearerAuth: [] }],
+      },
+    },
+  )
+  .post(
+    '/dict-types',
+    async ({ body, request, set }) => {
+      const { requestId } = ensureRequestContext(request);
+      const payload = body as {
+        code: string;
+        name: string;
+        status?: number;
+        remark?: string;
+      };
+      const code = payload.code.trim();
+      const name = payload.name.trim();
+      if (!code || !name) {
+        set.status = 400;
+        return {
+          code: 400000,
+          message: 'code and name are required',
+          requestId,
+        };
+      }
+      const exists = await db
+        .select({ id: sysDictTypesTable.id })
+        .from(sysDictTypesTable)
+        .where(
+          and(
+            eq(sysDictTypesTable.code, code),
+            isNull(sysDictTypesTable.deletedAt),
+          ),
+        )
+        .limit(1);
+      if (exists[0]) {
+        set.status = 409;
+        return {
+          code: 409000,
+          message: 'Dict type code already exists',
+          requestId,
+        };
+      }
+      const created = await db
+        .insert(sysDictTypesTable)
+        .values({
+          code,
+          name,
+          status: payload.status ?? 1,
+          remark: payload.remark?.trim() || null,
+        })
+        .returning({
+          id: sysDictTypesTable.id,
+          code: sysDictTypesTable.code,
+          name: sysDictTypesTable.name,
+          status: sysDictTypesTable.status,
+          remark: sysDictTypesTable.remark,
+        });
+      set.status = 201;
+      return ok(requestId, created[0], 'OK');
+    },
+    {
+      detail: {
+        summary: '新增字典类型',
+        description: '需要管理员权限，字典编码必须唯一。',
+        security: [{ bearerAuth: [] }],
+      },
+      body: dictTypeBodySchema,
+      response: {
+        201: t.Object({
+          code: t.Number(),
+          message: t.String(),
+          requestId: t.String(),
+          data: dictTypeSchema,
+        }),
+        400: apiErrorSchema,
+        409: apiErrorSchema,
+      },
+    },
+  )
+  .put(
+    '/dict-types/:id',
+    async ({ params, body, request, set }) => {
+      const { requestId } = ensureRequestContext(request);
+      const id = Number(params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        set.status = 400;
+        return { code: 400000, message: 'invalid id', requestId };
+      }
+      const payload = body as {
+        code: string;
+        name: string;
+        status?: number;
+        remark?: string;
+      };
+      const code = payload.code.trim();
+      const name = payload.name.trim();
+      if (!code || !name) {
+        set.status = 400;
+        return {
+          code: 400000,
+          message: 'code and name are required',
+          requestId,
+        };
+      }
+      const duplicate = await db
+        .select({ id: sysDictTypesTable.id })
+        .from(sysDictTypesTable)
+        .where(
+          and(
+            eq(sysDictTypesTable.code, code),
+            ne(sysDictTypesTable.id, id),
+            isNull(sysDictTypesTable.deletedAt),
+          ),
+        )
+        .limit(1);
+      if (duplicate[0]) {
+        set.status = 409;
+        return {
+          code: 409000,
+          message: 'Dict type code already exists',
+          requestId,
+        };
+      }
+      const rows = await db
+        .update(sysDictTypesTable)
+        .set({
+          code,
+          name,
+          status: payload.status ?? 1,
+          remark: payload.remark?.trim() || null,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(sysDictTypesTable.id, id),
+            isNull(sysDictTypesTable.deletedAt),
+          ),
+        )
+        .returning({
+          id: sysDictTypesTable.id,
+          code: sysDictTypesTable.code,
+          name: sysDictTypesTable.name,
+          status: sysDictTypesTable.status,
+          remark: sysDictTypesTable.remark,
+        });
+      if (!rows[0]) {
+        set.status = 404;
+        return { code: 404000, message: 'Dict type not found', requestId };
+      }
+      return ok(requestId, rows[0], 'OK');
+    },
+    {
+      detail: {
+        summary: '编辑字典类型',
+        description: '需要管理员权限，按 id 更新字典类型。',
+        security: [{ bearerAuth: [] }],
+      },
+      params: t.Object({ id: t.String() }),
+      body: dictTypeBodySchema,
+      response: {
+        200: t.Object({
+          code: t.Number(),
+          message: t.String(),
+          requestId: t.String(),
+          data: dictTypeSchema,
+        }),
+        400: apiErrorSchema,
+        404: apiErrorSchema,
+        409: apiErrorSchema,
+      },
+    },
+  )
+  .post(
+    '/dict-types/:id/toggle',
+    async ({ params, body, request, set }) => {
+      const { requestId } = ensureRequestContext(request);
+      const id = Number(params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        set.status = 400;
+        return { code: 400000, message: 'invalid id', requestId };
+      }
+      const payload = body as { status: number };
+      const rows = await db
+        .update(sysDictTypesTable)
+        .set({
+          status: payload.status,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(sysDictTypesTable.id, id),
+            isNull(sysDictTypesTable.deletedAt),
+          ),
+        )
+        .returning({
+          id: sysDictTypesTable.id,
+          code: sysDictTypesTable.code,
+          name: sysDictTypesTable.name,
+          status: sysDictTypesTable.status,
+          remark: sysDictTypesTable.remark,
+        });
+      if (!rows[0]) {
+        set.status = 404;
+        return { code: 404000, message: 'Dict type not found', requestId };
+      }
+      return ok(requestId, rows[0], 'OK');
+    },
+    {
+      detail: {
+        summary: '切换字典类型状态',
+        description: '需要管理员权限，status: 0 禁用, 1 启用。',
+        security: [{ bearerAuth: [] }],
+      },
+      params: t.Object({ id: t.String() }),
+      body: toggleBodySchema,
+    },
+  )
+  .delete(
+    '/dict-types/:id',
+    async ({ params, request, set }) => {
+      const { requestId } = ensureRequestContext(request);
+      const id = Number(params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        set.status = 400;
+        return { code: 400000, message: 'invalid id', requestId };
+      }
+      const itemRows = await db
+        .select({ id: sysDictItemsTable.id })
+        .from(sysDictItemsTable)
+        .where(
+          and(
+            eq(sysDictItemsTable.dictTypeId, id),
+            isNull(sysDictItemsTable.deletedAt),
+          ),
+        )
+        .limit(1);
+      if (itemRows[0]) {
+        set.status = 409;
+        return {
+          code: 409000,
+          message: 'Please delete dict items first',
+          requestId,
+        };
+      }
+      const rows = await db
+        .update(sysDictTypesTable)
+        .set({
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(sysDictTypesTable.id, id),
+            isNull(sysDictTypesTable.deletedAt),
+          ),
+        )
+        .returning({ id: sysDictTypesTable.id });
+      if (!rows[0]) {
+        set.status = 404;
+        return { code: 404000, message: 'Dict type not found', requestId };
+      }
+      return ok(requestId, { deleted: 1 }, 'OK');
+    },
+    {
+      detail: {
+        summary: '删除字典类型',
+        description: '需要管理员权限，若存在字典项则拒绝删除。',
+        security: [{ bearerAuth: [] }],
+      },
+      params: t.Object({ id: t.String() }),
+      response: {
+        400: apiErrorSchema,
+        404: apiErrorSchema,
+        409: apiErrorSchema,
+      },
+    },
+  )
+  .get(
+    '/dict-items',
+    async ({ query, request }) => {
+      const { requestId } = ensureRequestContext(request);
+      const dictTypeId =
+        query.dictTypeId !== undefined ? Number(query.dictTypeId) : undefined;
+      const rows = await db
+        .select({
+          id: sysDictItemsTable.id,
+          dictTypeId: sysDictItemsTable.dictTypeId,
+          label: sysDictItemsTable.label,
+          value: sysDictItemsTable.value,
+          tagType: sysDictItemsTable.tagType,
+          sort: sysDictItemsTable.sort,
+          status: sysDictItemsTable.status,
+          isDefault: sysDictItemsTable.isDefault,
+          remark: sysDictItemsTable.remark,
+        })
+        .from(sysDictItemsTable)
+        .where(
+          and(
+            dictTypeId
+              ? eq(sysDictItemsTable.dictTypeId, dictTypeId)
+              : undefined,
+            isNull(sysDictItemsTable.deletedAt),
+          ),
+        )
+        .orderBy(asc(sysDictItemsTable.sort), asc(sysDictItemsTable.id));
+      return ok(requestId, rows, 'OK');
+    },
+    {
+      detail: {
+        summary: '查询字典项列表',
+        description: '需要管理员权限，可按字典类型过滤。',
+        security: [{ bearerAuth: [] }],
+      },
+      query: t.Object({
+        dictTypeId: t.Optional(t.Numeric({ minimum: 1 })),
+      }),
+    },
+  )
+  .post(
+    '/dict-items',
+    async ({ body, request, set }) => {
+      const { requestId } = ensureRequestContext(request);
+      const payload = body as {
+        dictTypeId: number;
+        label: string;
+        value: string;
+        tagType?: string;
+        sort?: number;
+        status?: number;
+        isDefault?: number;
+        remark?: string;
+      };
+      const dictTypeId = Number(payload.dictTypeId);
+      const label = payload.label.trim();
+      const value = payload.value.trim();
+      if (
+        !Number.isInteger(dictTypeId) ||
+        dictTypeId <= 0 ||
+        !label ||
+        !value
+      ) {
+        set.status = 400;
+        return {
+          code: 400000,
+          message: 'dictTypeId, label and value are required',
+          requestId,
+        };
+      }
+      const dictTypeRows = await db
+        .select({ id: sysDictTypesTable.id })
+        .from(sysDictTypesTable)
+        .where(
+          and(
+            eq(sysDictTypesTable.id, dictTypeId),
+            isNull(sysDictTypesTable.deletedAt),
+          ),
+        )
+        .limit(1);
+      if (!dictTypeRows[0]) {
+        set.status = 404;
+        return { code: 404000, message: 'Dict type not found', requestId };
+      }
+      const duplicate = await db
+        .select({ id: sysDictItemsTable.id })
+        .from(sysDictItemsTable)
+        .where(
+          and(
+            eq(sysDictItemsTable.dictTypeId, dictTypeId),
+            eq(sysDictItemsTable.value, value),
+            isNull(sysDictItemsTable.deletedAt),
+          ),
+        )
+        .limit(1);
+      if (duplicate[0]) {
+        set.status = 409;
+        return {
+          code: 409000,
+          message: 'Dict item value already exists in dict type',
+          requestId,
+        };
+      }
+      const created = await db
+        .insert(sysDictItemsTable)
+        .values({
+          dictTypeId,
+          label,
+          value,
+          tagType: payload.tagType?.trim() || null,
+          sort: payload.sort ?? 0,
+          status: payload.status ?? 1,
+          isDefault: payload.isDefault ?? 0,
+          remark: payload.remark?.trim() || null,
+        })
+        .returning({
+          id: sysDictItemsTable.id,
+          dictTypeId: sysDictItemsTable.dictTypeId,
+          label: sysDictItemsTable.label,
+          value: sysDictItemsTable.value,
+          tagType: sysDictItemsTable.tagType,
+          sort: sysDictItemsTable.sort,
+          status: sysDictItemsTable.status,
+          isDefault: sysDictItemsTable.isDefault,
+          remark: sysDictItemsTable.remark,
+        });
+      set.status = 201;
+      return ok(requestId, created[0], 'OK');
+    },
+    {
+      detail: {
+        summary: '新增字典项',
+        description: '需要管理员权限，value 在同字典类型下唯一。',
+        security: [{ bearerAuth: [] }],
+      },
+      body: dictItemBodySchema,
+      response: {
+        400: apiErrorSchema,
+        404: apiErrorSchema,
+        409: apiErrorSchema,
+      },
+    },
+  )
+  .put(
+    '/dict-items/:id',
+    async ({ params, body, request, set }) => {
+      const { requestId } = ensureRequestContext(request);
+      const id = Number(params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        set.status = 400;
+        return { code: 400000, message: 'invalid id', requestId };
+      }
+      const payload = body as {
+        dictTypeId: number;
+        label: string;
+        value: string;
+        tagType?: string;
+        sort?: number;
+        status?: number;
+        isDefault?: number;
+        remark?: string;
+      };
+      const dictTypeId = Number(payload.dictTypeId);
+      const label = payload.label.trim();
+      const value = payload.value.trim();
+      if (
+        !Number.isInteger(dictTypeId) ||
+        dictTypeId <= 0 ||
+        !label ||
+        !value
+      ) {
+        set.status = 400;
+        return {
+          code: 400000,
+          message: 'dictTypeId, label and value are required',
+          requestId,
+        };
+      }
+      const duplicate = await db
+        .select({ id: sysDictItemsTable.id })
+        .from(sysDictItemsTable)
+        .where(
+          and(
+            eq(sysDictItemsTable.dictTypeId, dictTypeId),
+            eq(sysDictItemsTable.value, value),
+            ne(sysDictItemsTable.id, id),
+            isNull(sysDictItemsTable.deletedAt),
+          ),
+        )
+        .limit(1);
+      if (duplicate[0]) {
+        set.status = 409;
+        return {
+          code: 409000,
+          message: 'Dict item value already exists in dict type',
+          requestId,
+        };
+      }
+      const rows = await db
+        .update(sysDictItemsTable)
+        .set({
+          dictTypeId,
+          label,
+          value,
+          tagType: payload.tagType?.trim() || null,
+          sort: payload.sort ?? 0,
+          status: payload.status ?? 1,
+          isDefault: payload.isDefault ?? 0,
+          remark: payload.remark?.trim() || null,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(sysDictItemsTable.id, id),
+            isNull(sysDictItemsTable.deletedAt),
+          ),
+        )
+        .returning({
+          id: sysDictItemsTable.id,
+          dictTypeId: sysDictItemsTable.dictTypeId,
+          label: sysDictItemsTable.label,
+          value: sysDictItemsTable.value,
+          tagType: sysDictItemsTable.tagType,
+          sort: sysDictItemsTable.sort,
+          status: sysDictItemsTable.status,
+          isDefault: sysDictItemsTable.isDefault,
+          remark: sysDictItemsTable.remark,
+        });
+      if (!rows[0]) {
+        set.status = 404;
+        return { code: 404000, message: 'Dict item not found', requestId };
+      }
+      return ok(requestId, rows[0], 'OK');
+    },
+    {
+      detail: {
+        summary: '编辑字典项',
+        description: '需要管理员权限，按 id 更新字典项。',
+        security: [{ bearerAuth: [] }],
+      },
+      params: t.Object({ id: t.String() }),
+      body: dictItemBodySchema,
+      response: {
+        400: apiErrorSchema,
+        404: apiErrorSchema,
+        409: apiErrorSchema,
+      },
+    },
+  )
+  .post(
+    '/dict-items/:id/toggle',
+    async ({ params, body, request, set }) => {
+      const { requestId } = ensureRequestContext(request);
+      const id = Number(params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        set.status = 400;
+        return { code: 400000, message: 'invalid id', requestId };
+      }
+      const payload = body as { status: number };
+      const rows = await db
+        .update(sysDictItemsTable)
+        .set({
+          status: payload.status,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(sysDictItemsTable.id, id),
+            isNull(sysDictItemsTable.deletedAt),
+          ),
+        )
+        .returning({
+          id: sysDictItemsTable.id,
+          dictTypeId: sysDictItemsTable.dictTypeId,
+          label: sysDictItemsTable.label,
+          value: sysDictItemsTable.value,
+          tagType: sysDictItemsTable.tagType,
+          sort: sysDictItemsTable.sort,
+          status: sysDictItemsTable.status,
+          isDefault: sysDictItemsTable.isDefault,
+          remark: sysDictItemsTable.remark,
+        });
+      if (!rows[0]) {
+        set.status = 404;
+        return { code: 404000, message: 'Dict item not found', requestId };
+      }
+      return ok(requestId, rows[0], 'OK');
+    },
+    {
+      detail: {
+        summary: '切换字典项状态',
+        description: '需要管理员权限，status: 0 禁用, 1 启用。',
+        security: [{ bearerAuth: [] }],
+      },
+      params: t.Object({ id: t.String() }),
+      body: toggleBodySchema,
+    },
+  )
+  .delete(
+    '/dict-items/:id',
+    async ({ params, request, set }) => {
+      const { requestId } = ensureRequestContext(request);
+      const id = Number(params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        set.status = 400;
+        return { code: 400000, message: 'invalid id', requestId };
+      }
+      const rows = await db
+        .update(sysDictItemsTable)
+        .set({
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(sysDictItemsTable.id, id),
+            isNull(sysDictItemsTable.deletedAt),
+          ),
+        )
+        .returning({ id: sysDictItemsTable.id });
+      if (!rows[0]) {
+        set.status = 404;
+        return { code: 404000, message: 'Dict item not found', requestId };
+      }
+      return ok(requestId, { deleted: 1 }, 'OK');
+    },
+    {
+      detail: {
+        summary: '删除字典项',
+        description: '需要管理员权限，软删除字典项。',
+        security: [{ bearerAuth: [] }],
+      },
+      params: t.Object({ id: t.String() }),
+      response: {
+        400: apiErrorSchema,
+        404: apiErrorSchema,
+      },
+    },
+  )
+  .get(
+    '/depts/tree',
+    async ({ request }) => {
+      const { requestId } = ensureRequestContext(request);
+      const rows = await db
+        .select({
+          id: sysDeptsTable.id,
+          parentId: sysDeptsTable.parentId,
+          name: sysDeptsTable.name,
+          code: sysDeptsTable.code,
+          sort: sysDeptsTable.sort,
+          status: sysDeptsTable.status,
+          leader: sysDeptsTable.leader,
+          phone: sysDeptsTable.phone,
+          email: sysDeptsTable.email,
+        })
+        .from(sysDeptsTable)
+        .where(isNull(sysDeptsTable.deletedAt))
+        .orderBy(
+          asc(sysDeptsTable.parentId),
+          asc(sysDeptsTable.sort),
+          asc(sysDeptsTable.id),
+        );
+      return ok(requestId, buildDeptTree(rows), 'OK');
+    },
+    {
+      detail: {
+        summary: '查询部门树',
+        description: '需要管理员权限，返回部门树结构。',
+        security: [{ bearerAuth: [] }],
+      },
+    },
+  )
+  .post(
+    '/depts',
+    async ({ body, request, set }) => {
+      const { requestId } = ensureRequestContext(request);
+      const payload = body as {
+        parentId?: number;
+        name: string;
+        code: string;
+        sort?: number;
+        status?: number;
+        leader?: string;
+        phone?: string;
+        email?: string;
+      };
+      const name = payload.name.trim();
+      const code = payload.code.trim();
+      if (!name || !code) {
+        set.status = 400;
+        return {
+          code: 400000,
+          message: 'name and code are required',
+          requestId,
+        };
+      }
+      const exists = await db
+        .select({ id: sysDeptsTable.id })
+        .from(sysDeptsTable)
+        .where(
+          and(eq(sysDeptsTable.code, code), isNull(sysDeptsTable.deletedAt)),
+        )
+        .limit(1);
+      if (exists[0]) {
+        set.status = 409;
+        return { code: 409000, message: 'Dept code already exists', requestId };
+      }
+      const parentId = payload.parentId ?? 0;
+      if (parentId > 0) {
+        const parentRows = await db
+          .select({ id: sysDeptsTable.id })
+          .from(sysDeptsTable)
+          .where(
+            and(
+              eq(sysDeptsTable.id, parentId),
+              isNull(sysDeptsTable.deletedAt),
+            ),
+          )
+          .limit(1);
+        if (!parentRows[0]) {
+          set.status = 404;
+          return { code: 404000, message: 'Parent dept not found', requestId };
+        }
+      }
+      const rows = await db
+        .insert(sysDeptsTable)
+        .values({
+          parentId,
+          name,
+          code,
+          sort: payload.sort ?? 0,
+          status: payload.status ?? 1,
+          leader: payload.leader?.trim() || null,
+          phone: payload.phone?.trim() || null,
+          email: payload.email?.trim() || null,
+        })
+        .returning({
+          id: sysDeptsTable.id,
+          parentId: sysDeptsTable.parentId,
+          name: sysDeptsTable.name,
+          code: sysDeptsTable.code,
+          sort: sysDeptsTable.sort,
+          status: sysDeptsTable.status,
+          leader: sysDeptsTable.leader,
+          phone: sysDeptsTable.phone,
+          email: sysDeptsTable.email,
+        });
+      set.status = 201;
+      return ok(requestId, rows[0], 'OK');
+    },
+    {
+      detail: {
+        summary: '新增部门',
+        description: '需要管理员权限，部门编码全局唯一。',
+        security: [{ bearerAuth: [] }],
+      },
+      body: deptBodySchema,
+    },
+  )
+  .put(
+    '/depts/:id',
+    async ({ params, body, request, set }) => {
+      const { requestId } = ensureRequestContext(request);
+      const id = Number(params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        set.status = 400;
+        return { code: 400000, message: 'invalid id', requestId };
+      }
+      const payload = body as {
+        parentId?: number;
+        name: string;
+        code: string;
+        sort?: number;
+        status?: number;
+        leader?: string;
+        phone?: string;
+        email?: string;
+      };
+      const name = payload.name.trim();
+      const code = payload.code.trim();
+      if (!name || !code) {
+        set.status = 400;
+        return {
+          code: 400000,
+          message: 'name and code are required',
+          requestId,
+        };
+      }
+      const duplicate = await db
+        .select({ id: sysDeptsTable.id })
+        .from(sysDeptsTable)
+        .where(
+          and(
+            eq(sysDeptsTable.code, code),
+            ne(sysDeptsTable.id, id),
+            isNull(sysDeptsTable.deletedAt),
+          ),
+        )
+        .limit(1);
+      if (duplicate[0]) {
+        set.status = 409;
+        return { code: 409000, message: 'Dept code already exists', requestId };
+      }
+      const parentId = payload.parentId ?? 0;
+      if (parentId === id) {
+        set.status = 400;
+        return { code: 400000, message: 'parentId cannot be self', requestId };
+      }
+      if (parentId > 0) {
+        const parentRows = await db
+          .select({ id: sysDeptsTable.id })
+          .from(sysDeptsTable)
+          .where(
+            and(
+              eq(sysDeptsTable.id, parentId),
+              isNull(sysDeptsTable.deletedAt),
+            ),
+          )
+          .limit(1);
+        if (!parentRows[0]) {
+          set.status = 404;
+          return { code: 404000, message: 'Parent dept not found', requestId };
+        }
+      }
+      const rows = await db
+        .update(sysDeptsTable)
+        .set({
+          parentId,
+          name,
+          code,
+          sort: payload.sort ?? 0,
+          status: payload.status ?? 1,
+          leader: payload.leader?.trim() || null,
+          phone: payload.phone?.trim() || null,
+          email: payload.email?.trim() || null,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(sysDeptsTable.id, id), isNull(sysDeptsTable.deletedAt)))
+        .returning({
+          id: sysDeptsTable.id,
+          parentId: sysDeptsTable.parentId,
+          name: sysDeptsTable.name,
+          code: sysDeptsTable.code,
+          sort: sysDeptsTable.sort,
+          status: sysDeptsTable.status,
+          leader: sysDeptsTable.leader,
+          phone: sysDeptsTable.phone,
+          email: sysDeptsTable.email,
+        });
+      if (!rows[0]) {
+        set.status = 404;
+        return { code: 404000, message: 'Dept not found', requestId };
+      }
+      return ok(requestId, rows[0], 'OK');
+    },
+    {
+      detail: {
+        summary: '编辑部门',
+        description: '需要管理员权限，支持更新父级、排序与负责人信息。',
+        security: [{ bearerAuth: [] }],
+      },
+      params: t.Object({ id: t.String() }),
+      body: deptBodySchema,
+    },
+  )
+  .post(
+    '/depts/:id/toggle',
+    async ({ params, body, request, set }) => {
+      const { requestId } = ensureRequestContext(request);
+      const id = Number(params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        set.status = 400;
+        return { code: 400000, message: 'invalid id', requestId };
+      }
+      const payload = body as { status: number };
+      const rows = await db
+        .update(sysDeptsTable)
+        .set({
+          status: payload.status,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(sysDeptsTable.id, id), isNull(sysDeptsTable.deletedAt)))
+        .returning({
+          id: sysDeptsTable.id,
+          parentId: sysDeptsTable.parentId,
+          name: sysDeptsTable.name,
+          code: sysDeptsTable.code,
+          sort: sysDeptsTable.sort,
+          status: sysDeptsTable.status,
+          leader: sysDeptsTable.leader,
+          phone: sysDeptsTable.phone,
+          email: sysDeptsTable.email,
+        });
+      if (!rows[0]) {
+        set.status = 404;
+        return { code: 404000, message: 'Dept not found', requestId };
+      }
+      return ok(requestId, rows[0], 'OK');
+    },
+    {
+      detail: {
+        summary: '切换部门状态',
+        description: '需要管理员权限，status: 0 禁用, 1 启用。',
+        security: [{ bearerAuth: [] }],
+      },
+      params: t.Object({ id: t.String() }),
+      body: toggleBodySchema,
+    },
+  )
+  .delete(
+    '/depts/:id',
+    async ({ params, request, set }) => {
+      const { requestId } = ensureRequestContext(request);
+      const id = Number(params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        set.status = 400;
+        return { code: 400000, message: 'invalid id', requestId };
+      }
+      const childRows = await db
+        .select({ id: sysDeptsTable.id })
+        .from(sysDeptsTable)
+        .where(
+          and(eq(sysDeptsTable.parentId, id), isNull(sysDeptsTable.deletedAt)),
+        )
+        .limit(1);
+      if (childRows[0]) {
+        set.status = 409;
+        return {
+          code: 409000,
+          message: 'Please delete child departments first',
+          requestId,
+        };
+      }
+      const rows = await db
+        .update(sysDeptsTable)
+        .set({
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(and(eq(sysDeptsTable.id, id), isNull(sysDeptsTable.deletedAt)))
+        .returning({ id: sysDeptsTable.id });
+      if (!rows[0]) {
+        set.status = 404;
+        return { code: 404000, message: 'Dept not found', requestId };
+      }
+      return ok(requestId, { deleted: 1 }, 'OK');
+    },
+    {
+      detail: {
+        summary: '删除部门',
+        description: '需要管理员权限，存在子部门时拒绝删除。',
+        security: [{ bearerAuth: [] }],
+      },
+      params: t.Object({ id: t.String() }),
     },
   )
   .get(

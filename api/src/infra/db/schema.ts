@@ -50,6 +50,7 @@ export const sysUsersTable = pgTable(
     email: varchar('email', { length: 128 }),
     mobile: varchar('mobile', { length: 32 }),
     avatarUrl: varchar('avatar_url', { length: 512 }),
+    deptId: integer('dept_id'),
     status: smallint('status').notNull().default(1), // 1: enabled, 0: disabled
     lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
     ...auditColumns,
@@ -198,6 +199,32 @@ export const sysRoleMenusTable = pgTable(
   },
   (table) => ({
     roleMenuUk: uniqueIndex('uk_sys_role_menus').on(table.roleId, table.menuId),
+  }),
+);
+
+// P0: department management
+export const sysDeptsTable = pgTable(
+  'sys_depts',
+  {
+    id: serial('id').primaryKey(),
+    parentId: integer('parent_id').notNull().default(0),
+    name: varchar('name', { length: 64 }).notNull(),
+    code: varchar('code', { length: 64 }).notNull(),
+    sort: integer('sort').notNull().default(0),
+    status: smallint('status').notNull().default(1),
+    leader: varchar('leader', { length: 64 }),
+    phone: varchar('phone', { length: 32 }),
+    email: varchar('email', { length: 128 }),
+    ...auditColumns,
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => ({
+    codeUk: uniqueIndex('uk_sys_depts_code').on(table.code),
+    parentSortIdx: index('idx_sys_depts_parent_sort').on(
+      table.parentId,
+      table.sort,
+    ),
+    statusIdx: index('idx_sys_depts_status').on(table.status),
   }),
 );
 

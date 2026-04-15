@@ -41,7 +41,8 @@ const isPublicRoute = (method: string, path: string) => {
 };
 
 const requireAdminRoute = (method: string, path: string) => {
-  if (path.startsWith('/api/dicts')) return true;
+  if (path.startsWith('/api/dict')) return true;
+  if (path.startsWith('/api/depts')) return true;
   if (path.startsWith('/api/configs')) return true;
   if (path.startsWith('/api/audit-logs')) return true;
   if (path.startsWith('/api/monitor')) return true;

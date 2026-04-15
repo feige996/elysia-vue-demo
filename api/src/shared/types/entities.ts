@@ -3,6 +3,8 @@ export type UserEntity = {
   account: string;
   name: string;
   role: string;
+  deptId?: number | null;
+  deptName?: string | null;
 };
 
 export type MenuEntity = {

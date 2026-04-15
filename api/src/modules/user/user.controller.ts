@@ -373,8 +373,13 @@ export const createUserController = (
         parsedQuery.error.issues[0]?.message ?? 'Invalid query',
       );
     }
-    const { page, pageSize, keyword } = parsedQuery.data;
-    const result = await userRepository.findPage(page, pageSize, keyword);
+    const { page, pageSize, keyword, deptId } = parsedQuery.data;
+    const result = await userRepository.findPage(
+      page,
+      pageSize,
+      keyword,
+      deptId,
+    );
     return {
       status: 200,
       payload: ok(

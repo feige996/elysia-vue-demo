@@ -150,6 +150,46 @@ export const defaultSysPermissions = [
     status: 1,
   },
   {
+    id: 16,
+    code: 'system:dept:view',
+    name: '查看部门',
+    type: 3,
+    module: 'system-dept',
+    status: 1,
+  },
+  {
+    id: 17,
+    code: 'system:dept:create',
+    name: '新增部门',
+    type: 2,
+    module: 'system-dept',
+    status: 1,
+  },
+  {
+    id: 18,
+    code: 'system:dept:update',
+    name: '编辑部门',
+    type: 2,
+    module: 'system-dept',
+    status: 1,
+  },
+  {
+    id: 19,
+    code: 'system:dept:delete',
+    name: '删除部门',
+    type: 2,
+    module: 'system-dept',
+    status: 1,
+  },
+  {
+    id: 20,
+    code: 'system:dept:toggle',
+    name: '切换部门状态',
+    type: 2,
+    module: 'system-dept',
+    status: 1,
+  },
+  {
     id: 15,
     code: 'security:ip-blacklist:view',
     name: '查看 IP 黑名单',
@@ -281,6 +321,21 @@ export const defaultSysMenus = [
     permissionCode: 'monitor:cache:view',
   },
   {
+    id: 10,
+    parentId: 1,
+    name: '部门管理',
+    routeName: 'SystemDept',
+    path: '/system/dept',
+    component: 'system/dept/index',
+    icon: 'git-network-outline',
+    type: 2,
+    sort: 35,
+    visible: 1,
+    status: 1,
+    keepAlive: 1,
+    permissionCode: 'system:dept:view',
+  },
+  {
     id: 9,
     parentId: 1,
     name: 'IP 黑名单',
@@ -306,6 +361,7 @@ export const defaultSysUsers = [
     email: null,
     mobile: null,
     avatarUrl: null,
+    deptId: 1,
     status: 1,
   },
   {
@@ -316,6 +372,7 @@ export const defaultSysUsers = [
     email: null,
     mobile: null,
     avatarUrl: null,
+    deptId: 2,
     status: 1,
   },
 ];
@@ -341,10 +398,16 @@ export const defaultSysRolePermissions = [
   { roleId: 1, permissionId: 13 },
   { roleId: 1, permissionId: 14 },
   { roleId: 1, permissionId: 15 },
+  { roleId: 1, permissionId: 16 },
+  { roleId: 1, permissionId: 17 },
+  { roleId: 1, permissionId: 18 },
+  { roleId: 1, permissionId: 19 },
+  { roleId: 1, permissionId: 20 },
   { roleId: 2, permissionId: 1 },
   { roleId: 2, permissionId: 5 },
   { roleId: 2, permissionId: 7 },
   { roleId: 2, permissionId: 9 },
+  { roleId: 2, permissionId: 16 },
 ];
 
 export const defaultSysRoleMenus = [
@@ -357,8 +420,35 @@ export const defaultSysRoleMenus = [
   { roleId: 1, menuId: 7 },
   { roleId: 1, menuId: 8 },
   { roleId: 1, menuId: 9 },
+  { roleId: 1, menuId: 10 },
   { roleId: 2, menuId: 1 },
   { roleId: 2, menuId: 2 },
+  { roleId: 2, menuId: 10 },
+];
+
+export const defaultSysDepts = [
+  {
+    id: 1,
+    parentId: 0,
+    name: '总部',
+    code: 'HEADQUARTER',
+    sort: 1,
+    status: 1,
+    leader: 'Admin',
+    phone: null,
+    email: null,
+  },
+  {
+    id: 2,
+    parentId: 1,
+    name: '运营部',
+    code: 'OPS',
+    sort: 10,
+    status: 1,
+    leader: 'Editor',
+    phone: null,
+    email: null,
+  },
 ];
 
 export const defaultSysDictTypes = [

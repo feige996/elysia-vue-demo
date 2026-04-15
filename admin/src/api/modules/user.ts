@@ -14,12 +14,18 @@ export type SaveUserPayload = {
   account: string;
   name: string;
   role: string;
+  deptId?: number;
+};
+
+export type UpdateUserPayload = Partial<Omit<SaveUserPayload, 'deptId'>> & {
+  deptId?: number | null;
 };
 
 export const getUsersPageMethod = (params: {
   page: number;
   pageSize: number;
   keyword?: string;
+  deptId?: number;
 }) =>
   apiClient.authRequest<UserPageData>('/api/users', {
     method: 'GET',
@@ -32,10 +38,7 @@ export const createUserMethod = (payload: SaveUserPayload) =>
     body: payload,
   });
 
-export const updateUserMethod = (
-  id: number,
-  payload: Partial<SaveUserPayload>,
-) =>
+export const updateUserMethod = (id: number, payload: UpdateUserPayload) =>
   apiClient.authRequest<User>(`/api/users/${id}`, {
     method: 'PUT',
     body: payload,

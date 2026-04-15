@@ -1,6 +1,7 @@
 import { and, asc, count, eq, ilike, inArray, isNull, or } from 'drizzle-orm';
 import { db } from '../../infra/db/client';
 import {
+  sysDeptsTable,
   sysMenusTable,
   sysPermissionsTable,
   sysRoleMenusTable,
@@ -23,6 +24,8 @@ type UserWithRoleRow = {
   account: string;
   nickname: string;
   roleCode: string | null;
+  deptId: number | null;
+  deptName: string | null;
 };
 
 const toUserEntity = (row: UserWithRoleRow): UserEntity => ({
@@ -30,15 +33,20 @@ const toUserEntity = (row: UserWithRoleRow): UserEntity => ({
   account: row.account,
   name: row.nickname,
   role: toUserRole(row.roleCode),
+  deptId: row.deptId,
+  deptName: row.deptName,
 });
 
 type SaveUserInput = {
   account: string;
   name: string;
   role: UserEntity['role'];
+  deptId?: number;
 };
 
-type UpdateUserInput = Partial<SaveUserInput>;
+type UpdateUserInput = Omit<Partial<SaveUserInput>, 'deptId'> & {
+  deptId?: number | null;
+};
 type SaveRoleInput = {
   code: string;
   name: string;
@@ -52,6 +60,7 @@ type FindUserOptions = {
   keyword?: string;
   id?: number;
   account?: string;
+  deptId?: number;
   onlyActive?: boolean;
 };
 
@@ -85,6 +94,7 @@ export class UserRepository {
     const filters = [
       options.id ? eq(sysUsersTable.id, options.id) : undefined,
       options.account ? eq(sysUsersTable.account, options.account) : undefined,
+      options.deptId ? eq(sysUsersTable.deptId, options.deptId) : undefined,
       buildKeywordFilter(options.keyword, sysUsersTable.nickname),
       isNull(sysUsersTable.deletedAt),
       options.onlyActive ? eq(sysUsersTable.status, 1) : undefined,
@@ -96,6 +106,8 @@ export class UserRepository {
         account: sysUsersTable.account,
         nickname: sysUsersTable.nickname,
         roleCode: sysRolesTable.code,
+        deptId: sysUsersTable.deptId,
+        deptName: sysDeptsTable.name,
       })
       .from(sysUsersTable)
       .leftJoin(
@@ -103,6 +115,7 @@ export class UserRepository {
         eq(sysUserRolesTable.userId, sysUsersTable.id),
       )
       .leftJoin(sysRolesTable, eq(sysRolesTable.id, sysUserRolesTable.roleId))
+      .leftJoin(sysDeptsTable, eq(sysDeptsTable.id, sysUsersTable.deptId))
       .where(filters.length ? and(...filters) : undefined)
       .orderBy(asc(sysUsersTable.id));
     return rows;
@@ -115,6 +128,8 @@ export class UserRepository {
         account: sysUsersTable.account,
         nickname: sysUsersTable.nickname,
         roleCode: sysRolesTable.code,
+        deptId: sysUsersTable.deptId,
+        deptName: sysDeptsTable.name,
         status: sysUsersTable.status,
         passwordHash: sysUsersTable.passwordHash,
       })
@@ -124,6 +139,7 @@ export class UserRepository {
         eq(sysUserRolesTable.userId, sysUsersTable.id),
       )
       .leftJoin(sysRolesTable, eq(sysRolesTable.id, sysUserRolesTable.roleId))
+      .leftJoin(sysDeptsTable, eq(sysDeptsTable.id, sysUsersTable.deptId))
       .where(
         and(
           eq(sysUsersTable.account, account),
@@ -140,6 +156,8 @@ export class UserRepository {
         account: row.account,
         nickname: row.nickname,
         roleCode: row.roleCode,
+        deptId: row.deptId,
+        deptName: row.deptName,
       })),
     );
     return {
@@ -305,10 +323,16 @@ export class UserRepository {
     });
   }
 
-  async findPage(page: number, pageSize: number, keyword?: string) {
+  async findPage(
+    page: number,
+    pageSize: number,
+    keyword?: string,
+    deptId?: number,
+  ) {
     const offset = (page - 1) * pageSize;
     const filters = [
       buildKeywordFilter(keyword),
+      deptId ? eq(sysUsersTable.deptId, deptId) : undefined,
       isNull(sysUsersTable.deletedAt),
     ].filter((value): value is NonNullable<typeof value> => Boolean(value));
 
@@ -318,6 +342,8 @@ export class UserRepository {
         account: sysUsersTable.account,
         nickname: sysUsersTable.nickname,
         roleCode: sysRolesTable.code,
+        deptId: sysUsersTable.deptId,
+        deptName: sysDeptsTable.name,
       })
       .from(sysUsersTable)
       .leftJoin(
@@ -325,6 +351,7 @@ export class UserRepository {
         eq(sysUserRolesTable.userId, sysUsersTable.id),
       )
       .leftJoin(sysRolesTable, eq(sysRolesTable.id, sysUserRolesTable.roleId))
+      .leftJoin(sysDeptsTable, eq(sysDeptsTable.id, sysUsersTable.deptId))
       .where(filters.length ? and(...filters) : undefined)
       .orderBy(asc(sysUsersTable.id))
       .limit(pageSize)
@@ -353,6 +380,8 @@ export class UserRepository {
         account: sysUsersTable.account,
         nickname: sysUsersTable.nickname,
         roleCode: sysRolesTable.code,
+        deptId: sysUsersTable.deptId,
+        deptName: sysDeptsTable.name,
       })
       .from(sysUsersTable)
       .leftJoin(
@@ -360,6 +389,7 @@ export class UserRepository {
         eq(sysUserRolesTable.userId, sysUsersTable.id),
       )
       .leftJoin(sysRolesTable, eq(sysRolesTable.id, sysUserRolesTable.roleId))
+      .leftJoin(sysDeptsTable, eq(sysDeptsTable.id, sysUsersTable.deptId))
       .where(eq(sysUsersTable.account, account))
       .orderBy(asc(sysUsersTable.id))
       .limit(10);
@@ -384,12 +414,14 @@ export class UserRepository {
           account: input.account,
           passwordHash: `${input.account}123`,
           nickname: input.name,
+          deptId: input.deptId ?? null,
           status: 1,
         })
         .returning({
           id: sysUsersTable.id,
           account: sysUsersTable.account,
           nickname: sysUsersTable.nickname,
+          deptId: sysUsersTable.deptId,
         });
 
       const user = insertedUsers[0];
@@ -403,6 +435,8 @@ export class UserRepository {
         account: user.account,
         nickname: user.nickname,
         roleCode: input.role,
+        deptId: user.deptId,
+        deptName: null,
       };
     });
 
@@ -414,12 +448,17 @@ export class UserRepository {
       return this.findById(id);
     }
     await db.transaction(async (tx) => {
-      if (input.account || input.name) {
+      if (
+        input.account !== undefined ||
+        input.name !== undefined ||
+        input.deptId !== undefined
+      ) {
         await tx
           .update(sysUsersTable)
           .set({
             account: input.account,
             nickname: input.name,
+            deptId: input.deptId,
           })
           .where(
             and(eq(sysUsersTable.id, id), isNull(sysUsersTable.deletedAt)),

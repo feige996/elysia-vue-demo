@@ -5,6 +5,7 @@ import { env } from '../../shared/config/env';
 import {
   defaultArticles,
   defaultSysConfigs,
+  defaultSysDepts,
   defaultSysDictItems,
   defaultSysDictTypes,
   defaultSysMenus,
@@ -19,6 +20,7 @@ import {
 import {
   articlesTable,
   sysConfigsTable,
+  sysDeptsTable,
   sysDictItemsTable,
   sysDictTypesTable,
   sysMenusTable,
@@ -117,6 +119,11 @@ export const seedDatabase = async () => {
     .insert(sysConfigsTable)
     .values(defaultSysConfigs)
     .onConflictDoNothing({ target: sysConfigsTable.key });
+
+  await db
+    .insert(sysDeptsTable)
+    .values(defaultSysDepts)
+    .onConflictDoNothing({ target: sysDeptsTable.code });
 };
 
 export const checkDatabaseHealth = async () => {
@@ -124,6 +131,7 @@ export const checkDatabaseHealth = async () => {
   await db.select({ total: count() }).from(articlesTable);
   await db.select({ total: count() }).from(sysUsersTable);
   await db.select({ total: count() }).from(sysRolesTable);
+  await db.select({ total: count() }).from(sysDeptsTable);
 };
 
 if (import.meta.main) {
