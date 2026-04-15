@@ -38,10 +38,15 @@
     "prettier": "^3.8.2"
   },
   "lint-staged": {
-    "*.{ts,mts,cts,tsx,js,mjs,cjs,json,jsonc}": "oxfmt --write",
+    "*.{ts,mts,cts,tsx,js,mjs,cjs}": [
+      "oxfmt --write",
+      "oxlint"
+    ],
+    "*.{json,jsonc}": "oxfmt --write",
     "*.vue": [
       "oxfmt --write",
-      "prettier --write"
+      "prettier --write",
+      "oxlint"
     ],
     "*.md": "prettier --write"
   },
