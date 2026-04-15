@@ -9,6 +9,7 @@ import {
   isNull,
   lte,
   ne,
+  or,
 } from 'drizzle-orm';
 import { Elysia, t } from 'elysia';
 import { db } from '../../infra/db/client';
@@ -17,6 +18,8 @@ import {
   sysConfigsTable,
   sysDeptsTable,
   sysDictItemsTable,
+  sysLoginLogsTable,
+  sysPermissionsTable,
   sysDictTypesTable,
 } from '../../infra/db/schema';
 import { ok } from '../../shared/types/http';
@@ -220,6 +223,24 @@ const auditLogQuerySchema = t.Object({
   dateTo: t.Optional(t.String()),
 });
 
+const loginLogQuerySchema = t.Object({
+  page: t.Optional(t.Numeric({ minimum: 1, default: 1 })),
+  pageSize: t.Optional(t.Numeric({ minimum: 1, maximum: 100, default: 20 })),
+  account: t.Optional(t.String()),
+  requestIp: t.Optional(t.String()),
+  success: t.Optional(t.Numeric({ minimum: 0, maximum: 1 })),
+  dateFrom: t.Optional(t.String()),
+  dateTo: t.Optional(t.String()),
+});
+
+const apiCatalogQuerySchema = t.Object({
+  page: t.Optional(t.Numeric({ minimum: 1, default: 1 })),
+  pageSize: t.Optional(t.Numeric({ minimum: 1, maximum: 100, default: 20 })),
+  keyword: t.Optional(t.String()),
+  module: t.Optional(t.String()),
+  status: t.Optional(t.Numeric({ minimum: 0, maximum: 1 })),
+});
+
 const parseConfigValue = (value: string, valueType: number) => {
   if (valueType === 2) {
     const n = Number(value);
@@ -268,6 +289,31 @@ const buildAuditLogFilters = (query: {
       : undefined,
     query.dateTo
       ? lte(sysAuditLogsTable.createdAt, new Date(query.dateTo))
+      : undefined,
+  ].filter((item): item is NonNullable<typeof item> => Boolean(item));
+
+const buildLoginLogFilters = (query: {
+  account?: string;
+  requestIp?: string;
+  success?: number;
+  dateFrom?: string;
+  dateTo?: string;
+}) =>
+  [
+    query.account
+      ? ilike(sysLoginLogsTable.account, `%${query.account}%`)
+      : undefined,
+    query.requestIp
+      ? ilike(sysLoginLogsTable.requestIp, `%${query.requestIp}%`)
+      : undefined,
+    query.success !== undefined
+      ? eq(sysLoginLogsTable.success, query.success)
+      : undefined,
+    query.dateFrom
+      ? gte(sysLoginLogsTable.createdAt, new Date(query.dateFrom))
+      : undefined,
+    query.dateTo
+      ? lte(sysLoginLogsTable.createdAt, new Date(query.dateTo))
       : undefined,
   ].filter((item): item is NonNullable<typeof item> => Boolean(item));
 
@@ -1337,6 +1383,141 @@ export const systemModule = new Elysia({
         200: configSuccessSchema,
         404: apiErrorSchema,
       },
+    },
+  )
+  .get(
+    '/login-logs',
+    async ({ query, request }) => {
+      const { requestId } = ensureRequestContext(request);
+      const page = query.page ?? 1;
+      const pageSize = query.pageSize ?? 20;
+      const offset = (page - 1) * pageSize;
+      const filters = buildLoginLogFilters(query);
+      try {
+        const list = await db
+          .select({
+            id: sysLoginLogsTable.id,
+            account: sysLoginLogsTable.account,
+            userId: sysLoginLogsTable.userId,
+            success: sysLoginLogsTable.success,
+            reason: sysLoginLogsTable.reason,
+            requestIp: sysLoginLogsTable.requestIp,
+            userAgent: sysLoginLogsTable.userAgent,
+            createdAt: sysLoginLogsTable.createdAt,
+          })
+          .from(sysLoginLogsTable)
+          .where(filters.length ? and(...filters) : undefined)
+          .orderBy(desc(sysLoginLogsTable.createdAt))
+          .limit(pageSize)
+          .offset(offset);
+
+        const totalRows = await db
+          .select({ total: count() })
+          .from(sysLoginLogsTable)
+          .where(filters.length ? and(...filters) : undefined);
+
+        return ok(
+          requestId,
+          {
+            list: list.map((item) => ({
+              ...item,
+              createdAt: item.createdAt?.toISOString() ?? '',
+            })),
+            total: Number(totalRows[0]?.total ?? 0),
+            page,
+            pageSize,
+          },
+          'OK',
+        );
+      } catch {
+        // Keep endpoint available before login-log table migration.
+        return ok(
+          requestId,
+          {
+            list: [],
+            total: 0,
+            page,
+            pageSize,
+          },
+          'OK',
+        );
+      }
+    },
+    {
+      detail: {
+        summary: '查询登录日志',
+        description: '需要管理员权限，支持账号、IP、结果与时间范围筛选。',
+        security: [{ bearerAuth: [] }],
+      },
+      query: loginLogQuerySchema,
+    },
+  )
+  .get(
+    '/api-catalog',
+    async ({ query, request }) => {
+      const { requestId } = ensureRequestContext(request);
+      const page = query.page ?? 1;
+      const pageSize = query.pageSize ?? 20;
+      const offset = (page - 1) * pageSize;
+      const keyword = query.keyword?.trim();
+      const moduleKeyword = query.module?.trim();
+
+      const filters = [
+        eq(sysPermissionsTable.type, 3),
+        isNull(sysPermissionsTable.deletedAt),
+        moduleKeyword
+          ? ilike(sysPermissionsTable.module, `%${moduleKeyword}%`)
+          : undefined,
+        keyword
+          ? or(
+              ilike(sysPermissionsTable.code, `%${keyword}%`),
+              ilike(sysPermissionsTable.name, `%${keyword}%`),
+            )
+          : undefined,
+        query.status !== undefined
+          ? eq(sysPermissionsTable.status, query.status)
+          : undefined,
+      ].filter((item): item is NonNullable<typeof item> => Boolean(item));
+
+      const list = await db
+        .select({
+          id: sysPermissionsTable.id,
+          code: sysPermissionsTable.code,
+          name: sysPermissionsTable.name,
+          module: sysPermissionsTable.module,
+          type: sysPermissionsTable.type,
+          status: sysPermissionsTable.status,
+          description: sysPermissionsTable.description,
+        })
+        .from(sysPermissionsTable)
+        .where(and(...filters))
+        .orderBy(asc(sysPermissionsTable.module), asc(sysPermissionsTable.code))
+        .limit(pageSize)
+        .offset(offset);
+
+      const totalRows = await db
+        .select({ total: count() })
+        .from(sysPermissionsTable)
+        .where(and(...filters));
+
+      return ok(
+        requestId,
+        {
+          list,
+          total: Number(totalRows[0]?.total ?? 0),
+          page,
+          pageSize,
+        },
+        'OK',
+      );
+    },
+    {
+      detail: {
+        summary: '查询 API 目录',
+        description: '需要管理员权限，返回系统 API 权限点目录（只读）。',
+        security: [{ bearerAuth: [] }],
+      },
+      query: apiCatalogQuerySchema,
     },
   )
   .get(
