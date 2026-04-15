@@ -76,6 +76,21 @@ bun run build
 bun run audit
 ```
 
+测试补充说明（API）：
+
+- `api` 的测试命令已内置 `--preload ./tests/setup-env.ts`，会在测试启动前自动读取 `api/.env`。
+- 常用命令：
+
+```bash
+# API 单元测试
+bun run --cwd api test:unit
+
+# API 集成测试（含 dict 集成用例）
+bun run --cwd api test:integration
+```
+
+- 优先级规则：如果你在命令行/CI 显式传入环境变量（如 `JWT_SECRET`），将优先于 `api/.env`，不会被覆盖。
+
 ## 7. 最小接口入口
 
 - `POST /api/auth/login`

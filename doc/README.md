@@ -1,5 +1,13 @@
 # 文档索引（doc）
 
+## 开发与测试快速说明
+
+- API 测试命令已统一预加载 `api/tests/setup-env.ts`，会在测试前自动读取 `api/.env`。
+- 常用命令：
+  - `bun run --cwd api test:unit`
+  - `bun run --cwd api test:integration`
+- 若命令行/CI 显式注入环境变量（如 `JWT_SECRET`），优先级高于 `.env`，不会被覆盖。
+
 ## 对外文档（1.00 ~ 1.02）
 
 - [1.00-基座价值与适用场景](./1.00-基座价值与适用场景.md)
