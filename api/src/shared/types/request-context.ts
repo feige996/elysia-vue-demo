@@ -20,10 +20,7 @@ export const ensureRequestContext = (request: Request): RequestContext => {
   return createdContext;
 };
 
-export const setAuthorizedRoleInContext = (
-  request: Request,
-  role: string,
-) => {
+export const setAuthorizedRoleInContext = (request: Request, role: string) => {
   const context = ensureRequestContext(request);
   context.authorizedRole = role;
 };

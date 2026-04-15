@@ -163,12 +163,18 @@ const fetchRoleOptions = async () => {
   try {
     const response = await getRolesMethod();
     roleOptions.value = response.data
-      .filter((item): item is typeof item & { code: User['role'] } => item.status === 1)
+      .filter(
+        (item): item is typeof item & { code: User['role'] } =>
+          item.status === 1,
+      )
       .map((item) => ({
         label: item.name,
         value: item.code,
       }));
-    if (roleOptions.value.length > 0 && !roleOptions.value.some((item) => item.value === userForm.value.role)) {
+    if (
+      roleOptions.value.length > 0 &&
+      !roleOptions.value.some((item) => item.value === userForm.value.role)
+    ) {
       userForm.value.role = roleOptions.value[0].value;
     }
   } catch (error) {

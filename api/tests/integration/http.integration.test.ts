@@ -13,7 +13,12 @@ import { env } from '../../src/shared/config/env';
 import { ok, AppCode } from '../../src/shared/types/http';
 import { ensureRequestContext } from '../../src/shared/types/request-context';
 
-const users: Array<{ id: number; account: string; name: string; role: string }> = [
+const users: Array<{
+  id: number;
+  account: string;
+  name: string;
+  role: string;
+}> = [
   { id: 1, account: 'admin', name: 'Admin', role: 'admin' as const },
   { id: 2, account: 'editor', name: 'Editor', role: 'editor' as const },
   { id: 3, account: 'alice', name: 'Alice', role: 'editor' as const },
@@ -150,11 +155,7 @@ const userRepository = {
     if (!targetRole) return 0;
     return users.filter((user) => user.role === targetRole.code).length;
   },
-  async create(input: {
-    account: string;
-    name: string;
-    role: string;
-  }) {
+  async create(input: { account: string; name: string; role: string }) {
     const id = Math.max(...users.map((item) => item.id)) + 1;
     const created = { id, ...input };
     users.push(created);
