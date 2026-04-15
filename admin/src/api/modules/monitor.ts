@@ -39,6 +39,8 @@ export type IpBlacklistItem = {
   reason: string;
   createdAt: string;
   expiresAt: string | null;
+  hitCount: number;
+  lastHitAt: string | null;
 };
 
 export const getIpBlacklistMethod = () =>

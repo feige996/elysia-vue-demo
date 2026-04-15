@@ -2,7 +2,10 @@ import { Elysia } from 'elysia';
 import { getAuthorizedIdentity } from '../../shared/auth/token-auth';
 import { env, features } from '../../shared/config/env';
 import { logService } from '../../shared/logger/log.service';
-import { isIpBlocked } from '../../shared/security/ip-blacklist-store';
+import {
+  isIpBlocked,
+  markBlockedIpHit,
+} from '../../shared/security/ip-blacklist-store';
 import { ErrorKey, failByKey } from '../../shared/types/http';
 import {
   ensureRequestContext,
@@ -71,7 +74,7 @@ const resolveClientIpForBlacklist = (request: Request) => {
   );
 };
 
-const isLoginRequestBlockedByIp = (
+const isLoginRequestBlockedByIp = async (
   request: Request,
   method: string,
   path: string,
@@ -80,7 +83,7 @@ const isLoginRequestBlockedByIp = (
   if (!(method === 'POST' && path === '/api/auth/login')) return false;
   const ip = resolveClientIpForBlacklist(request);
   if (!ip || ip === 'unknown') return false;
-  return isIpBlocked(ip);
+  return await isIpBlocked(ip);
 };
 
 const resolveAuditModule = (path: string) => {
@@ -150,7 +153,11 @@ export const authMiddleware = new Elysia({ name: 'auth-middleware' }).onRequest(
     };
     const path = new URL(request.url).pathname;
     const method = request.method.toUpperCase();
-    if (isLoginRequestBlockedByIp(request, method, path)) {
+    if (await isLoginRequestBlockedByIp(request, method, path)) {
+      const ip = resolveClientIpForBlacklist(request);
+      if (ip && ip !== 'unknown') {
+        await markBlockedIpHit(ip);
+      }
       const { requestId } = ensureRequestContext(request);
       const forbidden = failByKey(
         requestId,

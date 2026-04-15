@@ -30,6 +30,13 @@ const expiresInMinutesInput = ref<number | null>(60);
 const columns: DataTableColumns<IpBlacklistItem> = [
   { title: 'IP', key: 'ip', width: 180 },
   { title: '原因', key: 'reason', minWidth: 200 },
+  { title: '命中次数', key: 'hitCount', width: 100 },
+  {
+    title: '最近命中',
+    key: 'lastHitAt',
+    width: 180,
+    render: (row) => row.lastHitAt ?? '-',
+  },
   { title: '创建时间', key: 'createdAt', width: 180 },
   {
     title: '过期时间',

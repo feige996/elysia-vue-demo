@@ -85,13 +85,13 @@ export const monitorModule = new Elysia({
   )
   .get(
     '/monitor/ip-blacklist',
-    ({ request }) => {
+    async ({ request }) => {
       const { requestId } = ensureRequestContext(request);
       return ok(
         requestId,
         {
           enabled: features.ipBlacklist,
-          list: listBlockedIps(),
+          list: await listBlockedIps(),
         },
         'OK',
       );
@@ -130,7 +130,7 @@ export const monitorModule = new Elysia({
           requestId,
         };
       }
-      addBlockedIp(ip, payload.reason, payload.expiresInMinutes);
+      await addBlockedIp(ip, payload.reason, payload.expiresInMinutes);
       return ok(
         requestId,
         {
@@ -150,7 +150,7 @@ export const monitorModule = new Elysia({
   )
   .delete(
     '/monitor/ip-blacklist',
-    ({ request, query, set }) => {
+    async ({ request, query, set }) => {
       const { requestId } = ensureRequestContext(request);
       const ip = String((query as Record<string, unknown>).ip ?? '').trim();
       if (!ip) {
@@ -161,7 +161,7 @@ export const monitorModule = new Elysia({
           requestId,
         };
       }
-      const removed = removeBlockedIp(ip);
+      const removed = await removeBlockedIp(ip);
       return ok(
         requestId,
         {
