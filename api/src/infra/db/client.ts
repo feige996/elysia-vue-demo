@@ -52,35 +52,20 @@ export const seedDatabase = async () => {
     await db.insert(articlesTable).values(defaultArticles);
   }
 
-  const existingSysRoles = await db
-    .select({ total: count() })
-    .from(sysRolesTable);
-  if (Number(existingSysRoles[0]?.total ?? 0) === 0) {
-    await db
-      .insert(sysRolesTable)
-      .values(defaultSysRoles)
-      .onConflictDoNothing({ target: sysRolesTable.code });
-  }
+  await db
+    .insert(sysRolesTable)
+    .values(defaultSysRoles)
+    .onConflictDoNothing({ target: sysRolesTable.code });
 
-  const existingSysPermissions = await db
-    .select({ total: count() })
-    .from(sysPermissionsTable);
-  if (Number(existingSysPermissions[0]?.total ?? 0) === 0) {
-    await db
-      .insert(sysPermissionsTable)
-      .values(defaultSysPermissions)
-      .onConflictDoNothing({ target: sysPermissionsTable.code });
-  }
+  await db
+    .insert(sysPermissionsTable)
+    .values(defaultSysPermissions)
+    .onConflictDoNothing({ target: sysPermissionsTable.code });
 
-  const existingSysMenus = await db
-    .select({ total: count() })
-    .from(sysMenusTable);
-  if (Number(existingSysMenus[0]?.total ?? 0) === 0) {
-    await db
-      .insert(sysMenusTable)
-      .values(defaultSysMenus)
-      .onConflictDoNothing({ target: sysMenusTable.routeName });
-  }
+  await db
+    .insert(sysMenusTable)
+    .values(defaultSysMenus)
+    .onConflictDoNothing({ target: sysMenusTable.routeName });
 
   const existingSysUsers = await db
     .select({ total: count() })
@@ -92,76 +77,46 @@ export const seedDatabase = async () => {
       .onConflictDoNothing({ target: sysUsersTable.account });
   }
 
-  const existingSysUserRoles = await db
-    .select({ total: count() })
-    .from(sysUserRolesTable);
-  if (Number(existingSysUserRoles[0]?.total ?? 0) === 0) {
-    await db
-      .insert(sysUserRolesTable)
-      .values(defaultSysUserRoles)
-      .onConflictDoNothing({
-        target: [sysUserRolesTable.userId, sysUserRolesTable.roleId],
-      });
-  }
+  await db
+    .insert(sysUserRolesTable)
+    .values(defaultSysUserRoles)
+    .onConflictDoNothing({
+      target: [sysUserRolesTable.userId, sysUserRolesTable.roleId],
+    });
 
-  const existingSysRolePermissions = await db
-    .select({ total: count() })
-    .from(sysRolePermissionsTable);
-  if (Number(existingSysRolePermissions[0]?.total ?? 0) === 0) {
-    await db
-      .insert(sysRolePermissionsTable)
-      .values(defaultSysRolePermissions)
-      .onConflictDoNothing({
-        target: [
-          sysRolePermissionsTable.roleId,
-          sysRolePermissionsTable.permissionId,
-        ],
-      });
-  }
+  await db
+    .insert(sysRolePermissionsTable)
+    .values(defaultSysRolePermissions)
+    .onConflictDoNothing({
+      target: [
+        sysRolePermissionsTable.roleId,
+        sysRolePermissionsTable.permissionId,
+      ],
+    });
 
-  const existingSysRoleMenus = await db
-    .select({ total: count() })
-    .from(sysRoleMenusTable);
-  if (Number(existingSysRoleMenus[0]?.total ?? 0) === 0) {
-    await db
-      .insert(sysRoleMenusTable)
-      .values(defaultSysRoleMenus)
-      .onConflictDoNothing({
-        target: [sysRoleMenusTable.roleId, sysRoleMenusTable.menuId],
-      });
-  }
+  await db
+    .insert(sysRoleMenusTable)
+    .values(defaultSysRoleMenus)
+    .onConflictDoNothing({
+      target: [sysRoleMenusTable.roleId, sysRoleMenusTable.menuId],
+    });
 
-  const existingSysDictTypes = await db
-    .select({ total: count() })
-    .from(sysDictTypesTable);
-  if (Number(existingSysDictTypes[0]?.total ?? 0) === 0) {
-    await db
-      .insert(sysDictTypesTable)
-      .values(defaultSysDictTypes)
-      .onConflictDoNothing({ target: sysDictTypesTable.code });
-  }
+  await db
+    .insert(sysDictTypesTable)
+    .values(defaultSysDictTypes)
+    .onConflictDoNothing({ target: sysDictTypesTable.code });
 
-  const existingSysDictItems = await db
-    .select({ total: count() })
-    .from(sysDictItemsTable);
-  if (Number(existingSysDictItems[0]?.total ?? 0) === 0) {
-    await db
-      .insert(sysDictItemsTable)
-      .values(defaultSysDictItems)
-      .onConflictDoNothing({
-        target: [sysDictItemsTable.dictTypeId, sysDictItemsTable.value],
-      });
-  }
+  await db
+    .insert(sysDictItemsTable)
+    .values(defaultSysDictItems)
+    .onConflictDoNothing({
+      target: [sysDictItemsTable.dictTypeId, sysDictItemsTable.value],
+    });
 
-  const existingSysConfigs = await db
-    .select({ total: count() })
-    .from(sysConfigsTable);
-  if (Number(existingSysConfigs[0]?.total ?? 0) === 0) {
-    await db
-      .insert(sysConfigsTable)
-      .values(defaultSysConfigs)
-      .onConflictDoNothing({ target: sysConfigsTable.key });
-  }
+  await db
+    .insert(sysConfigsTable)
+    .values(defaultSysConfigs)
+    .onConflictDoNothing({ target: sysConfigsTable.key });
 };
 
 export const checkDatabaseHealth = async () => {
