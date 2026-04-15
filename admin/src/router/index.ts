@@ -16,18 +16,26 @@ const dynamicRouteNames = new Set<string>();
 const ConsoleLayout = () => import('../layouts/ConsoleLayout.vue');
 const Forbidden = () => import('../views/Forbidden.vue');
 const LoginPage = () => import('../views/LoginPage.vue');
+const RegisterPage = () => import('../views/RegisterPage.vue');
+const ForgotPasswordPage = () => import('../views/ForgotPasswordPage.vue');
+const ResetPasswordPage = () => import('../views/ResetPasswordPage.vue');
 const MenuManagement = () => import('../views/MenuManagement.vue');
 const RoleManagement = () => import('../views/RoleManagement.vue');
 const UserManagement = () => import('../views/UserManagement.vue');
 const DictConfigManagement = () => import('../views/DictConfigManagement.vue');
 const DeptManagement = () => import('../views/DeptManagement.vue');
 const AuditLogManagement = () => import('../views/AuditLogManagement.vue');
+const LoginLogManagement = () => import('../views/LoginLogManagement.vue');
+const ApiCatalogManagement = () => import('../views/ApiCatalogManagement.vue');
 const OnlineUserManagement = () => import('../views/OnlineUserManagement.vue');
 const JobManagement = () => import('../views/JobManagement.vue');
 const CacheMonitorManagement = () =>
   import('../views/CacheMonitorManagement.vue');
 const IpBlacklistManagement = () =>
   import('../views/IpBlacklistManagement.vue');
+const UserCenterPage = () => import('../views/UserCenterPage.vue');
+const StorageManagement = () => import('../views/StorageManagement.vue');
+const DashboardConsole = () => import('../views/DashboardConsole.vue');
 
 const resolveMenuComponent = (menu: MenuTreeEntity) => {
   const componentKey = menu.component ?? '';
@@ -37,9 +45,13 @@ const resolveMenuComponent = (menu: MenuTreeEntity) => {
   if (componentKey === 'system/dept/index') return DeptManagement;
   if (componentKey === 'system/dict-config/index') return DictConfigManagement;
   if (componentKey === 'system/audit-log/index') return AuditLogManagement;
+  if (componentKey === 'system/login-log/index') return LoginLogManagement;
+  if (componentKey === 'system/api-catalog/index') return ApiCatalogManagement;
   if (componentKey === 'monitor/online/index') return OnlineUserManagement;
   if (componentKey === 'monitor/job/index') return JobManagement;
   if (componentKey === 'monitor/cache/index') return CacheMonitorManagement;
+  if (componentKey === 'system/storage/index') return StorageManagement;
+  if (componentKey === 'dashboard/console/index') return DashboardConsole;
   if (componentKey === 'security/ip-blacklist/index')
     return IpBlacklistManagement;
   return MenuManagement;
@@ -97,6 +109,27 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/register',
+    component: RegisterPage,
+    meta: {
+      public: true,
+    },
+  },
+  {
+    path: '/forgot-password',
+    component: ForgotPasswordPage,
+    meta: {
+      public: true,
+    },
+  },
+  {
+    path: '/reset-password',
+    component: ResetPasswordPage,
+    meta: {
+      public: true,
+    },
+  },
+  {
     path: '/',
     name: 'root',
     component: ConsoleLayout,
@@ -108,6 +141,10 @@ const routes: RouteRecordRaw[] = [
       {
         path: '403',
         component: Forbidden,
+      },
+      {
+        path: 'system/user-center',
+        component: UserCenterPage,
       },
     ],
   },
