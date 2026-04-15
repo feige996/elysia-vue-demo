@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { NButton, NDatePicker, NInput, NSelect } from 'naive-ui';
+import { NButton, NDatePicker, NInput, NSelect, NTag } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
 import { useRoute, useRouter } from 'vue-router';
 import {
+  exportAuditLogsCsvMethod,
   getAuditLogsMethod,
+  getAuditLogStatsMethod,
   type AuditLogItem,
 } from '../api/modules/audit-log';
 import SearchBar from '../components/crud/SearchBar.vue';
@@ -23,8 +25,15 @@ const page = ref(1);
 const pageSize = ref(20);
 const total = ref(0);
 const rows = ref<AuditLogItem[]>([]);
+const stats = ref({
+  total: 0,
+  successTotal: 0,
+  failedTotal: 0,
+  topModules: [] as Array<{ module: string; count: number }>,
+});
 const route = useRoute();
 const router = useRouter();
+const exportLoading = ref(false);
 
 const columns: DataTableColumns<AuditLogItem> = [
   { title: '时间', key: 'createdAt', width: 180 },
@@ -128,7 +137,7 @@ const loadLogs = async () => {
   const [dateFromMs, dateToMs] = dateRange.value ?? [];
   try {
     await syncQueryToUrl();
-    const response = await getAuditLogsMethod({
+    const baseQuery = {
       page: page.value,
       pageSize: pageSize.value,
       module: moduleKeyword.value || undefined,
@@ -152,13 +161,67 @@ const loadLogs = async () => {
         typeof dateToMs === 'number'
           ? new Date(dateToMs).toISOString()
           : undefined,
+    } as const;
+    const response = await getAuditLogsMethod({
+      ...baseQuery,
     });
+    const statsResponse = await getAuditLogStatsMethod(baseQuery);
     rows.value = response.data.list;
     total.value = response.data.total;
+    stats.value = statsResponse.data;
   } catch (error) {
     errorText.value = getMappedErrorMessage(error, '加载日志失败');
   } finally {
     loading.value = false;
+  }
+};
+
+const resolveCurrentQuery = () => {
+  const operatorUserId = Number(operatorUserIdText.value);
+  const [dateFromMs, dateToMs] = dateRange.value ?? [];
+  return {
+    page: page.value,
+    pageSize: pageSize.value,
+    module: moduleKeyword.value || undefined,
+    action: actionKeyword.value || undefined,
+    operatorAccount: operatorAccountKeyword.value || undefined,
+    operatorUserId:
+      Number.isInteger(operatorUserId) && operatorUserId > 0
+        ? operatorUserId
+        : undefined,
+    success:
+      successValue.value === 'all'
+        ? undefined
+        : successValue.value === 'success'
+          ? 1
+          : 0,
+    dateFrom:
+      typeof dateFromMs === 'number'
+        ? new Date(dateFromMs).toISOString()
+        : undefined,
+    dateTo:
+      typeof dateToMs === 'number'
+        ? new Date(dateToMs).toISOString()
+        : undefined,
+  } as const;
+};
+
+const exportCsv = async () => {
+  exportLoading.value = true;
+  try {
+    const blob = await exportAuditLogsCsvMethod(resolveCurrentQuery());
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `audit-logs-${new Date().toISOString().slice(0, 19).replaceAll(':', '-')}.csv`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    errorText.value = getMappedErrorMessage(error, '导出日志失败');
+  } finally {
+    exportLoading.value = false;
   }
 };
 
@@ -198,6 +261,20 @@ const resetFilter = () => {
     :pagination="pagination"
     :table-props="tableProps"
   >
+    <template #toolbar-extra>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <NTag type="info">总数：{{ stats.total }}</NTag>
+        <NTag type="success">成功：{{ stats.successTotal }}</NTag>
+        <NTag type="error">失败：{{ stats.failedTotal }}</NTag>
+        <NTag
+          v-for="item in stats.topModules"
+          :key="item.module"
+          type="warning"
+        >
+          Top 模块 {{ item.module }}：{{ item.count }}
+        </NTag>
+      </div>
+    </template>
     <template #toolbar-left>
       <SearchBar>
         <NInput
@@ -244,6 +321,14 @@ const resetFilter = () => {
         >
         <NButton tertiary :loading="loading" @click="applyAutoBlockQuickFilter">
           自动封禁事件
+        </NButton>
+        <NButton
+          tertiary
+          type="primary"
+          :loading="exportLoading"
+          @click="exportCsv"
+        >
+          导出 CSV
         </NButton>
         <NButton quaternary :loading="loading" @click="resetFilter">
           重置

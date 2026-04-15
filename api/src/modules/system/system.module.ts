@@ -85,23 +85,6 @@ const auditLogsSuccessSchema = t.Object({
   }),
 });
 
-const auditLogStatsSuccessSchema = t.Object({
-  code: t.Number(),
-  message: t.String(),
-  requestId: t.String(),
-  data: t.Object({
-    total: t.Number(),
-    successTotal: t.Number(),
-    failedTotal: t.Number(),
-    topModules: t.Array(
-      t.Object({
-        module: t.String(),
-        count: t.Number(),
-      }),
-    ),
-  }),
-});
-
 const auditLogQuerySchema = t.Object({
   page: t.Optional(t.Numeric({ minimum: 1, default: 1 })),
   pageSize: t.Optional(t.Numeric({ minimum: 1, maximum: 100, default: 20 })),
@@ -130,6 +113,45 @@ const parseConfigValue = (value: string, valueType: number) => {
     }
   }
   return value;
+};
+
+const buildAuditLogFilters = (query: {
+  module?: string;
+  action?: string;
+  operatorUserId?: number;
+  operatorAccount?: string;
+  success?: number;
+  dateFrom?: string;
+  dateTo?: string;
+}) =>
+  [
+    query.module
+      ? ilike(sysAuditLogsTable.module, `%${query.module}%`)
+      : undefined,
+    query.action
+      ? ilike(sysAuditLogsTable.action, `%${query.action}%`)
+      : undefined,
+    query.operatorUserId !== undefined
+      ? eq(sysAuditLogsTable.operatorUserId, query.operatorUserId)
+      : undefined,
+    query.operatorAccount
+      ? ilike(sysAuditLogsTable.operatorAccount, `%${query.operatorAccount}%`)
+      : undefined,
+    query.success !== undefined
+      ? eq(sysAuditLogsTable.success, query.success)
+      : undefined,
+    query.dateFrom
+      ? gte(sysAuditLogsTable.createdAt, new Date(query.dateFrom))
+      : undefined,
+    query.dateTo
+      ? lte(sysAuditLogsTable.createdAt, new Date(query.dateTo))
+      : undefined,
+  ].filter((item): item is NonNullable<typeof item> => Boolean(item));
+
+const toCsvCell = (value: string | number | null) => {
+  const raw = value === null ? '' : String(value);
+  const escaped = raw.replaceAll('"', '""');
+  return `"${escaped}"`;
 };
 
 export const systemModule = new Elysia({
@@ -241,55 +263,22 @@ export const systemModule = new Elysia({
     '/audit-logs/stats',
     async ({ query, request }) => {
       const { requestId } = ensureRequestContext(request);
-      const filters = [
-        query.module
-          ? ilike(sysAuditLogsTable.module, `%${query.module}%`)
-          : undefined,
-        query.action
-          ? ilike(sysAuditLogsTable.action, `%${query.action}%`)
-          : undefined,
-        query.operatorUserId !== undefined
-          ? eq(sysAuditLogsTable.operatorUserId, query.operatorUserId)
-          : undefined,
-        query.operatorAccount
-          ? ilike(
-              sysAuditLogsTable.operatorAccount,
-              `%${query.operatorAccount}%`,
-            )
-          : undefined,
-        query.success !== undefined
-          ? eq(sysAuditLogsTable.success, query.success)
-          : undefined,
-        query.dateFrom
-          ? gte(sysAuditLogsTable.createdAt, new Date(query.dateFrom))
-          : undefined,
-        query.dateTo
-          ? lte(sysAuditLogsTable.createdAt, new Date(query.dateTo))
-          : undefined,
-      ].filter((item): item is NonNullable<typeof item> => Boolean(item));
+      const filters = buildAuditLogFilters(query);
 
       const totalRows = await db
         .select({ total: count() })
         .from(sysAuditLogsTable)
         .where(filters.length ? and(...filters) : undefined);
+      const successFilters = [...filters, eq(sysAuditLogsTable.success, 1)];
       const successRows = await db
         .select({ total: count() })
         .from(sysAuditLogsTable)
-        .where(
-          and(
-            filters.length ? and(...filters) : undefined,
-            eq(sysAuditLogsTable.success, 1),
-          ),
-        );
+        .where(and(...successFilters));
+      const failedFilters = [...filters, eq(sysAuditLogsTable.success, 0)];
       const failedRows = await db
         .select({ total: count() })
         .from(sysAuditLogsTable)
-        .where(
-          and(
-            filters.length ? and(...filters) : undefined,
-            eq(sysAuditLogsTable.success, 0),
-          ),
-        );
+        .where(and(...failedFilters));
 
       const moduleRows = await db
         .select({
@@ -309,7 +298,7 @@ export const systemModule = new Elysia({
           successTotal: Number(successRows[0]?.total ?? 0),
           failedTotal: Number(failedRows[0]?.total ?? 0),
           topModules: moduleRows.map((item) => ({
-            module: item.module,
+            module: item.module ?? 'unknown',
             count: Number(item.total ?? 0),
           })),
         },
@@ -323,9 +312,84 @@ export const systemModule = new Elysia({
         security: [{ bearerAuth: [] }],
       },
       query: auditLogQuerySchema,
-      response: {
-        200: auditLogStatsSuccessSchema,
+    },
+  )
+  .get(
+    '/audit-logs/export',
+    async ({ query }) => {
+      const filters = buildAuditLogFilters(query);
+      const rows = await db
+        .select({
+          id: sysAuditLogsTable.id,
+          createdAt: sysAuditLogsTable.createdAt,
+          module: sysAuditLogsTable.module,
+          action: sysAuditLogsTable.action,
+          operatorUserId: sysAuditLogsTable.operatorUserId,
+          operatorAccount: sysAuditLogsTable.operatorAccount,
+          requestMethod: sysAuditLogsTable.requestMethod,
+          requestPath: sysAuditLogsTable.requestPath,
+          responseCode: sysAuditLogsTable.responseCode,
+          success: sysAuditLogsTable.success,
+          durationMs: sysAuditLogsTable.durationMs,
+          resourceId: sysAuditLogsTable.resourceId,
+          traceId: sysAuditLogsTable.traceId,
+        })
+        .from(sysAuditLogsTable)
+        .where(filters.length ? and(...filters) : undefined)
+        .orderBy(desc(sysAuditLogsTable.createdAt))
+        .limit(5000);
+
+      const headers = [
+        'id',
+        'createdAt',
+        'module',
+        'action',
+        'operatorUserId',
+        'operatorAccount',
+        'requestMethod',
+        'requestPath',
+        'responseCode',
+        'success',
+        'durationMs',
+        'resourceId',
+        'traceId',
+      ];
+      const lines = rows.map((item) =>
+        [
+          item.id,
+          item.createdAt?.toISOString() ?? '',
+          item.module,
+          item.action,
+          item.operatorUserId,
+          item.operatorAccount,
+          item.requestMethod,
+          item.requestPath,
+          item.responseCode,
+          item.success,
+          item.durationMs,
+          item.resourceId,
+          item.traceId,
+        ]
+          .map((cell) => toCsvCell(cell))
+          .join(','),
+      );
+      const csv = [headers.join(','), ...lines].join('\n');
+      const fileName = `audit-logs-${new Date().toISOString().slice(0, 19).replaceAll(':', '-')}.csv`;
+      return new Response(csv, {
+        headers: {
+          'content-type': 'text/csv; charset=utf-8',
+          'content-disposition': `attachment; filename="${fileName}"`,
+        },
+      });
+    },
+    {
+      detail: {
+        summary: '导出操作日志 CSV',
+        description:
+          '需要管理员权限，按当前筛选导出，最多导出最近匹配的 5000 条。',
+        security: [{ bearerAuth: [] }],
       },
+      query: auditLogQuerySchema,
     },
   )
   .get(
@@ -335,32 +399,7 @@ export const systemModule = new Elysia({
       const page = query.page ?? 1;
       const pageSize = query.pageSize ?? 20;
       const offset = (page - 1) * pageSize;
-      const filters = [
-        query.module
-          ? ilike(sysAuditLogsTable.module, `%${query.module}%`)
-          : undefined,
-        query.action
-          ? ilike(sysAuditLogsTable.action, `%${query.action}%`)
-          : undefined,
-        query.operatorUserId !== undefined
-          ? eq(sysAuditLogsTable.operatorUserId, query.operatorUserId)
-          : undefined,
-        query.operatorAccount
-          ? ilike(
-              sysAuditLogsTable.operatorAccount,
-              `%${query.operatorAccount}%`,
-            )
-          : undefined,
-        query.success !== undefined
-          ? eq(sysAuditLogsTable.success, query.success)
-          : undefined,
-        query.dateFrom
-          ? gte(sysAuditLogsTable.createdAt, new Date(query.dateFrom))
-          : undefined,
-        query.dateTo
-          ? lte(sysAuditLogsTable.createdAt, new Date(query.dateTo))
-          : undefined,
-      ].filter((item): item is NonNullable<typeof item> => Boolean(item));
+      const filters = buildAuditLogFilters(query);
 
       const list = await db
         .select({
