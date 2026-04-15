@@ -4,6 +4,7 @@ import {
   isIpBlocked,
   listBlockedIps,
   markBlockedIpHit,
+  recordFailedLoginAttempt,
   removeBlockedIp,
   resetIpBlacklistForTest,
 } from '../../src/shared/security/ip-blacklist-store';
@@ -23,5 +24,16 @@ describe('ip blacklist store', () => {
     const removed = await removeBlockedIp('127.0.0.1');
     expect(removed).toBeTrue();
     expect(await isIpBlocked('127.0.0.1')).toBeFalse();
+  });
+
+  it('marks source as auto when threshold is reached', async () => {
+    resetIpBlacklistForTest();
+    for (let index = 0; index < 5; index += 1) {
+      await recordFailedLoginAttempt('10.0.0.9');
+    }
+    const list = await listBlockedIps();
+    expect(list[0]?.ip).toBe('10.0.0.9');
+    expect(list[0]?.source).toBe('auto');
+    expect(await isIpBlocked('10.0.0.9')).toBeTrue();
   });
 });

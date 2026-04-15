@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { NButton, NDatePicker, NInput, NSelect } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
+import { useRoute, useRouter } from 'vue-router';
 import {
   getAuditLogsMethod,
   type AuditLogItem,
@@ -11,6 +12,7 @@ import DataTablePage from '../components/crud/DataTablePage.vue';
 import { getMappedErrorMessage } from '../api/error-map';
 
 const moduleKeyword = ref('');
+const actionKeyword = ref('');
 const operatorAccountKeyword = ref('');
 const operatorUserIdText = ref('');
 const successValue = ref<'all' | 'success' | 'failed'>('all');
@@ -21,6 +23,8 @@ const page = ref(1);
 const pageSize = ref(20);
 const total = ref(0);
 const rows = ref<AuditLogItem[]>([]);
+const route = useRoute();
+const router = useRouter();
 
 const columns: DataTableColumns<AuditLogItem> = [
   { title: '时间', key: 'createdAt', width: 180 },
@@ -56,16 +60,79 @@ const tableProps = {
   maxHeight: 560,
 };
 
+const readQueryString = (value: unknown) => {
+  if (Array.isArray(value)) return value[0] ?? '';
+  return typeof value === 'string' ? value : '';
+};
+
+const readPositiveIntQuery = (value: unknown, fallback: number) => {
+  const text = readQueryString(value);
+  const parsed = Number.parseInt(text, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const readDateMsQuery = (value: unknown) => {
+  const text = readQueryString(value);
+  if (!text) return null;
+  const ms = Date.parse(text);
+  return Number.isNaN(ms) ? null : ms;
+};
+
+const syncQueryToUrl = async () => {
+  const [dateFromMs, dateToMs] = dateRange.value ?? [];
+  const nextQuery = {
+    ...route.query,
+    module: moduleKeyword.value || undefined,
+    action: actionKeyword.value || undefined,
+    operatorAccount: operatorAccountKeyword.value || undefined,
+    success: successValue.value === 'all' ? undefined : successValue.value,
+    dateFrom:
+      typeof dateFromMs === 'number'
+        ? new Date(dateFromMs).toISOString()
+        : undefined,
+    dateTo:
+      typeof dateToMs === 'number'
+        ? new Date(dateToMs).toISOString()
+        : undefined,
+    page: String(page.value),
+    pageSize: String(pageSize.value),
+  };
+
+  await router.replace({ query: nextQuery });
+};
+
+const hydrateFromUrlQuery = () => {
+  moduleKeyword.value = readQueryString(route.query.module);
+  actionKeyword.value = readQueryString(route.query.action);
+  operatorAccountKeyword.value = readQueryString(route.query.operatorAccount);
+  successValue.value =
+    route.query.success === 'success' || route.query.success === 'failed'
+      ? route.query.success
+      : 'all';
+
+  const dateFromMs = readDateMsQuery(route.query.dateFrom);
+  const dateToMs = readDateMsQuery(route.query.dateTo);
+  dateRange.value =
+    typeof dateFromMs === 'number' && typeof dateToMs === 'number'
+      ? [dateFromMs, dateToMs]
+      : null;
+
+  page.value = readPositiveIntQuery(route.query.page, 1);
+  pageSize.value = readPositiveIntQuery(route.query.pageSize, 20);
+};
+
 const loadLogs = async () => {
   errorText.value = '';
   loading.value = true;
   const operatorUserId = Number(operatorUserIdText.value);
   const [dateFromMs, dateToMs] = dateRange.value ?? [];
   try {
+    await syncQueryToUrl();
     const response = await getAuditLogsMethod({
       page: page.value,
       pageSize: pageSize.value,
       module: moduleKeyword.value || undefined,
+      action: actionKeyword.value || undefined,
       operatorAccount: operatorAccountKeyword.value || undefined,
       operatorUserId:
         Number.isInteger(operatorUserId) && operatorUserId > 0
@@ -96,8 +163,27 @@ const loadLogs = async () => {
 };
 
 onMounted(() => {
+  hydrateFromUrlQuery();
   void loadLogs();
 });
+
+const applyAutoBlockQuickFilter = () => {
+  moduleKeyword.value = 'security-ip-blacklist';
+  actionKeyword.value = 'AUTO_BLOCK';
+  page.value = 1;
+  void loadLogs();
+};
+
+const resetFilter = () => {
+  moduleKeyword.value = '';
+  actionKeyword.value = '';
+  operatorAccountKeyword.value = '';
+  operatorUserIdText.value = '';
+  successValue.value = 'all';
+  dateRange.value = null;
+  page.value = 1;
+  void loadLogs();
+};
 </script>
 
 <template>
@@ -119,6 +205,12 @@ onMounted(() => {
           clearable
           placeholder="按模块筛选"
           style="width: 180px"
+        />
+        <NInput
+          v-model:value="actionKeyword"
+          clearable
+          placeholder="按动作筛选"
+          style="width: 160px"
         />
         <NInput
           v-model:value="operatorAccountKeyword"
@@ -150,6 +242,12 @@ onMounted(() => {
         <NButton type="primary" :loading="loading" @click="loadLogs"
           >查询</NButton
         >
+        <NButton tertiary :loading="loading" @click="applyAutoBlockQuickFilter">
+          自动封禁事件
+        </NButton>
+        <NButton quaternary :loading="loading" @click="resetFilter">
+          重置
+        </NButton>
       </SearchBar>
     </template>
   </DataTablePage>

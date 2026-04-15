@@ -21,6 +21,7 @@ export type AuditLogQuery = {
   page?: number;
   pageSize?: number;
   module?: string;
+  action?: string;
   operatorUserId?: number;
   operatorAccount?: string;
   success?: 0 | 1;

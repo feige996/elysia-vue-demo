@@ -36,6 +36,7 @@ export const getCacheOverviewMethod = () =>
 
 export type IpBlacklistItem = {
   ip: string;
+  source: 'manual' | 'auto';
   reason: string;
   createdAt: string;
   expiresAt: string | null;

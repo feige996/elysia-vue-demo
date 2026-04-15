@@ -2,6 +2,7 @@ import type { UserService } from './user.service';
 import type { AuthorizedRole } from '../../shared/auth/token-auth';
 import { ErrorKey, failByKey, ok } from '../../shared/types/http';
 import { ensureRequestContext } from '../../shared/types/request-context';
+import { recordFailedLoginAttempt } from '../../shared/security/ip-blacklist-store';
 import {
   assignRoleMenusSchema,
   assignRolePermissionsSchema,
@@ -30,6 +31,18 @@ type TokenIdentity = {
 
 const PROTECTED_ROLE_CODES = new Set<string>(['admin', 'editor']);
 
+const resolveClientIp = (request: Request) => {
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0]?.trim() ?? 'unknown';
+  }
+  return (
+    request.headers.get('x-real-ip') ??
+    request.headers.get('cf-connecting-ip') ??
+    'unknown'
+  );
+};
+
 export const createUserController = (
   userService: UserService,
   userRepository: UserRepository,
@@ -57,6 +70,13 @@ export const createUserController = (
       requestId,
     );
     if (!user) {
+      const clientIp = resolveClientIp(request);
+      if (clientIp !== 'unknown') {
+        await recordFailedLoginAttempt(clientIp, {
+          requestId,
+          account: parsedBody.data.account,
+        });
+      }
       return failByKey(requestId, ErrorKey.INVALID_CREDENTIALS);
     }
     if (!issueTokens) {

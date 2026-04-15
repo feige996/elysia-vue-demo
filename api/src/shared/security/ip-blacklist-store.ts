@@ -1,8 +1,12 @@
 import Redis from 'ioredis';
-import { env } from '../config/env';
+import { env, features } from '../config/env';
+import { db } from '../../infra/db/client';
+import { sysAuditLogsTable } from '../../infra/db/schema';
+import { logService } from '../logger/log.service';
 
 type IpBlacklistItem = {
   ip: string;
+  source: 'manual' | 'auto';
   reason: string;
   createdAt: string;
   expiresAt: string | null;
@@ -13,16 +17,22 @@ type IpBlacklistItem = {
 const MAX_IP_RULES = 2000;
 const defaultReason = 'Manual blocked';
 const redisRuleKey = (ip: string) => `security:ip-blacklist:rule:${ip}`;
+const loginFailCounterKey = (ip: string) => `security:login-fail:counter:${ip}`;
 
 const ipRules = new Map<
   string,
   {
+    source: 'manual' | 'auto';
     reason: string;
     createdAt: number;
     expiresAt: number | null;
     hitCount: number;
     lastHitAt: number | null;
   }
+>();
+const loginFailCounters = new Map<
+  string,
+  { count: number; expiresAt: number }
 >();
 
 const redisClient =
@@ -42,6 +52,12 @@ const trim = (value: string) => value.trim();
 const normalizeIp = (ip: string) => trim(ip);
 
 const now = () => Date.now();
+const whitelistedIps = new Set(
+  (env.IP_WHITELIST ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0),
+);
 
 const getRedisClient = async () => {
   if (!redisClient) return null;
@@ -64,6 +80,46 @@ const purgeExpiredRules = () => {
   }
 };
 
+const purgeExpiredLoginFailCounters = () => {
+  const timestamp = now();
+  for (const [ip, counter] of loginFailCounters.entries()) {
+    if (counter.expiresAt <= timestamp) {
+      loginFailCounters.delete(ip);
+    }
+  }
+};
+
+const writeAutoBlockAuditLog = async (params: {
+  ip: string;
+  requestId?: string;
+  account?: string;
+  attempts: number;
+}) => {
+  try {
+    await db.insert(sysAuditLogsTable).values({
+      traceId: params.requestId ?? null,
+      action: 'AUTO_BLOCK',
+      module: 'security-ip-blacklist',
+      resource: '/api/auth/login',
+      resourceId: params.ip,
+      requestMethod: 'POST',
+      requestPath: '/api/auth/login',
+      responseCode: 403,
+      success: 1,
+      durationMs: 0,
+      operatorUserId: null,
+      operatorAccount: params.account ?? null,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logService.warn('auto_block_audit_write_failed', {
+      ip: params.ip,
+      requestId: params.requestId,
+      error: message,
+    });
+  }
+};
+
 const ensureCapacity = () => {
   if (ipRules.size <= MAX_IP_RULES) return;
   const rules = [...ipRules.entries()].sort(
@@ -81,6 +137,7 @@ const listBlockedIpsFromMemory = (): IpBlacklistItem[] => {
   return [...ipRules.entries()]
     .map(([ip, rule]) => ({
       ip,
+      source: rule.source,
       reason: rule.reason,
       createdAt: new Date(rule.createdAt).toISOString(),
       expiresAt: rule.expiresAt ? new Date(rule.expiresAt).toISOString() : null,
@@ -100,6 +157,7 @@ const addBlockedIpToMemory = (
   ip: string,
   reason?: string,
   expiresInMinutes?: number,
+  source: 'manual' | 'auto' = 'manual',
 ) => {
   purgeExpiredRules();
   const normalizedIp = normalizeIp(ip);
@@ -109,6 +167,7 @@ const addBlockedIpToMemory = (
       ? createdAt + expiresInMinutes * 60 * 1000
       : null;
   ipRules.set(normalizedIp, {
+    source,
     reason: trim(reason || '') || defaultReason,
     createdAt,
     expiresAt,
@@ -165,6 +224,7 @@ export const listBlockedIps = async (): Promise<IpBlacklistItem[]> => {
     if (!value) continue;
     const ip =
       value.ip ?? keys[index].replace('security:ip-blacklist:rule:', '');
+    const source = value.source === 'auto' ? 'auto' : 'manual';
     const reason = value.reason ?? defaultReason;
     const createdAt = value.createdAt ?? new Date().toISOString();
     const expiresAtRaw = value.expiresAt;
@@ -176,6 +236,7 @@ export const listBlockedIps = async (): Promise<IpBlacklistItem[]> => {
       lastHitAtRaw && lastHitAtRaw.length > 0 ? lastHitAtRaw : null;
     list.push({
       ip,
+      source,
       reason,
       createdAt,
       expiresAt,
@@ -196,10 +257,11 @@ export const addBlockedIp = async (
   ip: string,
   reason?: string,
   expiresInMinutes?: number,
+  source: 'manual' | 'auto' = 'manual',
 ) => {
   const redis = await getRedisClient();
   if (!redis) {
-    addBlockedIpToMemory(ip, reason, expiresInMinutes);
+    addBlockedIpToMemory(ip, reason, expiresInMinutes, source);
     return;
   }
 
@@ -213,6 +275,7 @@ export const addBlockedIp = async (
   const key = redisRuleKey(normalizedIp);
   const payload = {
     ip: normalizedIp,
+    source,
     reason: trim(reason || '') || defaultReason,
     createdAt,
     expiresAt,
@@ -268,6 +331,89 @@ export const markBlockedIpHit = async (ip: string) => {
   await redis.hset(key, 'lastHitAt', hitAtIso);
 };
 
+export const recordFailedLoginAttempt = async (
+  ip: string,
+  options?: { requestId?: string; account?: string },
+) => {
+  const normalizedIp = normalizeIp(ip);
+  if (!features.ipBlacklist) {
+    return { blocked: false, attempts: 0 };
+  }
+  if (!normalizedIp || normalizedIp === 'unknown') {
+    return { blocked: false, attempts: 0 };
+  }
+  if (whitelistedIps.has(normalizedIp)) {
+    return { blocked: false, attempts: 0 };
+  }
+  if (await isIpBlocked(normalizedIp)) {
+    return { blocked: true, attempts: 0 };
+  }
+  const redis = await getRedisClient();
+  if (!redis) {
+    purgeExpiredLoginFailCounters();
+    const expiresAt = now() + env.LOGIN_FAIL_WINDOW_MINUTES * 60 * 1000;
+    const current = loginFailCounters.get(normalizedIp);
+    const attempts = (current?.count ?? 0) + 1;
+    loginFailCounters.set(normalizedIp, { count: attempts, expiresAt });
+    if (attempts >= env.LOGIN_FAIL_THRESHOLD) {
+      await addBlockedIp(
+        normalizedIp,
+        `Auto blocked: login failures >= ${env.LOGIN_FAIL_THRESHOLD} in ${env.LOGIN_FAIL_WINDOW_MINUTES}m`,
+        env.LOGIN_FAIL_BLOCK_MINUTES,
+        'auto',
+      );
+      await writeAutoBlockAuditLog({
+        ip: normalizedIp,
+        requestId: options?.requestId,
+        account: options?.account,
+        attempts,
+      });
+      logService.warn('ip_auto_blocked', {
+        event: 'ip_auto_blocked',
+        ip: normalizedIp,
+        attempts,
+        threshold: env.LOGIN_FAIL_THRESHOLD,
+        windowMinutes: env.LOGIN_FAIL_WINDOW_MINUTES,
+        blockMinutes: env.LOGIN_FAIL_BLOCK_MINUTES,
+      });
+      loginFailCounters.delete(normalizedIp);
+      return { blocked: true, attempts };
+    }
+    return { blocked: false, attempts };
+  }
+  const counterKey = loginFailCounterKey(normalizedIp);
+  const attempts = await redis.incr(counterKey);
+  if (attempts === 1) {
+    await redis.expire(counterKey, env.LOGIN_FAIL_WINDOW_MINUTES * 60);
+  }
+  if (attempts >= env.LOGIN_FAIL_THRESHOLD) {
+    await addBlockedIp(
+      normalizedIp,
+      `Auto blocked: login failures >= ${env.LOGIN_FAIL_THRESHOLD} in ${env.LOGIN_FAIL_WINDOW_MINUTES}m`,
+      env.LOGIN_FAIL_BLOCK_MINUTES,
+      'auto',
+    );
+    await writeAutoBlockAuditLog({
+      ip: normalizedIp,
+      requestId: options?.requestId,
+      account: options?.account,
+      attempts,
+    });
+    logService.warn('ip_auto_blocked', {
+      event: 'ip_auto_blocked',
+      ip: normalizedIp,
+      attempts,
+      threshold: env.LOGIN_FAIL_THRESHOLD,
+      windowMinutes: env.LOGIN_FAIL_WINDOW_MINUTES,
+      blockMinutes: env.LOGIN_FAIL_BLOCK_MINUTES,
+    });
+    await redis.del(counterKey);
+    return { blocked: true, attempts };
+  }
+  return { blocked: false, attempts };
+};
+
 export const resetIpBlacklistForTest = () => {
   ipRules.clear();
+  loginFailCounters.clear();
 };

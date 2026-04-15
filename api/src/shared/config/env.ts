@@ -67,6 +67,10 @@ const envSchema = z.object({
   FEATURE_STORAGE_EXTENDED: z.enum(['true', 'false']).default('false'),
   FEATURE_MONITOR_ENABLED: z.enum(['true', 'false']).default('false'),
   FEATURE_IP_BLACKLIST_ENABLED: z.enum(['true', 'false']).default('false'),
+  IP_WHITELIST: z.string().optional(),
+  LOGIN_FAIL_THRESHOLD: z.coerce.number().int().positive().default(5),
+  LOGIN_FAIL_WINDOW_MINUTES: z.coerce.number().int().positive().default(10),
+  LOGIN_FAIL_BLOCK_MINUTES: z.coerce.number().int().positive().default(30),
 });
 
 const rawEnv = envSchema.parse(process.env);

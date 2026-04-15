@@ -85,10 +85,28 @@ const auditLogsSuccessSchema = t.Object({
   }),
 });
 
+const auditLogStatsSuccessSchema = t.Object({
+  code: t.Number(),
+  message: t.String(),
+  requestId: t.String(),
+  data: t.Object({
+    total: t.Number(),
+    successTotal: t.Number(),
+    failedTotal: t.Number(),
+    topModules: t.Array(
+      t.Object({
+        module: t.String(),
+        count: t.Number(),
+      }),
+    ),
+  }),
+});
+
 const auditLogQuerySchema = t.Object({
   page: t.Optional(t.Numeric({ minimum: 1, default: 1 })),
   pageSize: t.Optional(t.Numeric({ minimum: 1, maximum: 100, default: 20 })),
   module: t.Optional(t.String()),
+  action: t.Optional(t.String()),
   operatorUserId: t.Optional(t.Numeric({ minimum: 1 })),
   operatorAccount: t.Optional(t.String()),
   success: t.Optional(t.Numeric({ minimum: 0, maximum: 1 })),
@@ -220,6 +238,97 @@ export const systemModule = new Elysia({
     },
   )
   .get(
+    '/audit-logs/stats',
+    async ({ query, request }) => {
+      const { requestId } = ensureRequestContext(request);
+      const filters = [
+        query.module
+          ? ilike(sysAuditLogsTable.module, `%${query.module}%`)
+          : undefined,
+        query.action
+          ? ilike(sysAuditLogsTable.action, `%${query.action}%`)
+          : undefined,
+        query.operatorUserId !== undefined
+          ? eq(sysAuditLogsTable.operatorUserId, query.operatorUserId)
+          : undefined,
+        query.operatorAccount
+          ? ilike(
+              sysAuditLogsTable.operatorAccount,
+              `%${query.operatorAccount}%`,
+            )
+          : undefined,
+        query.success !== undefined
+          ? eq(sysAuditLogsTable.success, query.success)
+          : undefined,
+        query.dateFrom
+          ? gte(sysAuditLogsTable.createdAt, new Date(query.dateFrom))
+          : undefined,
+        query.dateTo
+          ? lte(sysAuditLogsTable.createdAt, new Date(query.dateTo))
+          : undefined,
+      ].filter((item): item is NonNullable<typeof item> => Boolean(item));
+
+      const totalRows = await db
+        .select({ total: count() })
+        .from(sysAuditLogsTable)
+        .where(filters.length ? and(...filters) : undefined);
+      const successRows = await db
+        .select({ total: count() })
+        .from(sysAuditLogsTable)
+        .where(
+          and(
+            filters.length ? and(...filters) : undefined,
+            eq(sysAuditLogsTable.success, 1),
+          ),
+        );
+      const failedRows = await db
+        .select({ total: count() })
+        .from(sysAuditLogsTable)
+        .where(
+          and(
+            filters.length ? and(...filters) : undefined,
+            eq(sysAuditLogsTable.success, 0),
+          ),
+        );
+
+      const moduleRows = await db
+        .select({
+          module: sysAuditLogsTable.module,
+          total: count(),
+        })
+        .from(sysAuditLogsTable)
+        .where(filters.length ? and(...filters) : undefined)
+        .groupBy(sysAuditLogsTable.module)
+        .orderBy(desc(count()))
+        .limit(5);
+
+      return ok(
+        requestId,
+        {
+          total: Number(totalRows[0]?.total ?? 0),
+          successTotal: Number(successRows[0]?.total ?? 0),
+          failedTotal: Number(failedRows[0]?.total ?? 0),
+          topModules: moduleRows.map((item) => ({
+            module: item.module,
+            count: Number(item.total ?? 0),
+          })),
+        },
+        'OK',
+      );
+    },
+    {
+      detail: {
+        summary: '查询操作日志聚合统计',
+        description: '需要管理员权限，返回总量、成功失败和 Top 模块。',
+        security: [{ bearerAuth: [] }],
+      },
+      query: auditLogQuerySchema,
+      response: {
+        200: auditLogStatsSuccessSchema,
+      },
+    },
+  )
+  .get(
     '/audit-logs',
     async ({ query, request }) => {
       const { requestId } = ensureRequestContext(request);
@@ -229,6 +338,9 @@ export const systemModule = new Elysia({
       const filters = [
         query.module
           ? ilike(sysAuditLogsTable.module, `%${query.module}%`)
+          : undefined,
+        query.action
+          ? ilike(sysAuditLogsTable.action, `%${query.action}%`)
           : undefined,
         query.operatorUserId !== undefined
           ? eq(sysAuditLogsTable.operatorUserId, query.operatorUserId)
@@ -295,7 +407,8 @@ export const systemModule = new Elysia({
     {
       detail: {
         summary: '查询操作日志',
-        description: '需要管理员权限，支持模块、账号、成功状态与时间范围筛选。',
+        description:
+          '需要管理员权限，支持模块、动作、账号、成功状态与时间范围筛选。',
         security: [{ bearerAuth: [] }],
       },
       query: auditLogQuerySchema,
