@@ -10,6 +10,7 @@ import {
 } from '../../shared/types/request-context';
 import { db } from '../../infra/db/client';
 import { sysAuditLogsTable } from '../../infra/db/schema';
+import { touchOnlineSession } from '../../shared/monitor/online-session-store';
 
 const isPublicRoute = (method: string, path: string) => {
   if (path === '/') return true;
@@ -39,6 +40,7 @@ const requireAdminRoute = (method: string, path: string) => {
   if (path.startsWith('/api/dicts')) return true;
   if (path.startsWith('/api/configs')) return true;
   if (path.startsWith('/api/audit-logs')) return true;
+  if (path.startsWith('/api/monitor')) return true;
   if (path.startsWith('/api/roles')) return false;
   if (path.startsWith('/api/users')) {
     if (
@@ -136,6 +138,7 @@ export const authMiddleware = new Elysia({ name: 'auth-middleware' }).onRequest(
     }
     setAuthorizedRoleInContext(request, identity.role);
     setAuthorizedUserInContext(request, identity.userId, identity.account);
+    touchOnlineSession(request, identity);
     if (requireAdminRoute(method, path) && identity.role !== 'admin') {
       const { requestId } = ensureRequestContext(request);
       const forbidden = failByKey(requestId, ErrorKey.FORBIDDEN);

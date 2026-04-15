@@ -44,7 +44,6 @@
     ],
     "*.{json,jsonc}": "oxfmt --write",
     "*.vue": [
-      "oxfmt --write",
       "prettier --write",
       "oxlint"
     ],

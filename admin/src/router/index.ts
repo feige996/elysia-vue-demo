@@ -21,6 +21,9 @@ const RoleManagement = () => import('../views/RoleManagement.vue');
 const UserManagement = () => import('../views/UserManagement.vue');
 const DictConfigManagement = () => import('../views/DictConfigManagement.vue');
 const AuditLogManagement = () => import('../views/AuditLogManagement.vue');
+const OnlineUserManagement = () => import('../views/OnlineUserManagement.vue');
+const CacheMonitorManagement = () =>
+  import('../views/CacheMonitorManagement.vue');
 
 const resolveMenuComponent = (menu: MenuTreeEntity) => {
   const componentKey = menu.component ?? '';
@@ -29,6 +32,8 @@ const resolveMenuComponent = (menu: MenuTreeEntity) => {
   if (componentKey === 'system/menu/index') return MenuManagement;
   if (componentKey === 'system/dict-config/index') return DictConfigManagement;
   if (componentKey === 'system/audit-log/index') return AuditLogManagement;
+  if (componentKey === 'monitor/online/index') return OnlineUserManagement;
+  if (componentKey === 'monitor/cache/index') return CacheMonitorManagement;
   return MenuManagement;
 };
 

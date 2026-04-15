@@ -1,5 +1,7 @@
 import { Elysia } from 'elysia';
+import { getRedisCacheOverview } from '../../shared/auth/refresh-token-store';
 import { features } from '../../shared/config/env';
+import { getOnlineSessions } from '../../shared/monitor/online-session-store';
 import { ok } from '../../shared/types/http';
 import { ensureRequestContext } from '../../shared/types/request-context';
 
@@ -8,24 +10,71 @@ export const monitorModule = new Elysia({
   detail: {
     tags: ['Monitor'],
   },
-}).get(
-  '/monitor/features',
-  ({ request }) => {
-    const { requestId } = ensureRequestContext(request);
-    return ok(
-      requestId,
-      {
-        enabled: true,
-        features,
-      },
-      'OK',
-    );
-  },
-  {
-    detail: {
-      summary: '查询当前功能开关状态',
-      description: '需要登录，返回后端 feature flags 的当前启用状态。',
-      security: [{ bearerAuth: [] }],
+})
+  .get(
+    '/monitor/features',
+    ({ request }) => {
+      const { requestId } = ensureRequestContext(request);
+      return ok(
+        requestId,
+        {
+          enabled: true,
+          features,
+        },
+        'OK',
+      );
     },
-  },
-);
+    {
+      detail: {
+        summary: '查询当前功能开关状态',
+        description: '需要管理员权限，返回后端 feature flags 的当前启用状态。',
+        security: [{ bearerAuth: [] }],
+      },
+    },
+  )
+  .get(
+    '/monitor/online',
+    ({ request }) => {
+      const { requestId } = ensureRequestContext(request);
+      const sessions = getOnlineSessions();
+      return ok(
+        requestId,
+        {
+          total: sessions.length,
+          list: sessions,
+        },
+        'OK',
+      );
+    },
+    {
+      detail: {
+        summary: '查询在线会话列表',
+        description:
+          '需要管理员权限，返回最近活跃会话（内存态，默认 15 分钟无访问自动过期）。',
+        security: [{ bearerAuth: [] }],
+      },
+    },
+  )
+  .get(
+    '/monitor/cache',
+    async ({ request }) => {
+      const { requestId } = ensureRequestContext(request);
+      const cache = await getRedisCacheOverview();
+      return ok(
+        requestId,
+        {
+          ...cache,
+          sampledCount: cache.sampledKeys.length,
+        },
+        'OK',
+      );
+    },
+    {
+      detail: {
+        summary: '查询缓存总览',
+        description:
+          '需要管理员权限，返回 Redis 缓存总览与命名空间统计（只读）。',
+        security: [{ bearerAuth: [] }],
+      },
+    },
+  );

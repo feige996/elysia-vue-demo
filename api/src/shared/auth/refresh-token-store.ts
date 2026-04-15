@@ -30,6 +30,56 @@ const getRedisClient = async () => {
   return redisClient.status === 'ready' ? redisClient : null;
 };
 
+export const getRedisCacheOverview = async () => {
+  const redis = await getRedisClient();
+  if (!redis) {
+    return {
+      enabled: false,
+      status: redisClient ? redisClient.status : 'disabled',
+      totalKeys: 0,
+      sampledKeys: [] as string[],
+      namespaceStats: [] as Array<{ namespace: string; count: number }>,
+    };
+  }
+
+  let totalKeys = 0;
+  try {
+    totalKeys = await redis.dbsize();
+  } catch {
+    totalKeys = 0;
+  }
+
+  const sampledKeys: string[] = [];
+  let cursor = '0';
+  const maxSampleSize = 300;
+  do {
+    const result = await redis.scan(cursor, 'COUNT', 100);
+    cursor = result[0];
+    sampledKeys.push(...result[1]);
+  } while (cursor !== '0' && sampledKeys.length < maxSampleSize);
+
+  const namespaceCounter = new Map<string, number>();
+  for (const key of sampledKeys) {
+    const segments = key.split(':');
+    const namespace =
+      segments.length >= 2 ? `${segments[0]}:${segments[1]}` : segments[0];
+    namespaceCounter.set(namespace, (namespaceCounter.get(namespace) ?? 0) + 1);
+  }
+
+  const namespaceStats = [...namespaceCounter.entries()]
+    .map(([namespace, count]) => ({ namespace, count }))
+    .sort((left, right) => right.count - left.count)
+    .slice(0, 20);
+
+  return {
+    enabled: true,
+    status: redis.status,
+    totalKeys,
+    sampledKeys: sampledKeys.slice(0, maxSampleSize),
+    namespaceStats,
+  };
+};
+
 export const checkRedisHealth = async () => {
   if (!redisClient) {
     return {

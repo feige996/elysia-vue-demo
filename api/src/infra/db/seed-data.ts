@@ -133,6 +133,22 @@ export const defaultSysPermissions = [
     module: 'audit-log',
     status: 1,
   },
+  {
+    id: 13,
+    code: 'monitor:online:view',
+    name: '查看在线用户',
+    type: 3,
+    module: 'monitor-online',
+    status: 1,
+  },
+  {
+    id: 14,
+    code: 'monitor:cache:view',
+    name: '查看缓存监控',
+    type: 3,
+    module: 'monitor-cache',
+    status: 1,
+  },
 ];
 
 export const defaultSysMenus = [
@@ -226,6 +242,36 @@ export const defaultSysMenus = [
     keepAlive: 1,
     permissionCode: 'audit:log:view',
   },
+  {
+    id: 7,
+    parentId: 1,
+    name: '在线用户',
+    routeName: 'MonitorOnline',
+    path: '/monitor/online',
+    component: 'monitor/online/index',
+    icon: 'pulse-outline',
+    type: 2,
+    sort: 60,
+    visible: 1,
+    status: 1,
+    keepAlive: 1,
+    permissionCode: 'monitor:online:view',
+  },
+  {
+    id: 8,
+    parentId: 1,
+    name: '缓存监控',
+    routeName: 'MonitorCache',
+    path: '/monitor/cache',
+    component: 'monitor/cache/index',
+    icon: 'server-outline',
+    type: 2,
+    sort: 70,
+    visible: 1,
+    status: 1,
+    keepAlive: 1,
+    permissionCode: 'monitor:cache:view',
+  },
 ];
 
 export const defaultSysUsers = [
@@ -269,6 +315,8 @@ export const defaultSysRolePermissions = [
   { roleId: 1, permissionId: 10 },
   { roleId: 1, permissionId: 11 },
   { roleId: 1, permissionId: 12 },
+  { roleId: 1, permissionId: 13 },
+  { roleId: 1, permissionId: 14 },
   { roleId: 2, permissionId: 1 },
   { roleId: 2, permissionId: 5 },
   { roleId: 2, permissionId: 7 },
@@ -282,6 +330,8 @@ export const defaultSysRoleMenus = [
   { roleId: 1, menuId: 4 },
   { roleId: 1, menuId: 5 },
   { roleId: 1, menuId: 6 },
+  { roleId: 1, menuId: 7 },
+  { roleId: 1, menuId: 8 },
   { roleId: 2, menuId: 1 },
   { roleId: 2, menuId: 2 },
 ];
