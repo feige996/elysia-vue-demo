@@ -12,6 +12,7 @@ import {
 import { createStorage } from '../../infra/storage';
 import { getRedisCacheOverview } from '../../shared/auth/refresh-token-store';
 import { env, features } from '../../shared/config/env';
+import { logService } from '../../shared/logger/log.service';
 import { getOnlineSessions } from '../../shared/monitor/online-session-store';
 import {
   addBlockedIp,
@@ -304,6 +305,7 @@ const assertStorageConfigHealth = async (
 const isMissingTableError = (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
   return (
+    message.includes('Failed query:') ||
     message.includes('does not exist') ||
     message.includes('relation') ||
     message.includes('no such table')
@@ -342,27 +344,54 @@ export const monitorModule = new Elysia({
         todayLoginCount = Number(todayLoginRows[0]?.total ?? 0);
         totalLoginCount = Number(totalLoginRows[0]?.total ?? 0);
       } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        logService.warn('dashboard_summary_login_count_fallback', {
+          requestId,
+          error: message,
+        });
         if (!isMissingTableError(error)) {
-          throw error;
+          // Non-table related error also degrades to keep dashboard available.
         }
       }
-      const jobsRows = await db
-        .select({
-          total: count(),
-        })
-        .from(sysJobsTable)
-        .where(isNull(sysJobsTable.deletedAt));
+      let totalJobCount = 0;
+      try {
+        const jobsRows = await db
+          .select({
+            total: count(),
+          })
+          .from(sysJobsTable)
+          .where(isNull(sysJobsTable.deletedAt));
+        totalJobCount = Number(jobsRows[0]?.total ?? 0);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        logService.warn('dashboard_summary_job_count_fallback', {
+          requestId,
+          error: message,
+        });
+      }
       const onlineCount = getOnlineSessions().length;
-      const cache = await getRedisCacheOverview();
+      let cacheKeyCount = 0;
+      let cacheEnabled = false;
+      try {
+        const cache = await getRedisCacheOverview();
+        cacheKeyCount = cache.totalKeys;
+        cacheEnabled = cache.enabled;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        logService.warn('dashboard_summary_cache_overview_fallback', {
+          requestId,
+          error: message,
+        });
+      }
       return ok(
         requestId,
         {
           todayLoginCount,
           totalLoginCount,
           onlineUserCount: onlineCount,
-          totalJobCount: Number(jobsRows[0]?.total ?? 0),
-          cacheKeyCount: cache.totalKeys,
-          cacheEnabled: cache.enabled,
+          totalJobCount,
+          cacheKeyCount,
+          cacheEnabled,
         },
         'OK',
       );
