@@ -301,6 +301,15 @@ const assertStorageConfigHealth = async (
   return { message: 'cos config validation passed' };
 };
 
+const isMissingTableError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes('does not exist') ||
+    message.includes('relation') ||
+    message.includes('no such table')
+  );
+};
+
 export const monitorModule = new Elysia({
   prefix: '/api',
   detail: {
@@ -315,31 +324,41 @@ export const monitorModule = new Elysia({
       const startOfToday = new Date(
         Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
       );
-      const [todayLoginRows, totalLoginRows, jobsRows] = await Promise.all([
-        db
-          .select({ total: count() })
-          .from(sysLoginLogsTable)
-          .where(
-            and(
-              eq(sysLoginLogsTable.success, 1),
-              gte(sysLoginLogsTable.createdAt, startOfToday),
+      let todayLoginCount = 0;
+      let totalLoginCount = 0;
+      try {
+        const [todayLoginRows, totalLoginRows] = await Promise.all([
+          db
+            .select({ total: count() })
+            .from(sysLoginLogsTable)
+            .where(
+              and(
+                eq(sysLoginLogsTable.success, 1),
+                gte(sysLoginLogsTable.createdAt, startOfToday),
+              ),
             ),
-          ),
-        db.select({ total: count() }).from(sysLoginLogsTable),
-        db
-          .select({
-            total: count(),
-          })
-          .from(sysJobsTable)
-          .where(isNull(sysJobsTable.deletedAt)),
-      ]);
+          db.select({ total: count() }).from(sysLoginLogsTable),
+        ]);
+        todayLoginCount = Number(todayLoginRows[0]?.total ?? 0);
+        totalLoginCount = Number(totalLoginRows[0]?.total ?? 0);
+      } catch (error) {
+        if (!isMissingTableError(error)) {
+          throw error;
+        }
+      }
+      const jobsRows = await db
+        .select({
+          total: count(),
+        })
+        .from(sysJobsTable)
+        .where(isNull(sysJobsTable.deletedAt));
       const onlineCount = getOnlineSessions().length;
       const cache = await getRedisCacheOverview();
       return ok(
         requestId,
         {
-          todayLoginCount: Number(todayLoginRows[0]?.total ?? 0),
-          totalLoginCount: Number(totalLoginRows[0]?.total ?? 0),
+          todayLoginCount,
+          totalLoginCount,
           onlineUserCount: onlineCount,
           totalJobCount: Number(jobsRows[0]?.total ?? 0),
           cacheKeyCount: cache.totalKeys,
