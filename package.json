@@ -21,7 +21,8 @@
     "test": "bun run test:unit && bun run test:integration",
     "test:unit": "bun run --cwd api test:unit",
     "test:integration": "bun run --cwd api test:integration",
-    "test:e2e:admin": "bun run --cwd admin test:e2e"
+    "test:e2e:admin": "bun run --cwd admin test:e2e",
+    "prepare": "husky"
   },
   "dependencies": {
     "drizzle-kit": "^0.31.10",
@@ -30,9 +31,19 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "oxfmt": "^0.45.0",
     "oxlint": "^1.60.0",
     "prettier": "^3.8.2"
+  },
+  "lint-staged": {
+    "*.{ts,mts,cts,tsx,js,mjs,cjs,json,jsonc}": "oxfmt --write",
+    "*.vue": [
+      "oxfmt --write",
+      "prettier --write"
+    ],
+    "*.md": "prettier --write"
   },
   "engines": {
     "bun": "1.3.11"

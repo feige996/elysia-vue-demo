@@ -6,6 +6,8 @@
 
 ## 提交前建议
 
+克隆仓库并在根目录执行 `bun install` 后，会通过 **Husky** 安装 Git 钩子：`pre-commit` 会对**已暂存**的文件运行 **lint-staged**（与根目录 `format` 一致：`oxfmt` + 对 `*.vue` / `*.md` 的 Prettier），并自动把格式化结果写回暂存区。若你跳过安装钩子（例如 `HUSKY=0`），请自行在提交前运行 `bun run format`。
+
 与 README 中 **「发布 / 合并前检查」** 一致，至少本地执行：
 
 ```bash
