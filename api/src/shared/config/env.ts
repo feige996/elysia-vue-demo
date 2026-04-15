@@ -61,6 +61,11 @@ const envSchema = z.object({
   COS_BUCKET: z.string().optional(),
   COS_REGION: z.string().optional(),
   COS_CDN_URL: z.string().optional(),
+  FEATURE_QUEUE_ENABLED: z.enum(['true', 'false']).default('false'),
+  FEATURE_CRON_ENABLED: z.enum(['true', 'false']).default('false'),
+  FEATURE_MAIL_ENABLED: z.enum(['true', 'false']).default('false'),
+  FEATURE_STORAGE_EXTENDED: z.enum(['true', 'false']).default('false'),
+  FEATURE_MONITOR_ENABLED: z.enum(['true', 'false']).default('false'),
 });
 
 const rawEnv = envSchema.parse(process.env);
@@ -99,6 +104,14 @@ export const env = {
   REDIS_URL: redisUrl,
   JWT_EXPIRES_IN_SECONDS: jwtExpiresInSeconds,
 };
+
+export const features = {
+  queue: env.FEATURE_QUEUE_ENABLED === 'true',
+  cron: env.FEATURE_CRON_ENABLED === 'true',
+  mail: env.FEATURE_MAIL_ENABLED === 'true',
+  storageExtended: env.FEATURE_STORAGE_EXTENDED === 'true',
+  monitor: env.FEATURE_MONITOR_ENABLED === 'true',
+} as const;
 
 export type StorageType = 'local' | 'oss' | 'cos';
 export const storageType = env.STORAGE_TYPE as StorageType;

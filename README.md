@@ -82,6 +82,8 @@ bun run audit
 - `GET /api/users`
 - `GET /api/roles`
 
+> 可选模块开关（含 `monitor` 示例）的本地验证方式见：`doc/1.13-可选模块开关与最小落地方案.md`
+
 完整接口文档：
 
 - OpenAPI JSON: `/openapi.json`

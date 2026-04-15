@@ -2,14 +2,10 @@ import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { jwt } from '@elysiajs/jwt';
 import { openapi } from '@elysiajs/openapi';
-import { articleModule } from '../modules/article';
-import { fileModule } from '../modules/file';
 import { checkDatabaseHealth } from '../infra/db/client';
 import { checkRedisHealth } from '../shared/auth/refresh-token-store';
-import { env } from '../shared/config/env';
+import { env, features } from '../shared/config/env';
 import { logService } from '../shared/logger/log.service';
-import { userModule } from '../modules/user';
-import { systemModule } from '../modules/system';
 import { failByKey, ok } from '../shared/types/http';
 import { ensureRequestContext } from '../shared/types/request-context';
 import {
@@ -18,6 +14,7 @@ import {
   loggerMiddleware,
   rateLimitMiddleware,
 } from './middleware';
+import { appModuleDefs, registerModules } from './module-registry';
 import { diPlugin } from './plugins/di';
 
 const defaultCorsOriginRules = [
@@ -35,7 +32,7 @@ const corsOrigins =
     ? configuredCorsOrigins
     : defaultCorsOriginRules;
 
-export const app = new Elysia()
+const baseApp = new Elysia()
   .use(
     cors({
       origin: corsOrigins,
@@ -104,6 +101,11 @@ export const app = new Elysia()
         ok: true,
         detail: '',
       },
+      monitor: {
+        enabled: features.monitor,
+        ok: true,
+        detail: '',
+      },
     };
     try {
       await checkDatabaseHealth();
@@ -113,6 +115,9 @@ export const app = new Elysia()
       checks.redis.enabled = redisHealth.enabled;
       checks.redis.ok = redisHealth.ok;
       checks.redis.detail = redisHealth.detail;
+      checks.monitor.detail = features.monitor
+        ? 'Enabled by feature flag'
+        : 'Disabled by feature flag';
       const notReadyDependencies = Object.entries(checks)
         .filter(([, value]) => value.enabled && !value.ok)
         .map(([key]) => key);
@@ -160,11 +165,17 @@ export const app = new Elysia()
         },
       };
     }
-  })
-  .use(userModule)
-  .use(articleModule)
-  .use(fileModule)
-  .use(systemModule);
+  });
+
+const { app, enabledModuleIds } = registerModules(
+  baseApp as any,
+  appModuleDefs,
+  features,
+) as { app: typeof baseApp; enabledModuleIds: string[] };
+
+logService.info('API modules registered', { enabledModules: enabledModuleIds });
+
+export { app };
 
 export type AppType = typeof app;
 
