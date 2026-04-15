@@ -7,7 +7,7 @@ Harbor 是一个面向中后台场景的全栈 Monorepo 工程基座（Vue 3 + E
 
 - **开箱即用的后台基础设施**
   - JWT 登录/刷新/登出链路已打通，支持会话续期与退出撤销
-  - RBAC 管理闭环可直接使用（用户、角色、菜单、权限）
+  - RBAC 管理闭环可直接使用（用户、角色、菜单、权限、部门）
   - 管理员路由保护与前端权限指令（`v-permission`）已落地
 - **面向生产的稳定性能力**
   - 统一业务错误码体系 + 前端错误映射，问题更易定位
@@ -16,8 +16,10 @@ Harbor 是一个面向中后台场景的全栈 Monorepo 工程基座（Vue 3 + E
   - 审计日志完整记录并支持多维筛选，满足基础审计诉求
 - **可复制的研发提效能力**
   - CRUD 基建组件已沉淀（`SearchBar`、`TableToolbar`、`FormDrawer`、`UnifiedState`、`DataTablePage`）
-  - 用户/角色等核心页面已模板化，新增页面可快速复用
+  - 用户/角色/字典/部门等核心页面已模板化，新增页面可快速复用
   - 系统保留角色保护策略已具备，降低误操作风险
+  - 字典管理后台化已落地（字典类型/字典项 CRUD + 状态切换）
+  - 用户管理支持按部门筛选与部门字段维护
 - **可持续交付的质量体系**
   - 单元测试 + 集成测试 + Admin E2E Smoke 已接入
   - CI 质量门禁已覆盖 typecheck/lint/format/test/build
@@ -81,6 +83,8 @@ bun run audit
 - `GET /ready`
 - `GET /api/users`
 - `GET /api/roles`
+- `GET /api/dict-types`
+- `GET /api/depts/tree`
 
 > 可选模块开关（含 `monitor` 示例）的本地验证方式见：`doc/1.13-可选模块开关与最小落地方案.md`
 

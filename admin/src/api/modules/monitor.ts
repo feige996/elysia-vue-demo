@@ -72,3 +72,53 @@ export const deleteIpBlacklistMethod = (ip: string) =>
       method: 'DELETE',
     },
   );
+
+export type JobItem = {
+  id: number;
+  name: string;
+  cron: string;
+  status: number;
+  args: string | null;
+  runCount: number;
+  lastRunAt: string | null;
+  lastRunStatus: number | null;
+  lastRunMessage: string | null;
+  remark: string | null;
+  updatedAt: string | null;
+};
+
+export type JobPayload = {
+  name: string;
+  cron: string;
+  args?: string;
+  remark?: string;
+  status?: number;
+};
+
+export const getJobsMethod = () =>
+  apiClient.authRequest<JobItem[]>('/api/monitor/jobs', {
+    method: 'GET',
+  });
+
+export const createJobMethod = (payload: JobPayload) =>
+  apiClient.authRequest<JobItem>('/api/monitor/jobs', {
+    method: 'POST',
+    body: payload,
+  });
+
+export const updateJobMethod = (id: number, payload: JobPayload) =>
+  apiClient.authRequest<JobItem>(`/api/monitor/jobs/${id}`, {
+    method: 'PUT',
+    body: payload,
+  });
+
+export const toggleJobMethod = (id: number, status: number) =>
+  apiClient.authRequest<JobItem>(`/api/monitor/jobs/${id}/toggle`, {
+    method: 'POST',
+    body: { status },
+  });
+
+export const runJobMethod = (id: number) =>
+  apiClient.authRequest<JobItem>(`/api/monitor/jobs/${id}/run`, {
+    method: 'POST',
+  });

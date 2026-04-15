@@ -35,11 +35,33 @@ import { getMappedErrorMessage } from '../api/error-map';
 import DataTablePage from '../components/crud/DataTablePage.vue';
 import FormDrawer from '../components/crud/FormDrawer.vue';
 import SearchBar from '../components/crud/SearchBar.vue';
+import { useAuthStore } from '../store/auth';
 
 type DictItemRow = DictItem & { dictTypeId: number };
 
 const message = useMessage();
 const dialog = useDialog();
+const authStore = useAuthStore();
+
+const canUpdateDictType = computed(() =>
+  authStore.hasPermission('dict:type:update'),
+);
+const canToggleDictType = computed(() =>
+  authStore.hasPermission('dict:type:toggle'),
+);
+const canDeleteDictType = computed(() =>
+  authStore.hasPermission('dict:type:delete'),
+);
+
+const canUpdateDictItem = computed(() =>
+  authStore.hasPermission('dict:item:update'),
+);
+const canToggleDictItem = computed(() =>
+  authStore.hasPermission('dict:item:toggle'),
+);
+const canDeleteDictItem = computed(() =>
+  authStore.hasPermission('dict:item:delete'),
+);
 
 const loading = ref(false);
 const errorText = ref('');
@@ -357,28 +379,38 @@ const dictTypeColumns: DataTableColumns<DictType> = [
         NSpace,
         { size: 6 },
         {
-          default: () => [
-            h(
-              NButton,
-              { size: 'small', onClick: () => openEditTypeDrawer(row) },
-              { default: () => '编辑' },
-            ),
-            h(
-              NButton,
-              { size: 'small', onClick: () => void toggleTypeStatus(row) },
-              { default: () => (row.status === 1 ? '禁用' : '启用') },
-            ),
-            h(
-              NButton,
-              {
-                size: 'small',
-                type: 'error',
-                ghost: true,
-                onClick: () => deleteType(row),
-              },
-              { default: () => '删除' },
-            ),
-          ],
+          default: () =>
+            [
+              canUpdateDictType.value
+                ? h(
+                    NButton,
+                    { size: 'small', onClick: () => openEditTypeDrawer(row) },
+                    { default: () => '编辑' },
+                  )
+                : null,
+              canToggleDictType.value
+                ? h(
+                    NButton,
+                    {
+                      size: 'small',
+                      onClick: () => void toggleTypeStatus(row),
+                    },
+                    { default: () => (row.status === 1 ? '禁用' : '启用') },
+                  )
+                : null,
+              canDeleteDictType.value
+                ? h(
+                    NButton,
+                    {
+                      size: 'small',
+                      type: 'error',
+                      ghost: true,
+                      onClick: () => deleteType(row),
+                    },
+                    { default: () => '删除' },
+                  )
+                : null,
+            ].filter((item): item is NonNullable<typeof item> => Boolean(item)),
         },
       ),
   },
@@ -421,28 +453,38 @@ const dictItemColumns: DataTableColumns<DictItemRow> = [
         NSpace,
         { size: 6 },
         {
-          default: () => [
-            h(
-              NButton,
-              { size: 'small', onClick: () => openEditItemDrawer(row) },
-              { default: () => '编辑' },
-            ),
-            h(
-              NButton,
-              { size: 'small', onClick: () => void toggleItemStatus(row) },
-              { default: () => (row.status === 1 ? '禁用' : '启用') },
-            ),
-            h(
-              NButton,
-              {
-                size: 'small',
-                type: 'error',
-                ghost: true,
-                onClick: () => deleteItem(row),
-              },
-              { default: () => '删除' },
-            ),
-          ],
+          default: () =>
+            [
+              canUpdateDictItem.value
+                ? h(
+                    NButton,
+                    { size: 'small', onClick: () => openEditItemDrawer(row) },
+                    { default: () => '编辑' },
+                  )
+                : null,
+              canToggleDictItem.value
+                ? h(
+                    NButton,
+                    {
+                      size: 'small',
+                      onClick: () => void toggleItemStatus(row),
+                    },
+                    { default: () => (row.status === 1 ? '禁用' : '启用') },
+                  )
+                : null,
+              canDeleteDictItem.value
+                ? h(
+                    NButton,
+                    {
+                      size: 'small',
+                      type: 'error',
+                      ghost: true,
+                      onClick: () => deleteItem(row),
+                    },
+                    { default: () => '删除' },
+                  )
+                : null,
+            ].filter((item): item is NonNullable<typeof item> => Boolean(item)),
         },
       ),
   },
@@ -479,7 +521,10 @@ onMounted(() => {
         </SearchBar>
       </template>
       <template #toolbar-right>
-        <NButton type="primary" @click="openCreateTypeDrawer"
+        <NButton
+          v-permission="'dict:type:create'"
+          type="primary"
+          @click="openCreateTypeDrawer"
           >新增字典类型</NButton
         >
       </template>
@@ -504,7 +549,10 @@ onMounted(() => {
         >
       </template>
       <template #toolbar-right>
-        <NButton type="primary" @click="openCreateItemDrawer"
+        <NButton
+          v-permission="'dict:item:create'"
+          type="primary"
+          @click="openCreateItemDrawer"
           >新增字典项</NButton
         >
       </template>

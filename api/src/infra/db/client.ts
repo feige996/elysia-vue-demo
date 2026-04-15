@@ -8,6 +8,7 @@ import {
   defaultSysDepts,
   defaultSysDictItems,
   defaultSysDictTypes,
+  defaultSysJobs,
   defaultSysMenus,
   defaultSysPermissions,
   defaultSysRoleMenus,
@@ -23,6 +24,7 @@ import {
   sysDeptsTable,
   sysDictItemsTable,
   sysDictTypesTable,
+  sysJobsTable,
   sysMenusTable,
   sysPermissionsTable,
   sysRoleMenusTable,
@@ -121,6 +123,11 @@ export const seedDatabase = async () => {
     .onConflictDoNothing({ target: sysConfigsTable.key });
 
   await db
+    .insert(sysJobsTable)
+    .values(defaultSysJobs)
+    .onConflictDoNothing({ target: sysJobsTable.name });
+
+  await db
     .insert(sysDeptsTable)
     .values(defaultSysDepts)
     .onConflictDoNothing({ target: sysDeptsTable.code });
@@ -132,6 +139,7 @@ export const checkDatabaseHealth = async () => {
   await db.select({ total: count() }).from(sysUsersTable);
   await db.select({ total: count() }).from(sysRolesTable);
   await db.select({ total: count() }).from(sysDeptsTable);
+  await db.select({ total: count() }).from(sysJobsTable);
 };
 
 if (import.meta.main) {

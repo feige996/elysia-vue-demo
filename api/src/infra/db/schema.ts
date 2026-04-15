@@ -357,3 +357,27 @@ export const sysAuditLogsTable = pgTable(
     ),
   }),
 );
+
+// P0: monitor job center
+export const sysJobsTable = pgTable(
+  'sys_jobs',
+  {
+    id: serial('id').primaryKey(),
+    name: varchar('name', { length: 64 }).notNull(),
+    cron: varchar('cron', { length: 64 }).notNull(),
+    status: smallint('status').notNull().default(1), // 1: enabled, 0: disabled
+    args: text('args'),
+    runCount: integer('run_count').notNull().default(0),
+    lastRunAt: timestamp('last_run_at', { withTimezone: true }),
+    lastRunStatus: smallint('last_run_status'),
+    lastRunMessage: varchar('last_run_message', { length: 255 }),
+    remark: varchar('remark', { length: 255 }),
+    ...auditColumns,
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => ({
+    nameUk: uniqueIndex('uk_sys_jobs_name').on(table.name),
+    statusIdx: index('idx_sys_jobs_status').on(table.status),
+    deletedAtIdx: index('idx_sys_jobs_deleted_at').on(table.deletedAt),
+  }),
+);

@@ -23,6 +23,7 @@ const DictConfigManagement = () => import('../views/DictConfigManagement.vue');
 const DeptManagement = () => import('../views/DeptManagement.vue');
 const AuditLogManagement = () => import('../views/AuditLogManagement.vue');
 const OnlineUserManagement = () => import('../views/OnlineUserManagement.vue');
+const JobManagement = () => import('../views/JobManagement.vue');
 const CacheMonitorManagement = () =>
   import('../views/CacheMonitorManagement.vue');
 const IpBlacklistManagement = () =>
@@ -37,6 +38,7 @@ const resolveMenuComponent = (menu: MenuTreeEntity) => {
   if (componentKey === 'system/dict-config/index') return DictConfigManagement;
   if (componentKey === 'system/audit-log/index') return AuditLogManagement;
   if (componentKey === 'monitor/online/index') return OnlineUserManagement;
+  if (componentKey === 'monitor/job/index') return JobManagement;
   if (componentKey === 'monitor/cache/index') return CacheMonitorManagement;
   if (componentKey === 'security/ip-blacklist/index')
     return IpBlacklistManagement;
