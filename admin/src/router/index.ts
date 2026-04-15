@@ -24,6 +24,8 @@ const AuditLogManagement = () => import('../views/AuditLogManagement.vue');
 const OnlineUserManagement = () => import('../views/OnlineUserManagement.vue');
 const CacheMonitorManagement = () =>
   import('../views/CacheMonitorManagement.vue');
+const IpBlacklistManagement = () =>
+  import('../views/IpBlacklistManagement.vue');
 
 const resolveMenuComponent = (menu: MenuTreeEntity) => {
   const componentKey = menu.component ?? '';
@@ -34,6 +36,8 @@ const resolveMenuComponent = (menu: MenuTreeEntity) => {
   if (componentKey === 'system/audit-log/index') return AuditLogManagement;
   if (componentKey === 'monitor/online/index') return OnlineUserManagement;
   if (componentKey === 'monitor/cache/index') return CacheMonitorManagement;
+  if (componentKey === 'security/ip-blacklist/index')
+    return IpBlacklistManagement;
   return MenuManagement;
 };
 

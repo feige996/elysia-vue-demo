@@ -33,3 +33,39 @@ export const getCacheOverviewMethod = () =>
   apiClient.authRequest<CacheOverview>('/api/monitor/cache', {
     method: 'GET',
   });
+
+export type IpBlacklistItem = {
+  ip: string;
+  reason: string;
+  createdAt: string;
+  expiresAt: string | null;
+};
+
+export const getIpBlacklistMethod = () =>
+  apiClient.authRequest<{
+    enabled: boolean;
+    list: IpBlacklistItem[];
+  }>('/api/monitor/ip-blacklist', {
+    method: 'GET',
+  });
+
+export const createIpBlacklistMethod = (payload: {
+  ip: string;
+  reason?: string;
+  expiresInMinutes?: number;
+}) =>
+  apiClient.authRequest<{ success: boolean; ip: string }>(
+    '/api/monitor/ip-blacklist',
+    {
+      method: 'POST',
+      body: payload,
+    },
+  );
+
+export const deleteIpBlacklistMethod = (ip: string) =>
+  apiClient.authRequest<{ removed: boolean; ip: string }>(
+    `/api/monitor/ip-blacklist?ip=${encodeURIComponent(ip)}`,
+    {
+      method: 'DELETE',
+    },
+  );

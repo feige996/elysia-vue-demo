@@ -66,6 +66,7 @@ const envSchema = z.object({
   FEATURE_MAIL_ENABLED: z.enum(['true', 'false']).default('false'),
   FEATURE_STORAGE_EXTENDED: z.enum(['true', 'false']).default('false'),
   FEATURE_MONITOR_ENABLED: z.enum(['true', 'false']).default('false'),
+  FEATURE_IP_BLACKLIST_ENABLED: z.enum(['true', 'false']).default('false'),
 });
 
 const rawEnv = envSchema.parse(process.env);
@@ -111,6 +112,7 @@ export const features = {
   mail: env.FEATURE_MAIL_ENABLED === 'true',
   storageExtended: env.FEATURE_STORAGE_EXTENDED === 'true',
   monitor: env.FEATURE_MONITOR_ENABLED === 'true',
+  ipBlacklist: env.FEATURE_IP_BLACKLIST_ENABLED === 'true',
 } as const;
 
 export type StorageType = 'local' | 'oss' | 'cos';

@@ -1,7 +1,8 @@
 import { Elysia } from 'elysia';
 import { getAuthorizedIdentity } from '../../shared/auth/token-auth';
-import { env } from '../../shared/config/env';
+import { env, features } from '../../shared/config/env';
 import { logService } from '../../shared/logger/log.service';
+import { isIpBlocked } from '../../shared/security/ip-blacklist-store';
 import { ErrorKey, failByKey } from '../../shared/types/http';
 import {
   ensureRequestContext,
@@ -56,6 +57,30 @@ const requireAdminRoute = (method: string, path: string) => {
     path !== '/api/articles' &&
     path !== '/api/articles/all'
   );
+};
+
+const resolveClientIpForBlacklist = (request: Request) => {
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0]?.trim() ?? 'unknown';
+  }
+  return (
+    request.headers.get('x-real-ip') ??
+    request.headers.get('cf-connecting-ip') ??
+    'unknown'
+  );
+};
+
+const isLoginRequestBlockedByIp = (
+  request: Request,
+  method: string,
+  path: string,
+) => {
+  if (!features.ipBlacklist) return false;
+  if (!(method === 'POST' && path === '/api/auth/login')) return false;
+  const ip = resolveClientIpForBlacklist(request);
+  if (!ip || ip === 'unknown') return false;
+  return isIpBlocked(ip);
 };
 
 const resolveAuditModule = (path: string) => {
@@ -125,6 +150,16 @@ export const authMiddleware = new Elysia({ name: 'auth-middleware' }).onRequest(
     };
     const path = new URL(request.url).pathname;
     const method = request.method.toUpperCase();
+    if (isLoginRequestBlockedByIp(request, method, path)) {
+      const { requestId } = ensureRequestContext(request);
+      const forbidden = failByKey(
+        requestId,
+        ErrorKey.FORBIDDEN,
+        'IP is blocked',
+      );
+      set.status = forbidden.status;
+      return forbidden.payload;
+    }
     if (isPublicRoute(method, path)) return;
     const identity = await getAuthorizedIdentity(
       request.headers.get('authorization'),

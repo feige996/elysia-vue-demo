@@ -149,6 +149,14 @@ export const defaultSysPermissions = [
     module: 'monitor-cache',
     status: 1,
   },
+  {
+    id: 15,
+    code: 'security:ip-blacklist:view',
+    name: '查看 IP 黑名单',
+    type: 3,
+    module: 'security-ip-blacklist',
+    status: 1,
+  },
 ];
 
 export const defaultSysMenus = [
@@ -272,6 +280,21 @@ export const defaultSysMenus = [
     keepAlive: 1,
     permissionCode: 'monitor:cache:view',
   },
+  {
+    id: 9,
+    parentId: 1,
+    name: 'IP 黑名单',
+    routeName: 'SecurityIpBlacklist',
+    path: '/security/ip-blacklist',
+    component: 'security/ip-blacklist/index',
+    icon: 'ban-outline',
+    type: 2,
+    sort: 80,
+    visible: 1,
+    status: 1,
+    keepAlive: 1,
+    permissionCode: 'security:ip-blacklist:view',
+  },
 ];
 
 export const defaultSysUsers = [
@@ -317,6 +340,7 @@ export const defaultSysRolePermissions = [
   { roleId: 1, permissionId: 12 },
   { roleId: 1, permissionId: 13 },
   { roleId: 1, permissionId: 14 },
+  { roleId: 1, permissionId: 15 },
   { roleId: 2, permissionId: 1 },
   { roleId: 2, permissionId: 5 },
   { roleId: 2, permissionId: 7 },
@@ -332,6 +356,7 @@ export const defaultSysRoleMenus = [
   { roleId: 1, menuId: 6 },
   { roleId: 1, menuId: 7 },
   { roleId: 1, menuId: 8 },
+  { roleId: 1, menuId: 9 },
   { roleId: 2, menuId: 1 },
   { roleId: 2, menuId: 2 },
 ];
