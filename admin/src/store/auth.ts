@@ -73,6 +73,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
+  const patchProfile = (partial: Partial<LoginResult['user']>) => {
+    if (!profile.value) return;
+    profile.value = {
+      ...profile.value,
+      ...partial,
+    };
+    localStorage.setItem(ADMIN_PROFILE_KEY, JSON.stringify(profile.value));
+  };
+
   return {
     profile,
     permissionCodes,
@@ -84,5 +93,6 @@ export const useAuthStore = defineStore('auth', () => {
     bootstrapAuthContext,
     clearAuthState,
     restoreProfile,
+    patchProfile,
   };
 });

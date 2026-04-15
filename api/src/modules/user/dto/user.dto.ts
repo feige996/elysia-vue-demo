@@ -46,6 +46,36 @@ export const logoutSchema = z.object({
   refreshToken: z.string().min(1),
 });
 
+export const registerSchema = z.object({
+  account: z.string().min(3).max(64),
+  password: z.string().min(6).max(64),
+  name: z.string().min(1).max(64),
+});
+
+export const forgotPasswordSchema = z.object({
+  account: z.string().min(1).max(64),
+  channel: z.enum(['email', 'sms']),
+});
+
+export const resetPasswordSchema = z.object({
+  account: z.string().min(1).max(64),
+  channel: z.enum(['email', 'sms']),
+  verifyCode: z.string().length(6),
+  newPassword: z.string().min(6).max(64),
+});
+
+export const currentPasswordSchema = z.object({
+  currentPassword: z.string().min(6).max(64),
+  newPassword: z.string().min(6).max(64),
+});
+
+export const updateProfileSchema = z.object({
+  name: z.string().min(1).max(64).optional(),
+  email: z.string().email().max(128).nullable().optional(),
+  mobile: z.string().max(32).nullable().optional(),
+  avatarUrl: z.string().url().max(512).nullable().optional(),
+});
+
 export const createRoleSchema = z.object({
   code: z.string().min(1).max(64),
   name: z.string().min(1).max(64),

@@ -71,6 +71,22 @@ const envSchema = z.object({
   LOGIN_FAIL_THRESHOLD: z.coerce.number().int().positive().default(5),
   LOGIN_FAIL_WINDOW_MINUTES: z.coerce.number().int().positive().default(10),
   LOGIN_FAIL_BLOCK_MINUTES: z.coerce.number().int().positive().default(30),
+  PASSWORD_RESET_CODE_TTL_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(600),
+  PASSWORD_RESET_CODE_MAX_TRIES: z.coerce.number().int().positive().default(5),
+  PASSWORD_RESET_SEND_COOLDOWN_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(60),
+  NOTIFY_PROVIDER_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
+  NOTIFY_EMAIL_WEBHOOK_URL: z.string().optional(),
+  NOTIFY_EMAIL_WEBHOOK_TOKEN: z.string().optional(),
+  NOTIFY_SMS_WEBHOOK_URL: z.string().optional(),
+  NOTIFY_SMS_WEBHOOK_TOKEN: z.string().optional(),
 });
 
 const rawEnv = envSchema.parse(process.env);

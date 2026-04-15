@@ -59,6 +59,9 @@ const logout = () => {
         <NText strong>Harbor Admin</NText>
         <NSpace align="center">
           <NText>{{ welcomeText }}</NText>
+          <NButton tertiary @click="router.push('/system/user-center')"
+            >个人中心</NButton
+          >
           <NButton tertiary @click="collapsed = !collapsed">折叠菜单</NButton>
           <NButton tertiary @click="uiStore.toggleThemeMode">{{
             uiStore.isDarkMode ? '浅色模式' : '暗黑模式'

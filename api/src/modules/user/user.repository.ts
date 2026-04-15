@@ -41,6 +41,7 @@ type SaveUserInput = {
   account: string;
   name: string;
   role: UserEntity['role'];
+  password?: string;
   deptId?: number;
 };
 
@@ -412,7 +413,7 @@ export class UserRepository {
         .insert(sysUsersTable)
         .values({
           account: input.account,
-          passwordHash: `${input.account}123`,
+          passwordHash: input.password ?? `${input.account}123`,
           nickname: input.name,
           deptId: input.deptId ?? null,
           status: 1,
@@ -441,6 +442,84 @@ export class UserRepository {
     });
 
     return toUserEntity(created);
+  }
+
+  async updatePasswordByAccount(account: string, password: string) {
+    const rows = await db
+      .update(sysUsersTable)
+      .set({
+        passwordHash: password,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(sysUsersTable.account, account),
+          isNull(sysUsersTable.deletedAt),
+        ),
+      )
+      .returning({ id: sysUsersTable.id });
+    return rows.length > 0;
+  }
+
+  async updatePasswordById(id: number, password: string) {
+    const rows = await db
+      .update(sysUsersTable)
+      .set({
+        passwordHash: password,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(sysUsersTable.id, id), isNull(sysUsersTable.deletedAt)))
+      .returning({ id: sysUsersTable.id });
+    return rows.length > 0;
+  }
+
+  async findProfileById(id: number) {
+    const rows = await db
+      .select({
+        id: sysUsersTable.id,
+        account: sysUsersTable.account,
+        name: sysUsersTable.nickname,
+        role: sysRolesTable.code,
+        email: sysUsersTable.email,
+        mobile: sysUsersTable.mobile,
+        avatarUrl: sysUsersTable.avatarUrl,
+      })
+      .from(sysUsersTable)
+      .leftJoin(
+        sysUserRolesTable,
+        eq(sysUserRolesTable.userId, sysUsersTable.id),
+      )
+      .leftJoin(sysRolesTable, eq(sysRolesTable.id, sysUserRolesTable.roleId))
+      .where(and(eq(sysUsersTable.id, id), isNull(sysUsersTable.deletedAt)))
+      .limit(1);
+    return rows[0];
+  }
+
+  async updateProfileById(
+    id: number,
+    input: {
+      name?: string;
+      email?: string | null;
+      mobile?: string | null;
+      avatarUrl?: string | null;
+    },
+  ) {
+    if (Object.keys(input).length === 0) {
+      return this.findProfileById(id);
+    }
+    const rows = await db
+      .update(sysUsersTable)
+      .set({
+        nickname: input.name,
+        email: input.email,
+        mobile: input.mobile,
+        avatarUrl: input.avatarUrl,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(sysUsersTable.id, id), isNull(sysUsersTable.deletedAt)))
+      .returning({ id: sysUsersTable.id });
+    if (rows.length === 0) return undefined;
+    return this.findProfileById(id);
   }
 
   async update(id: number, input: UpdateUserInput) {

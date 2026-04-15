@@ -51,6 +51,40 @@ const refreshTokenBodySchema = t.Object({
   refreshToken: t.String({ minLength: 1 }),
 });
 
+const registerBodySchema = t.Object({
+  account: t.String({ minLength: 3, maxLength: 64 }),
+  password: t.String({ minLength: 6, maxLength: 64 }),
+  name: t.String({ minLength: 1, maxLength: 64 }),
+});
+
+const forgotPasswordBodySchema = t.Object({
+  account: t.String({ minLength: 1, maxLength: 64 }),
+  channel: t.Union([t.Literal('email'), t.Literal('sms')]),
+});
+
+const resetPasswordBodySchema = t.Object({
+  account: t.String({ minLength: 1, maxLength: 64 }),
+  channel: t.Union([t.Literal('email'), t.Literal('sms')]),
+  verifyCode: t.String({ minLength: 6, maxLength: 6 }),
+  newPassword: t.String({ minLength: 6, maxLength: 64 }),
+});
+
+const updateCurrentPasswordBodySchema = t.Object({
+  currentPassword: t.String({ minLength: 6, maxLength: 64 }),
+  newPassword: t.String({ minLength: 6, maxLength: 64 }),
+});
+
+const updateProfileBodySchema = t.Object({
+  name: t.Optional(t.String({ minLength: 1, maxLength: 64 })),
+  email: t.Optional(
+    t.Union([t.String({ format: 'email', maxLength: 128 }), t.Null()]),
+  ),
+  mobile: t.Optional(t.Union([t.String({ maxLength: 32 }), t.Null()])),
+  avatarUrl: t.Optional(
+    t.Union([t.String({ format: 'uri', maxLength: 512 }), t.Null()]),
+  ),
+});
+
 const listQuerySchema = t.Object({
   keyword: t.Optional(t.String()),
 });
@@ -230,12 +264,115 @@ const deletedSuccessSchema = t.Object({
   }),
 });
 
+const profileSuccessSchema = t.Object({
+  code: t.Literal(0),
+  message: t.String(),
+  requestId: t.String(),
+  data: t.Object({
+    id: t.Number(),
+    account: t.String(),
+    name: t.String(),
+    role: t.Nullable(t.String()),
+    email: t.Nullable(t.String()),
+    mobile: t.Nullable(t.String()),
+    avatarUrl: t.Nullable(t.String()),
+  }),
+});
+
+const resetTokenSuccessSchema = t.Object({
+  code: t.Literal(0),
+  message: t.String(),
+  requestId: t.String(),
+  data: t.Object({
+    sent: t.Boolean(),
+    channel: t.Union([t.Literal('email'), t.Literal('sms')]),
+    maskedTarget: t.String(),
+  }),
+});
+
+const simpleUpdatedSuccessSchema = t.Object({
+  code: t.Literal(0),
+  message: t.String(),
+  requestId: t.String(),
+  data: t.Object({
+    updated: t.Boolean(),
+  }),
+});
+
 export const userModule = new Elysia({
   prefix: '/api',
   detail: {
     tags: ['User'],
   },
 })
+  .post(
+    '/auth/register',
+    async (ctx) => {
+      const { body, set } = ctx;
+      const { userService, userRepository } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+      };
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.register(body, ctx.request);
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      detail: { summary: '用户注册' },
+      body: registerBodySchema,
+      response: {
+        201: userSuccessSchema,
+        400: apiErrorSchema,
+        409: apiErrorSchema,
+      },
+    },
+  )
+  .post(
+    '/auth/forgot-password',
+    async (ctx) => {
+      const { body, set } = ctx;
+      const { userService, userRepository } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+      };
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.forgotPassword(body, ctx.request);
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      detail: { summary: '忘记密码（生成重置令牌）' },
+      body: forgotPasswordBodySchema,
+      response: {
+        200: resetTokenSuccessSchema,
+        400: apiErrorSchema,
+      },
+    },
+  )
+  .post(
+    '/auth/reset-password',
+    async (ctx) => {
+      const { body, set } = ctx;
+      const { userService, userRepository } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+      };
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.resetPassword(body, ctx.request);
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      detail: { summary: '重置密码' },
+      body: resetPasswordBodySchema,
+      response: {
+        200: simpleUpdatedSuccessSchema,
+        400: apiErrorSchema,
+        401: apiErrorSchema,
+      },
+    },
+  )
   .post(
     '/auth/login',
     async (ctx) => {
@@ -349,6 +486,86 @@ export const userModule = new Elysia({
         400: apiErrorSchema,
         401: apiErrorSchema,
         500: apiErrorSchema,
+      },
+    },
+  )
+  .get(
+    '/auth/profile',
+    async (ctx) => {
+      const { set } = ctx;
+      const { userService, userRepository } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+      };
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.getProfile(ctx.request);
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      detail: {
+        summary: '获取当前用户信息',
+        security: [{ bearerAuth: [] }],
+      },
+      response: {
+        200: profileSuccessSchema,
+        401: apiErrorSchema,
+        404: apiErrorSchema,
+      },
+    },
+  )
+  .put(
+    '/auth/profile',
+    async (ctx) => {
+      const { body, set } = ctx;
+      const { userService, userRepository } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+      };
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.updateProfile(body, ctx.request);
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      detail: {
+        summary: '更新当前用户信息',
+        security: [{ bearerAuth: [] }],
+      },
+      body: updateProfileBodySchema,
+      response: {
+        200: profileSuccessSchema,
+        400: apiErrorSchema,
+        401: apiErrorSchema,
+      },
+    },
+  )
+  .put(
+    '/auth/password',
+    async (ctx) => {
+      const { body, set } = ctx;
+      const { userService, userRepository } = ctx as typeof ctx & {
+        userService: UserService;
+        userRepository: UserRepository;
+      };
+      const controller = createUserController(userService, userRepository);
+      const response = await controller.updateCurrentPassword(
+        body,
+        ctx.request,
+      );
+      set.status = response.status;
+      return response.payload;
+    },
+    {
+      detail: {
+        summary: '修改当前用户密码',
+        security: [{ bearerAuth: [] }],
+      },
+      body: updateCurrentPasswordBodySchema,
+      response: {
+        200: simpleUpdatedSuccessSchema,
+        400: apiErrorSchema,
+        401: apiErrorSchema,
       },
     },
   )

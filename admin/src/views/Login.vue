@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
+import { useRouter } from 'vue-router';
 import { z } from 'zod';
-import { NButton, NForm, NFormItem, NInput, NText } from 'naive-ui';
+import { NButton, NForm, NFormItem, NInput, NSpace, NText } from 'naive-ui';
 import { requestState, setAccessToken, setRefreshToken } from '../api/request';
 import {
   loginMethod,
@@ -13,6 +14,7 @@ import { getMappedErrorMessage } from '../api/error-map';
 const emit = defineEmits<{
   loginSuccess: [payload: LoginResult];
 }>();
+const router = useRouter();
 
 const formState = reactive<LoginPayload>({
   account: 'admin',
@@ -77,4 +79,14 @@ const submitLogin = async () => {
     </NFormItem>
   </NForm>
   <NText v-if="errorMessage.text" type="error">{{ errorMessage.text }}</NText>
+  <NSpace justify="space-between" class="auth-actions">
+    <NButton text @click="router.push('/register')">注册账号</NButton>
+    <NButton text @click="router.push('/forgot-password')">忘记密码</NButton>
+  </NSpace>
 </template>
+
+<style scoped>
+.auth-actions {
+  margin-top: 8px;
+}
+</style>

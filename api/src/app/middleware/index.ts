@@ -28,6 +28,9 @@ const isPublicRoute = (method: string, path: string) => {
   if (
     method === 'POST' &&
     (path === '/api/auth/login' ||
+      path === '/api/auth/register' ||
+      path === '/api/auth/forgot-password' ||
+      path === '/api/auth/reset-password' ||
       path === '/api/auth/refresh' ||
       path === '/api/auth/logout')
   )
@@ -45,6 +48,8 @@ const requireAdminRoute = (method: string, path: string) => {
   if (path.startsWith('/api/depts')) return true;
   if (path.startsWith('/api/configs')) return true;
   if (path.startsWith('/api/audit-logs')) return true;
+  if (path.startsWith('/api/login-logs')) return true;
+  if (path.startsWith('/api/api-catalog')) return true;
   if (path.startsWith('/api/monitor')) return true;
   if (path.startsWith('/api/roles')) return false;
   if (path.startsWith('/api/users')) {
@@ -237,6 +242,9 @@ const resolveRateLimitProfile = (
   if (
     method === 'POST' &&
     (path === '/api/auth/login' ||
+      path === '/api/auth/register' ||
+      path === '/api/auth/forgot-password' ||
+      path === '/api/auth/reset-password' ||
       path === '/api/auth/refresh' ||
       path === '/api/auth/logout')
   ) {
