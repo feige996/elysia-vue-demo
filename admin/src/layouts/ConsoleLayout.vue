@@ -26,6 +26,9 @@ const welcomeText = computed(() =>
   authStore.profile ? `欢迎你，${authStore.profile.name}` : '未登录',
 );
 
+const DEMO_PARENT_KEY = '/demo';
+const DEMO_DEFAULT_CHILD_KEY = '/demo/charts';
+
 const mapMenuTreeToOptions = (tree: MenuTreeEntity[]): MenuOption[] =>
   tree
     .filter((item) => item.type !== 3)
@@ -37,17 +40,64 @@ const mapMenuTreeToOptions = (tree: MenuTreeEntity[]): MenuOption[] =>
         : undefined,
     }));
 
+const hasOptionKeyDeep = (options: MenuOption[], key: string): boolean => {
+  for (const opt of options) {
+    if (opt.key === key) return true;
+    if (opt.children?.length) {
+      if (hasOptionKeyDeep(opt.children, key)) return true;
+    }
+  }
+  return false;
+};
+
+const removeKeysDeep = (
+  options: MenuOption[],
+  keys: Set<string>,
+): MenuOption[] => {
+  return options
+    .map((opt) => {
+      const optionKey = typeof opt.key === 'string' ? opt.key : '';
+      if (keys.has(optionKey)) return null;
+      const children: MenuOption[] | undefined = opt.children?.length
+        ? removeKeysDeep(opt.children, keys)
+        : undefined;
+      if (children?.length) {
+        return {
+          ...opt,
+          children,
+        };
+      }
+      return {
+        ...opt,
+        children: undefined,
+      };
+    })
+    .filter((v): v is MenuOption => Boolean(v));
+};
+
 const menuOptions = computed(() => {
   const baseOptions = mapMenuTreeToOptions(authStore.menuTree);
-  const hasDemoMenu = baseOptions.some(
-    (item) => item.key === '/demo/table-ops',
+
+  // 如果后端已经配置了“示例页”父级，优先使用后端结构
+  if (hasOptionKeyDeep(baseOptions, DEMO_PARENT_KEY)) {
+    return baseOptions;
+  }
+
+  // 将 demo 子项从原位置剥离，统一归到“示例页”下
+  const strippedOptions = removeKeysDeep(
+    baseOptions,
+    new Set(['/demo/table-ops', '/demo/charts']),
   );
-  if (hasDemoMenu) return baseOptions;
+
   return [
-    ...baseOptions,
+    ...strippedOptions,
     {
-      key: '/demo/table-ops',
-      label: '表格能力演示',
+      key: DEMO_PARENT_KEY,
+      label: '示例页',
+      children: [
+        { key: '/demo/charts', label: '图表能力演示' },
+        { key: '/demo/table-ops', label: '表格能力演示' },
+      ],
     },
   ];
 });
@@ -56,6 +106,10 @@ const selectedMenuKey = computed<string | null>(() =>
 );
 
 const onMenuSelect = (key: string) => {
+  if (key === DEMO_PARENT_KEY) {
+    void router.push(DEMO_DEFAULT_CHILD_KEY);
+    return;
+  }
   void router.push(key);
 };
 

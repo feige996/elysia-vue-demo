@@ -38,6 +38,7 @@ const UserCenterPage = () => import('../views/UserCenterPage.vue');
 const StorageManagement = () => import('../views/StorageManagement.vue');
 const DashboardConsole = () => import('../views/DashboardConsole.vue');
 const TableOpsDemoPage = () => import('../views/TableOpsDemoPage.vue');
+const ChartsDemoPage = () => import('../views/demo/charts/index.vue');
 
 type ViewComponentLoader = () => Promise<unknown>;
 
@@ -173,6 +174,10 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'demo/table-ops',
         component: TableOpsDemoPage,
+      },
+      {
+        path: 'demo/charts',
+        component: ChartsDemoPage,
       },
     ],
   },
