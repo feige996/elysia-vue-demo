@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  shallowRef,
+} from 'vue';
 import {
   NButton,
   NCard,
@@ -9,7 +16,7 @@ import {
   NText,
   useMessage,
 } from 'naive-ui';
-import { Editor } from '@wangeditor/editor-for-vue';
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue';
 import '@wangeditor/editor/dist/css/style.css';
 
 type RichDoc = {
@@ -100,8 +107,9 @@ const selectedDoc = computed(() =>
 // 表单输入（避免编辑时直接操作 selectedDoc 引用导致不可控）
 const formTitle = ref('');
 
-const editorInstanceRef = ref<any>(null);
+const editorRef = shallowRef<any>(null);
 const editorHtml = ref<string>('<p><br/></p>');
+const isPreview = ref(false);
 
 const refreshDocs = async () => {
   loading.value = true;
@@ -191,7 +199,6 @@ const deleteDoc = async () => {
 // Editor 配置：只做 demo，尽量保守配置
 const editorConfig = reactive({
   placeholder: '在这里编辑富文本内容...',
-  MENU_CONF: {},
 });
 
 onMounted(async () => {
@@ -206,7 +213,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-  const editor = editorInstanceRef.value;
+  const editor = editorRef.value;
   if (editor && typeof editor.destroy === 'function') editor.destroy();
 });
 </script>
@@ -263,11 +270,33 @@ onBeforeUnmount(() => {
               placeholder="请输入标题"
               :disabled="selectedDoc === null"
             />
+            <NSpace>
+              <NButton
+                quaternary
+                :disabled="selectedDoc === null"
+                @click="isPreview = !isPreview"
+              >
+                {{ isPreview ? '切换回编辑' : '预览渲染效果' }}
+              </NButton>
+            </NSpace>
+
+            <Toolbar
+              v-if="!isPreview && editorRef"
+              :editor="editorRef"
+              class="editor-toolbar"
+              :default-config="{}"
+            />
             <Editor
-              v-if="selectedDoc !== null"
+              v-if="!isPreview && selectedDoc !== null"
               :default-config="editorConfig"
               v-model="editorHtml"
-              @onCreated="(editor: any) => (editorInstanceRef = editor)"
+              @on-created="(editor: any) => (editorRef = editor)"
+            />
+
+            <div
+              v-if="isPreview && selectedDoc !== null"
+              class="rich-preview"
+              v-html="editorHtml"
             />
           </NSpace>
         </NCard>
@@ -348,6 +377,19 @@ onBeforeUnmount(() => {
 .editor-card {
   height: calc(100dvh - 220px);
   overflow: hidden;
+}
+
+:deep(.rich-preview) {
+  border: 1px dashed rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  padding: 12px;
+  height: calc(100dvh - 360px);
+  overflow: auto;
+}
+
+.rich-preview :deep(img) {
+  max-width: 100%;
+  height: auto;
 }
 
 :deep(.w-e-toolbar) {
