@@ -28,6 +28,7 @@ const welcomeText = computed(() =>
 
 const DEMO_PARENT_KEY = '/demo';
 const DEMO_DEFAULT_CHILD_KEY = '/demo/charts';
+const DEMO_RICH_TEXT_CHILD_KEY = '/demo/rich-text';
 
 const mapMenuTreeToOptions = (tree: MenuTreeEntity[]): MenuOption[] =>
   tree
@@ -86,7 +87,7 @@ const menuOptions = computed(() => {
   // 将 demo 子项从原位置剥离，统一归到“示例页”下
   const strippedOptions = removeKeysDeep(
     baseOptions,
-    new Set(['/demo/table-ops', '/demo/charts']),
+    new Set(['/demo/table-ops', '/demo/charts', DEMO_RICH_TEXT_CHILD_KEY]),
   );
 
   return [
@@ -97,6 +98,7 @@ const menuOptions = computed(() => {
       children: [
         { key: '/demo/charts', label: '图表能力演示' },
         { key: '/demo/table-ops', label: '表格能力演示' },
+        { key: DEMO_RICH_TEXT_CHILD_KEY, label: '富文本能力演示' },
       ],
     },
   ];

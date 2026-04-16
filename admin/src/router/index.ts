@@ -39,6 +39,7 @@ const StorageManagement = () => import('../views/StorageManagement.vue');
 const DashboardConsole = () => import('../views/DashboardConsole.vue');
 const TableOpsDemoPage = () => import('../views/TableOpsDemoPage.vue');
 const ChartsDemoPage = () => import('../views/demo/charts/index.vue');
+const RichTextDemoPage = () => import('../views/demo/rich-text/index.vue');
 
 type ViewComponentLoader = () => Promise<unknown>;
 
@@ -178,6 +179,10 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'demo/charts',
         component: ChartsDemoPage,
+      },
+      {
+        path: 'demo/rich-text',
+        component: RichTextDemoPage,
       },
     ],
   },

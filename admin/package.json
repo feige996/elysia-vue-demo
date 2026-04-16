@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@elysiajs/eden": "^1.4.2",
+    "@wangeditor/editor": "^5.1.1",
+    "@wangeditor/editor-for-vue": "^5.1.12",
     "echarts": "^6.0.0",
     "naive-ui": "^2.40.3",
     "pinia": "^3.0.4",
