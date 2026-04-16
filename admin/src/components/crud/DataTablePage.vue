@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import {
   NCard,
   NDataTable,
@@ -9,6 +10,7 @@ import {
 } from 'naive-ui';
 import TableToolbar from './TableToolbar.vue';
 import UnifiedState from '../state/UnifiedState.vue';
+import { buildTablePaginationPrefix } from './tablePaginationPrefix';
 
 type Props = {
   title: string;
@@ -31,6 +33,19 @@ const props = withDefaults(defineProps<Props>(), {
   emptyDescription: '暂无数据',
   pagination: false,
   bordered: false,
+});
+
+/** 为所有启用分页的表格统一补充总数摘要与快速跳转，各页仍可通过传入字段覆盖 */
+const mergedPagination = computed<false | PaginationProps>(() => {
+  if (props.pagination === false) {
+    return false;
+  }
+  const p = props.pagination;
+  return {
+    ...p,
+    showQuickJumper: p.showQuickJumper ?? true,
+    prefix: p.prefix ?? buildTablePaginationPrefix(),
+  };
 });
 </script>
 
@@ -56,7 +71,7 @@ const props = withDefaults(defineProps<Props>(), {
           :data="props.data"
           v-bind="props.tableProps"
           :loading="props.loading"
-          :pagination="props.pagination"
+          :pagination="mergedPagination"
           :row-key="props.rowKey"
         />
       </UnifiedState>

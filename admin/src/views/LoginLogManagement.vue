@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { NButton, NDatePicker, NInput, NSelect, NTag } from 'naive-ui';
+import { NButton, NDatePicker, NInput, NSelect } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
 import DataTablePage from '../components/crud/DataTablePage.vue';
 import SearchBar from '../components/crud/SearchBar.vue';
@@ -154,9 +154,6 @@ onMounted(() => {
           >重置</NButton
         >
       </SearchBar>
-    </template>
-    <template #toolbar-extra>
-      <NTag type="info">总数：{{ total }}</NTag>
     </template>
   </DataTablePage>
 </template>
