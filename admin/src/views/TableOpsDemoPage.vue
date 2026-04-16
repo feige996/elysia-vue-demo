@@ -14,6 +14,9 @@ import {
 } from 'naive-ui';
 import DataTablePage from '../components/crud/DataTablePage.vue';
 import SearchBar from '../components/crud/SearchBar.vue';
+import TableColumnManager, {
+  type TableColumnManagerItem,
+} from '../components/crud/TableColumnManager.vue';
 
 type DemoStatus = 'enabled' | 'disabled' | 'draft';
 type DemoRow = {
@@ -26,8 +29,18 @@ type DemoRow = {
   updatedAt: string;
   description: string;
 };
-
+type ColumnId =
+  | 'selection'
+  | 'code'
+  | 'name'
+  | 'owner'
+  | 'endpoint'
+  | 'status'
+  | 'updatedAt'
+  | 'description'
+  | 'actions';
 const message = useMessage();
+const COLUMN_PREFS_KEY = 'table-ops-demo:column-manager:v1';
 const loading = ref(false);
 const errorText = ref('');
 const showEmpty = ref(false);
@@ -219,12 +232,12 @@ const resetFilters = () => {
   page.value = 1;
 };
 
-const columns: DataTableColumns<DemoRow> = [
-  {
+const columnRegistry: Record<ColumnId, DataTableColumns<DemoRow>[number]> = {
+  selection: {
     type: 'selection',
     width: 48,
   },
-  {
+  code: {
     title: '权限码',
     key: 'code',
     width: 180,
@@ -248,9 +261,9 @@ const columns: DataTableColumns<DemoRow> = [
         },
       ),
   },
-  { title: '名称', key: 'name', width: 150 },
-  { title: '负责人', key: 'owner', width: 90 },
-  {
+  name: { title: '名称', key: 'name', width: 150 },
+  owner: { title: '负责人', key: 'owner', width: 90 },
+  endpoint: {
     title: '接口',
     key: 'endpoint',
     minWidth: 170,
@@ -275,7 +288,7 @@ const columns: DataTableColumns<DemoRow> = [
         },
       ),
   },
-  {
+  status: {
     title: '状态',
     key: 'status',
     width: 100,
@@ -296,13 +309,13 @@ const columns: DataTableColumns<DemoRow> = [
         },
       ),
   },
-  { title: '更新时间', key: 'updatedAt', width: 170 },
-  {
+  updatedAt: { title: '更新时间', key: 'updatedAt', width: 170 },
+  description: {
     title: '描述',
     key: 'description',
     ellipsis: { tooltip: true },
   },
-  {
+  actions: {
     title: '操作',
     key: 'actions',
     width: 200,
@@ -349,7 +362,53 @@ const columns: DataTableColumns<DemoRow> = [
         },
       ),
   },
+};
+const columnManagerItems: TableColumnManagerItem[] = [
+  { id: 'selection', label: '勾选列', hideable: false },
+  { id: 'code', label: '权限码', hideable: true },
+  { id: 'name', label: '名称', hideable: true },
+  { id: 'owner', label: '负责人', hideable: true },
+  { id: 'endpoint', label: '接口', hideable: true },
+  { id: 'status', label: '状态', hideable: true },
+  { id: 'updatedAt', label: '更新时间', hideable: true },
+  { id: 'description', label: '描述', hideable: true },
+  { id: 'actions', label: '操作', hideable: true },
 ];
+const defaultColumnOrder = columnManagerItems.map(
+  (item) => item.id as ColumnId,
+);
+const columnOrder = ref<ColumnId[]>([...defaultColumnOrder]);
+const visibleColumnIds = ref<ColumnId[]>(
+  columnManagerItems
+    .filter((item) => item.hideable !== false)
+    .map((item) => item.id as ColumnId),
+);
+
+const appliedColumns = computed<DataTableColumns<DemoRow>>(() => {
+  const visibleSet = new Set(visibleColumnIds.value);
+  return columnOrder.value
+    .filter((id) => {
+      if (id === 'selection') return true;
+      return visibleSet.has(id);
+    })
+    .map((id) => columnRegistry[id]);
+});
+
+const onColumnManagerChange = (payload: {
+  order: string[];
+  visible: string[];
+}) => {
+  const nextOrder = payload.order.filter((id): id is ColumnId =>
+    defaultColumnOrder.includes(id as ColumnId),
+  );
+  const missing = defaultColumnOrder.filter((id) => !nextOrder.includes(id));
+  columnOrder.value = [...nextOrder, ...missing];
+  visibleColumnIds.value = payload.visible.filter((id): id is ColumnId =>
+    columnManagerItems.some(
+      (item) => item.hideable !== false && item.id === id,
+    ),
+  );
+};
 
 const tableProps = computed(() => ({
   checkedRowKeys: checkedRowKeys.value,
@@ -368,7 +427,7 @@ const rowKey = (row: DemoRow) => row.id;
     :error-text="errorText"
     :empty="showEmpty || sortedRows.length === 0"
     empty-description="暂无演示数据"
-    :columns="columns"
+    :columns="appliedColumns"
     :data="pagedRows"
     :pagination="pagination"
     :row-key="rowKey"
@@ -428,6 +487,12 @@ const rowKey = (row: DemoRow) => row.id;
           确认删除选中项？
         </NPopconfirm>
         <NButton type="primary" @click="exportCurrentCsv">导出当前筛选</NButton>
+        <TableColumnManager
+          :items="columnManagerItems"
+          :storage-key="COLUMN_PREFS_KEY"
+          button-text="列管理"
+          @change="onColumnManagerChange"
+        />
       </NSpace>
     </template>
   </DataTablePage>
