@@ -92,26 +92,73 @@ const logout = () => {
         />
       </NLayoutSider>
       <NLayoutContent class="content">
-        <RouterView />
+        <div class="router-view-host">
+          <RouterView />
+        </div>
       </NLayoutContent>
     </NLayout>
   </NLayout>
 </template>
 
 <style scoped>
+/* 固定为视口高度，避免整页（含侧栏）跟表格一起滚动；主区与侧栏各自滚动 */
 .layout {
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.main {
-  min-height: calc(100vh - 56px);
+.layout > :deep(.n-layout-scroll-container) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .header {
+  flex-shrink: 0;
   padding: 14px 20px;
 }
 
+.main {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.main > :deep(.n-layout-scroll-container) {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .content {
-  margin: 24px;
+  /* 用 padding 替代 margin，避免 flex 子项外边距把总高度撑出视口而出现双滚动条 */
+  padding: 24px;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.content :deep(> .n-layout-scroll-container) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* 让子页面可用 height:100% / flex 填满主区，避免用 100dvh 估算与真实槽位不一致导致双滚动条 */
+.content :deep(.router-view-host) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 </style>

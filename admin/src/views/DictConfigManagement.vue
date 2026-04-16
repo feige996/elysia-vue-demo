@@ -506,6 +506,10 @@ onMounted(() => {
       :columns="dictTypeColumns"
       :data="dictTypes"
       :pagination="false"
+      :table-props="{
+        striped: true,
+        maxHeight: 'max(200px, min(380px, calc((100vh - 420px) / 3)))',
+      }"
     >
       <template #toolbar-left>
         <SearchBar>
@@ -539,6 +543,10 @@ onMounted(() => {
       :columns="dictItemColumns"
       :data="dictItems"
       :pagination="false"
+      :table-props="{
+        striped: true,
+        maxHeight: 'max(200px, min(380px, calc((100vh - 420px) / 3)))',
+      }"
     >
       <template #toolbar-left>
         <NText depth="3"
@@ -567,6 +575,10 @@ onMounted(() => {
       :columns="dictItemColumns"
       :data="dictPreviewItems as unknown as DictItemRow[]"
       :pagination="false"
+      :table-props="{
+        striped: true,
+        maxHeight: 'max(200px, min(380px, calc((100vh - 420px) / 3)))',
+      }"
     >
       <template #toolbar-left>
         <SearchBar>
