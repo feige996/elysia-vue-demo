@@ -7,6 +7,7 @@ import {
   NInput,
   NSpace,
   NTag,
+  useDialog,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui';
@@ -19,11 +20,18 @@ import {
   type JobItem,
 } from '../api/modules/monitor';
 import { getMappedErrorMessage } from '../api/error-map';
+import { useCrudActions } from '../composables/useCrudActions';
 import DataTablePage from '../components/crud/DataTablePage.vue';
 import FormDrawer from '../components/crud/FormDrawer.vue';
 import SearchBar from '../components/crud/SearchBar.vue';
 
 const message = useMessage();
+const dialog = useDialog();
+const { runWithFeedback } = useCrudActions({
+  message,
+  dialog,
+  mapErrorMessage: getMappedErrorMessage,
+});
 
 const loading = ref(false);
 const saving = ref(false);
@@ -115,23 +123,25 @@ const submitForm = async () => {
 
 const toggleJob = async (row: JobItem) => {
   const nextStatus = row.status === 1 ? 0 : 1;
-  try {
-    await toggleJobMethod(row.id, nextStatus);
-    message.success(nextStatus === 1 ? '任务已启用' : '任务已禁用');
-    await loadJobs();
-  } catch (error) {
-    message.error(getMappedErrorMessage(error, '更新任务状态失败'));
-  }
+  await runWithFeedback({
+    execute: async () => {
+      await toggleJobMethod(row.id, nextStatus);
+    },
+    successMessage: nextStatus === 1 ? '任务已启用' : '任务已禁用',
+    errorMessage: '更新任务状态失败',
+    onSuccess: loadJobs,
+  });
 };
 
 const runJob = async (row: JobItem) => {
-  try {
-    await runJobMethod(row.id);
-    message.success('任务触发成功');
-    await loadJobs();
-  } catch (error) {
-    message.error(getMappedErrorMessage(error, '触发任务失败'));
-  }
+  await runWithFeedback({
+    execute: async () => {
+      await runJobMethod(row.id);
+    },
+    successMessage: '任务触发成功',
+    errorMessage: '触发任务失败',
+    onSuccess: loadJobs,
+  });
 };
 
 const columns: DataTableColumns<JobItem> = [

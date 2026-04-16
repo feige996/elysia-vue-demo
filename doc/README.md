@@ -8,6 +8,11 @@
   - `bun run --cwd api test:integration`
 - 若命令行/CI 显式注入环境变量（如 `JWT_SECRET`），优先级高于 `.env`，不会被覆盖。
 
+## 前端页面开发约定
+
+- `admin` 新增后台 CRUD 页面默认使用模板：`admin/src/views/_templates/CrudPageTemplate.vue`
+- 组件组合规范见：`admin/src/components/crud/README.md`
+
 ## 对外文档（1.00 ~ 1.02）
 
 - [1.00-基座价值与适用场景](./1.00-基座价值与适用场景.md)

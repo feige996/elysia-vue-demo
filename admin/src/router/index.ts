@@ -8,6 +8,7 @@ import { ADMIN_TOKEN_KEY } from '../../../shared/auth/storage-keys';
 import type { MenuTreeEntity } from '../../../api/src/shared/types/entities';
 import { pinia } from '../store';
 import { useAuthStore } from '../store/auth';
+import { resolveViewLoaderByKey } from './view-map';
 
 const DYNAMIC_ROUTE_NAME_PREFIX = 'dynamic:';
 
@@ -38,24 +39,45 @@ const StorageManagement = () => import('../views/StorageManagement.vue');
 const DashboardConsole = () => import('../views/DashboardConsole.vue');
 const TableOpsDemoPage = () => import('../views/TableOpsDemoPage.vue');
 
+type ViewComponentLoader = () => Promise<unknown>;
+
+const legacyComponentResolverMap: Record<string, ViewComponentLoader> = {
+  'system/user/index': UserManagement,
+  'system/role/index': RoleManagement,
+  'system/menu/index': MenuManagement,
+  'system/dept/index': DeptManagement,
+  'system/dict-config/index': DictConfigManagement,
+  'system/audit-log/index': AuditLogManagement,
+  'system/login-log/index': LoginLogManagement,
+  'system/api-catalog/index': ApiCatalogManagement,
+  'monitor/online/index': OnlineUserManagement,
+  'monitor/job/index': JobManagement,
+  'monitor/cache/index': CacheMonitorManagement,
+  'system/storage/index': StorageManagement,
+  'system/table-ops-demo/index': TableOpsDemoPage,
+  'dashboard/console/index': DashboardConsole,
+  'security/ip-blacklist/index': IpBlacklistManagement,
+};
+
 const resolveMenuComponent = (menu: MenuTreeEntity) => {
-  const componentKey = menu.component ?? '';
-  if (componentKey === 'system/user/index') return UserManagement;
-  if (componentKey === 'system/role/index') return RoleManagement;
-  if (componentKey === 'system/menu/index') return MenuManagement;
-  if (componentKey === 'system/dept/index') return DeptManagement;
-  if (componentKey === 'system/dict-config/index') return DictConfigManagement;
-  if (componentKey === 'system/audit-log/index') return AuditLogManagement;
-  if (componentKey === 'system/login-log/index') return LoginLogManagement;
-  if (componentKey === 'system/api-catalog/index') return ApiCatalogManagement;
-  if (componentKey === 'monitor/online/index') return OnlineUserManagement;
-  if (componentKey === 'monitor/job/index') return JobManagement;
-  if (componentKey === 'monitor/cache/index') return CacheMonitorManagement;
-  if (componentKey === 'system/storage/index') return StorageManagement;
-  if (componentKey === 'system/table-ops-demo/index') return TableOpsDemoPage;
-  if (componentKey === 'dashboard/console/index') return DashboardConsole;
-  if (componentKey === 'security/ip-blacklist/index')
-    return IpBlacklistManagement;
+  const componentKey = (menu.component ?? '').replace(/^\/+/, '');
+  const autoResolved = componentKey
+    ? resolveViewLoaderByKey(componentKey)
+    : undefined;
+  if (autoResolved) {
+    return autoResolved;
+  }
+
+  const legacyResolved = legacyComponentResolverMap[componentKey];
+  if (legacyResolved) {
+    return legacyResolved;
+  }
+
+  if (componentKey && import.meta.env.DEV) {
+    console.warn(
+      `[router] unresolved menu component key "${componentKey}", fallback to MenuManagement`,
+    );
+  }
   return MenuManagement;
 };
 

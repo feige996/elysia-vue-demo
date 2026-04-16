@@ -5,19 +5,13 @@ import type { DataTableColumns } from 'naive-ui';
 import DataTablePage from '../components/crud/DataTablePage.vue';
 import SearchBar from '../components/crud/SearchBar.vue';
 import { getMappedErrorMessage } from '../api/error-map';
+import { useListQuery } from '../composables/useListQuery';
 import {
   getApiCatalogMethod,
   type ApiCatalogItem,
 } from '../api/modules/system-ops';
 
-const keyword = ref('');
-const moduleKeyword = ref('');
-const statusValue = ref<'all' | 'enabled' | 'disabled'>('all');
-const loading = ref(false);
-const errorText = ref('');
 const rows = ref<ApiCatalogItem[]>([]);
-const page = ref(1);
-const pageSize = ref(20);
 const total = ref(0);
 
 const columns: DataTableColumns<ApiCatalogItem> = [
@@ -34,53 +28,63 @@ const columns: DataTableColumns<ApiCatalogItem> = [
   { title: '描述', key: 'description' },
 ];
 
+const {
+  query,
+  loading,
+  errorText,
+  run: loadList,
+  reset: resetQuery,
+} = useListQuery({
+  createInitialQuery: () => ({
+    keyword: '',
+    moduleKeyword: '',
+    statusValue: 'all' as 'all' | 'enabled' | 'disabled',
+    page: 1,
+    pageSize: 20,
+  }),
+  request: (currentQuery) =>
+    getApiCatalogMethod({
+      page: currentQuery.page,
+      pageSize: currentQuery.pageSize,
+      keyword: currentQuery.keyword || undefined,
+      module: currentQuery.moduleKeyword || undefined,
+      status:
+        currentQuery.statusValue === 'all'
+          ? undefined
+          : currentQuery.statusValue === 'enabled'
+            ? 1
+            : 0,
+    }),
+  onSuccess: (response) => {
+    rows.value = response.data.list;
+    total.value = response.data.total;
+  },
+  onError: (error) => {
+    errorText.value = getMappedErrorMessage(error, '加载 API 目录失败');
+    rows.value = [];
+    total.value = 0;
+  },
+});
+
 const pagination = computed(() => ({
-  page: page.value,
-  pageSize: pageSize.value,
+  page: query.page,
+  pageSize: query.pageSize,
   itemCount: total.value,
   showSizePicker: true,
   pageSizes: [20, 50, 100],
   onUpdatePage: (nextPage: number) => {
-    page.value = nextPage;
+    query.page = nextPage;
     void loadList();
   },
   onUpdatePageSize: (nextSize: number) => {
-    pageSize.value = nextSize;
-    page.value = 1;
+    query.pageSize = nextSize;
+    query.page = 1;
     void loadList();
   },
 }));
 
-const loadList = async () => {
-  loading.value = true;
-  errorText.value = '';
-  try {
-    const response = await getApiCatalogMethod({
-      page: page.value,
-      pageSize: pageSize.value,
-      keyword: keyword.value || undefined,
-      module: moduleKeyword.value || undefined,
-      status:
-        statusValue.value === 'all'
-          ? undefined
-          : statusValue.value === 'enabled'
-            ? 1
-            : 0,
-    });
-    rows.value = response.data.list;
-    total.value = response.data.total;
-  } catch (error) {
-    errorText.value = getMappedErrorMessage(error, '加载 API 目录失败');
-  } finally {
-    loading.value = false;
-  }
-};
-
 const resetFilter = () => {
-  keyword.value = '';
-  moduleKeyword.value = '';
-  statusValue.value = 'all';
-  page.value = 1;
+  resetQuery();
   void loadList();
 };
 
@@ -103,19 +107,19 @@ onMounted(() => {
     <template #toolbar-left>
       <SearchBar>
         <NInput
-          v-model:value="keyword"
+          v-model:value="query.keyword"
           clearable
           placeholder="按权限码/名称筛选"
           style="width: 220px"
         />
         <NInput
-          v-model:value="moduleKeyword"
+          v-model:value="query.moduleKeyword"
           clearable
           placeholder="按模块筛选"
           style="width: 180px"
         />
         <NSelect
-          v-model:value="statusValue"
+          v-model:value="query.statusValue"
           style="width: 160px"
           :options="[
             { label: '全部状态', value: 'all' },

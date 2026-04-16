@@ -32,6 +32,7 @@ import {
   type SystemConfig,
 } from '../api/modules/dict-config';
 import { getMappedErrorMessage } from '../api/error-map';
+import { useCrudActions } from '../composables/useCrudActions';
 import DataTablePage from '../components/crud/DataTablePage.vue';
 import FormDrawer from '../components/crud/FormDrawer.vue';
 import SearchBar from '../components/crud/SearchBar.vue';
@@ -42,6 +43,11 @@ type DictItemRow = DictItem & { dictTypeId: number };
 const message = useMessage();
 const dialog = useDialog();
 const authStore = useAuthStore();
+const { runWithFeedback, confirmAndRun } = useCrudActions({
+  message,
+  dialog,
+  mapErrorMessage: getMappedErrorMessage,
+});
 
 const canUpdateDictType = computed(() =>
   authStore.hasPermission('dict:type:update'),
@@ -221,33 +227,29 @@ const submitTypeForm = async () => {
 
 const toggleTypeStatus = async (row: DictType) => {
   const nextStatus = row.status === 1 ? 0 : 1;
-  try {
-    await toggleDictTypeMethod(row.id, nextStatus);
-    message.success(nextStatus === 1 ? '字典类型已启用' : '字典类型已禁用');
-    await loadAll();
-  } catch (error) {
-    message.error(getMappedErrorMessage(error, '更新状态失败'));
-  }
+  await runWithFeedback({
+    execute: async () => {
+      await toggleDictTypeMethod(row.id, nextStatus);
+    },
+    successMessage: nextStatus === 1 ? '字典类型已启用' : '字典类型已禁用',
+    errorMessage: '更新状态失败',
+    onSuccess: loadAll,
+  });
 };
 
 const deleteType = (row: DictType) => {
-  dialog.warning({
+  confirmAndRun({
     title: '删除字典类型',
     content: `确定删除字典类型「${row.name}」吗？`,
-    positiveText: '删除',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        await deleteDictTypeMethod(row.id);
-        message.success('删除成功');
-        if (selectedDictTypeId.value === row.id) {
-          selectedDictTypeId.value = null;
-        }
-        await loadAll();
-      } catch (error) {
-        message.error(getMappedErrorMessage(error, '删除失败'));
+    successMessage: '删除成功',
+    errorMessage: '删除失败',
+    execute: async () => {
+      await deleteDictTypeMethod(row.id);
+      if (selectedDictTypeId.value === row.id) {
+        selectedDictTypeId.value = null;
       }
     },
+    onSuccess: loadAll,
   });
 };
 
@@ -325,31 +327,31 @@ const submitItemForm = async () => {
 
 const toggleItemStatus = async (row: DictItemRow) => {
   const nextStatus = row.status === 1 ? 0 : 1;
-  try {
-    await toggleDictItemMethod(row.id, nextStatus);
-    message.success(nextStatus === 1 ? '字典项已启用' : '字典项已禁用');
-    await loadDictItems();
-    await loadPreviewData();
-  } catch (error) {
-    message.error(getMappedErrorMessage(error, '更新状态失败'));
-  }
+  await runWithFeedback({
+    execute: async () => {
+      await toggleDictItemMethod(row.id, nextStatus);
+    },
+    successMessage: nextStatus === 1 ? '字典项已启用' : '字典项已禁用',
+    errorMessage: '更新状态失败',
+    onSuccess: async () => {
+      await loadDictItems();
+      await loadPreviewData();
+    },
+  });
 };
 
 const deleteItem = (row: DictItemRow) => {
-  dialog.warning({
+  confirmAndRun({
     title: '删除字典项',
     content: `确定删除字典项「${row.label}」吗？`,
-    positiveText: '删除',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        await deleteDictItemMethod(row.id);
-        message.success('删除成功');
-        await loadDictItems();
-        await loadPreviewData();
-      } catch (error) {
-        message.error(getMappedErrorMessage(error, '删除失败'));
-      }
+    successMessage: '删除成功',
+    errorMessage: '删除失败',
+    execute: async () => {
+      await deleteDictItemMethod(row.id);
+    },
+    onSuccess: async () => {
+      await loadDictItems();
+      await loadPreviewData();
     },
   });
 };

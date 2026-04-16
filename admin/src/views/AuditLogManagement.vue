@@ -12,17 +12,8 @@ import {
 import SearchBar from '../components/crud/SearchBar.vue';
 import DataTablePage from '../components/crud/DataTablePage.vue';
 import { getMappedErrorMessage } from '../api/error-map';
+import { useListQuery } from '../composables/useListQuery';
 
-const moduleKeyword = ref('');
-const actionKeyword = ref('');
-const operatorAccountKeyword = ref('');
-const operatorUserIdText = ref('');
-const successValue = ref<'all' | 'success' | 'failed'>('all');
-const dateRange = ref<[number, number] | null>(null);
-const loading = ref(false);
-const errorText = ref('');
-const page = ref(1);
-const pageSize = ref(20);
 const total = ref(0);
 const rows = ref<AuditLogItem[]>([]);
 const stats = ref({
@@ -34,6 +25,16 @@ const stats = ref({
 const route = useRoute();
 const router = useRouter();
 const exportLoading = ref(false);
+type AuditListQuery = {
+  moduleKeyword: string;
+  actionKeyword: string;
+  operatorAccountKeyword: string;
+  operatorUserIdText: string;
+  successValue: 'all' | 'success' | 'failed';
+  dateRange: [number, number] | null;
+  page: number;
+  pageSize: number;
+};
 
 const columns: DataTableColumns<AuditLogItem> = [
   { title: '时间', key: 'createdAt', width: 180 },
@@ -48,18 +49,18 @@ const columns: DataTableColumns<AuditLogItem> = [
 ];
 
 const pagination = computed(() => ({
-  page: page.value,
-  pageSize: pageSize.value,
+  page: query.page,
+  pageSize: query.pageSize,
   itemCount: total.value,
   showSizePicker: true,
   pageSizes: [20, 50, 100],
   onUpdatePage: (nextPage: number) => {
-    page.value = nextPage;
+    query.page = nextPage;
     void loadLogs();
   },
   onUpdatePageSize: (nextSize: number) => {
-    pageSize.value = nextSize;
-    page.value = 1;
+    query.pageSize = nextSize;
+    query.page = 1;
     void loadLogs();
   },
 }));
@@ -83,13 +84,13 @@ const readDateMsQuery = (value: unknown) => {
 };
 
 const syncQueryToUrl = async () => {
-  const [dateFromMs, dateToMs] = dateRange.value ?? [];
+  const [dateFromMs, dateToMs] = query.dateRange ?? [];
   const nextQuery = {
     ...route.query,
-    module: moduleKeyword.value || undefined,
-    action: actionKeyword.value || undefined,
-    operatorAccount: operatorAccountKeyword.value || undefined,
-    success: successValue.value === 'all' ? undefined : successValue.value,
+    module: query.moduleKeyword || undefined,
+    action: query.actionKeyword || undefined,
+    operatorAccount: query.operatorAccountKeyword || undefined,
+    success: query.successValue === 'all' ? undefined : query.successValue,
     dateFrom:
       typeof dateFromMs === 'number'
         ? new Date(dateFromMs).toISOString()
@@ -98,96 +99,50 @@ const syncQueryToUrl = async () => {
       typeof dateToMs === 'number'
         ? new Date(dateToMs).toISOString()
         : undefined,
-    page: String(page.value),
-    pageSize: String(pageSize.value),
+    page: String(query.page),
+    pageSize: String(query.pageSize),
   };
 
   await router.replace({ query: nextQuery });
 };
 
 const hydrateFromUrlQuery = () => {
-  moduleKeyword.value = readQueryString(route.query.module);
-  actionKeyword.value = readQueryString(route.query.action);
-  operatorAccountKeyword.value = readQueryString(route.query.operatorAccount);
-  successValue.value =
+  query.moduleKeyword = readQueryString(route.query.module);
+  query.actionKeyword = readQueryString(route.query.action);
+  query.operatorAccountKeyword = readQueryString(route.query.operatorAccount);
+  query.successValue =
     route.query.success === 'success' || route.query.success === 'failed'
       ? route.query.success
       : 'all';
 
   const dateFromMs = readDateMsQuery(route.query.dateFrom);
   const dateToMs = readDateMsQuery(route.query.dateTo);
-  dateRange.value =
+  query.dateRange =
     typeof dateFromMs === 'number' && typeof dateToMs === 'number'
       ? [dateFromMs, dateToMs]
       : null;
 
-  page.value = readPositiveIntQuery(route.query.page, 1);
-  pageSize.value = readPositiveIntQuery(route.query.pageSize, 20);
+  query.page = readPositiveIntQuery(route.query.page, 1);
+  query.pageSize = readPositiveIntQuery(route.query.pageSize, 20);
 };
 
-const loadLogs = async () => {
-  errorText.value = '';
-  loading.value = true;
-  const operatorUserId = Number(operatorUserIdText.value);
-  const [dateFromMs, dateToMs] = dateRange.value ?? [];
-  try {
-    await syncQueryToUrl();
-    const baseQuery = {
-      page: page.value,
-      pageSize: pageSize.value,
-      module: moduleKeyword.value || undefined,
-      action: actionKeyword.value || undefined,
-      operatorAccount: operatorAccountKeyword.value || undefined,
-      operatorUserId:
-        Number.isInteger(operatorUserId) && operatorUserId > 0
-          ? operatorUserId
-          : undefined,
-      success:
-        successValue.value === 'all'
-          ? undefined
-          : successValue.value === 'success'
-            ? 1
-            : 0,
-      dateFrom:
-        typeof dateFromMs === 'number'
-          ? new Date(dateFromMs).toISOString()
-          : undefined,
-      dateTo:
-        typeof dateToMs === 'number'
-          ? new Date(dateToMs).toISOString()
-          : undefined,
-    } as const;
-    const response = await getAuditLogsMethod({
-      ...baseQuery,
-    });
-    const statsResponse = await getAuditLogStatsMethod(baseQuery);
-    rows.value = response.data.list;
-    total.value = response.data.total;
-    stats.value = statsResponse.data;
-  } catch (error) {
-    errorText.value = getMappedErrorMessage(error, '加载日志失败');
-  } finally {
-    loading.value = false;
-  }
-};
-
-const resolveCurrentQuery = () => {
-  const operatorUserId = Number(operatorUserIdText.value);
-  const [dateFromMs, dateToMs] = dateRange.value ?? [];
+const buildAuditRequestQuery = (currentQuery: AuditListQuery) => {
+  const operatorUserId = Number(currentQuery.operatorUserIdText);
+  const [dateFromMs, dateToMs] = currentQuery.dateRange ?? [];
   return {
-    page: page.value,
-    pageSize: pageSize.value,
-    module: moduleKeyword.value || undefined,
-    action: actionKeyword.value || undefined,
-    operatorAccount: operatorAccountKeyword.value || undefined,
+    page: currentQuery.page,
+    pageSize: currentQuery.pageSize,
+    module: currentQuery.moduleKeyword || undefined,
+    action: currentQuery.actionKeyword || undefined,
+    operatorAccount: currentQuery.operatorAccountKeyword || undefined,
     operatorUserId:
       Number.isInteger(operatorUserId) && operatorUserId > 0
         ? operatorUserId
         : undefined,
     success:
-      successValue.value === 'all'
+      currentQuery.successValue === 'all'
         ? undefined
-        : successValue.value === 'success'
+        : currentQuery.successValue === 'success'
           ? 1
           : 0,
     dateFrom:
@@ -201,10 +156,60 @@ const resolveCurrentQuery = () => {
   } as const;
 };
 
+const {
+  query,
+  loading,
+  errorText,
+  run: loadLogs,
+  reset: resetQuery,
+} = useListQuery<
+  AuditListQuery,
+  {
+    logsResponse: Awaited<ReturnType<typeof getAuditLogsMethod>>;
+    statsResponse: Awaited<ReturnType<typeof getAuditLogStatsMethod>>;
+  }
+>({
+  createInitialQuery: () => ({
+    moduleKeyword: '',
+    actionKeyword: '',
+    operatorAccountKeyword: '',
+    operatorUserIdText: '',
+    successValue: 'all' as 'all' | 'success' | 'failed',
+    dateRange: null as [number, number] | null,
+    page: 1,
+    pageSize: 20,
+  }),
+  request: async (currentQuery) => {
+    await syncQueryToUrl();
+    const baseQuery = buildAuditRequestQuery(currentQuery);
+    const [logsResponse, statsResponse] = await Promise.all([
+      getAuditLogsMethod(baseQuery),
+      getAuditLogStatsMethod(baseQuery),
+    ]);
+    return { logsResponse, statsResponse };
+  },
+  onSuccess: ({ logsResponse, statsResponse }) => {
+    rows.value = logsResponse.data.list;
+    total.value = logsResponse.data.total;
+    stats.value = statsResponse.data;
+  },
+  onError: (error) => {
+    errorText.value = getMappedErrorMessage(error, '加载日志失败');
+    rows.value = [];
+    total.value = 0;
+    stats.value = {
+      total: 0,
+      successTotal: 0,
+      failedTotal: 0,
+      topModules: [],
+    };
+  },
+});
+
 const exportCsv = async () => {
   exportLoading.value = true;
   try {
-    const blob = await exportAuditLogsCsvMethod(resolveCurrentQuery());
+    const blob = await exportAuditLogsCsvMethod(buildAuditRequestQuery(query));
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
@@ -226,20 +231,14 @@ onMounted(() => {
 });
 
 const applyAutoBlockQuickFilter = () => {
-  moduleKeyword.value = 'security-ip-blacklist';
-  actionKeyword.value = 'AUTO_BLOCK';
-  page.value = 1;
+  query.moduleKeyword = 'security-ip-blacklist';
+  query.actionKeyword = 'AUTO_BLOCK';
+  query.page = 1;
   void loadLogs();
 };
 
 const resetFilter = () => {
-  moduleKeyword.value = '';
-  actionKeyword.value = '';
-  operatorAccountKeyword.value = '';
-  operatorUserIdText.value = '';
-  successValue.value = 'all';
-  dateRange.value = null;
-  page.value = 1;
+  resetQuery();
   void loadLogs();
 };
 </script>
@@ -272,31 +271,31 @@ const resetFilter = () => {
     <template #toolbar-left>
       <SearchBar>
         <NInput
-          v-model:value="moduleKeyword"
+          v-model:value="query.moduleKeyword"
           clearable
           placeholder="按模块筛选"
           style="width: 180px"
         />
         <NInput
-          v-model:value="actionKeyword"
+          v-model:value="query.actionKeyword"
           clearable
           placeholder="按动作筛选"
           style="width: 160px"
         />
         <NInput
-          v-model:value="operatorAccountKeyword"
+          v-model:value="query.operatorAccountKeyword"
           clearable
           placeholder="按操作者账号筛选"
           style="width: 180px"
         />
         <NInput
-          v-model:value="operatorUserIdText"
+          v-model:value="query.operatorUserIdText"
           clearable
           placeholder="按操作者 ID 筛选"
           style="width: 180px"
         />
         <NSelect
-          v-model:value="successValue"
+          v-model:value="query.successValue"
           style="width: 160px"
           :options="[
             { label: '全部结果', value: 'all' },
@@ -305,7 +304,7 @@ const resetFilter = () => {
           ]"
         />
         <NDatePicker
-          v-model:value="dateRange"
+          v-model:value="query.dateRange"
           type="datetimerange"
           clearable
           style="width: 320px"

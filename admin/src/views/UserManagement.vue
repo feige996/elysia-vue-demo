@@ -24,24 +24,26 @@ import {
 import { getDeptTreeMethod, type DeptNode } from '../api/modules/dept';
 import { getRolesMethod } from '../api/modules/role';
 import { getMappedErrorMessage } from '../api/error-map';
+import { useCrudActions } from '../composables/useCrudActions';
+import { useListQuery } from '../composables/useListQuery';
 import SearchBar from '../components/crud/SearchBar.vue';
 import FormDrawer from '../components/crud/FormDrawer.vue';
 import DataTablePage from '../components/crud/DataTablePage.vue';
 
 type UserRow = User;
 
-const keyword = ref('');
-const page = ref(1);
-const pageSize = ref(10);
 const total = ref(0);
 const users = ref<UserRow[]>([]);
-const loading = ref(false);
 const saving = ref(false);
-const errorText = ref('');
 const checkedRowKeys = ref<DataTableRowKey[]>([]);
 
 const dialog = useDialog();
 const message = useMessage();
+const { confirmAndRun } = useCrudActions({
+  message,
+  dialog,
+  mapErrorMessage: getMappedErrorMessage,
+});
 
 const userModalVisible = ref(false);
 const userModalMode = ref<'create' | 'edit'>('create');
@@ -54,7 +56,6 @@ const userForm = ref({
 });
 
 const roleOptions = ref<Array<{ label: string; value: User['role'] }>>([]);
-const deptFilterId = ref<number | null>(null);
 const deptOptions = ref<Array<{ label: string; value: number }>>([]);
 const roleLabelMap = computed<Record<User['role'], string>>(() => {
   const defaults: Record<User['role'], string> = {
@@ -142,43 +143,52 @@ const columns: DataTableColumns<UserRow> = [
   },
 ];
 
+const {
+  query,
+  loading,
+  errorText,
+  run: fetchUsers,
+} = useListQuery({
+  createInitialQuery: () => ({
+    keyword: '',
+    page: 1,
+    pageSize: 10,
+    deptId: null as number | null,
+  }),
+  request: (currentQuery) =>
+    getUsersPageMethod({
+      page: currentQuery.page,
+      pageSize: currentQuery.pageSize,
+      keyword: currentQuery.keyword || undefined,
+      deptId: currentQuery.deptId ?? undefined,
+    }),
+  onSuccess: (response) => {
+    users.value = response.data.list;
+    total.value = response.data.total;
+  },
+  onError: (error) => {
+    errorText.value = getMappedErrorMessage(error, '加载失败');
+    users.value = [];
+    total.value = 0;
+  },
+});
+
 const pagination = computed(() => ({
-  page: page.value,
-  pageSize: pageSize.value,
+  page: query.page,
+  pageSize: query.pageSize,
   itemCount: total.value,
   showSizePicker: true,
   pageSizes: [10, 20, 50],
   onUpdatePage: (nextPage: number) => {
-    page.value = nextPage;
+    query.page = nextPage;
     void fetchUsers();
   },
   onUpdatePageSize: (nextPageSize: number) => {
-    pageSize.value = nextPageSize;
-    page.value = 1;
+    query.pageSize = nextPageSize;
+    query.page = 1;
     void fetchUsers();
   },
 }));
-
-const fetchUsers = async () => {
-  errorText.value = '';
-  loading.value = true;
-  try {
-    const response = await getUsersPageMethod({
-      page: page.value,
-      pageSize: pageSize.value,
-      keyword: keyword.value || undefined,
-      deptId: deptFilterId.value ?? undefined,
-    });
-    users.value = response.data.list;
-    total.value = response.data.total;
-  } catch (error) {
-    errorText.value = getMappedErrorMessage(error, '加载失败');
-    users.value = [];
-    total.value = 0;
-  } finally {
-    loading.value = false;
-  }
-};
 
 const fetchRoleOptions = async () => {
   try {
@@ -293,20 +303,15 @@ const submitUserForm = async () => {
 };
 
 const deleteOneUser = (row: UserRow) => {
-  dialog.warning({
+  confirmAndRun({
     title: '删除用户',
     content: `确定删除用户「${row.account}」吗？`,
-    positiveText: '删除',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        await deleteUserMethod(row.id);
-        message.success('删除成功');
-        await fetchUsers();
-      } catch (error) {
-        message.error(getMappedErrorMessage(error, '删除失败'));
-      }
+    successMessage: '删除成功',
+    errorMessage: '删除失败',
+    execute: async () => {
+      await deleteUserMethod(row.id);
     },
+    onSuccess: fetchUsers,
   });
 };
 
@@ -316,21 +321,16 @@ const deleteBatchUsers = () => {
     message.warning('请先选择要删除的用户');
     return;
   }
-  dialog.warning({
+  confirmAndRun({
     title: '批量删除',
     content: `确定删除已选 ${ids.length} 个用户吗？`,
-    positiveText: '删除',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        await batchDeleteUsersMethod(ids);
-        checkedRowKeys.value = [];
-        message.success('批量删除成功');
-        await fetchUsers();
-      } catch (error) {
-        message.error(getMappedErrorMessage(error, '批量删除失败'));
-      }
+    successMessage: '批量删除成功',
+    errorMessage: '批量删除失败',
+    execute: async () => {
+      await batchDeleteUsersMethod(ids);
+      checkedRowKeys.value = [];
     },
+    onSuccess: fetchUsers,
   });
 };
 
@@ -366,13 +366,13 @@ onMounted(() => {
     <template #toolbar-left>
       <SearchBar>
         <NInput
-          v-model:value="keyword"
+          v-model:value="query.keyword"
           clearable
           placeholder="按账号或姓名搜索"
           style="width: 280px"
         />
         <NSelect
-          v-model:value="deptFilterId"
+          v-model:value="query.deptId"
           :options="deptOptions"
           clearable
           placeholder="按部门筛选"

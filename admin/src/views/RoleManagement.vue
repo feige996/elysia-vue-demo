@@ -29,15 +29,20 @@ import {
   type RoleRow,
 } from '../api/modules/role';
 import { getMappedErrorMessage } from '../api/error-map';
+import { useCrudActions } from '../composables/useCrudActions';
+import { useListQuery } from '../composables/useListQuery';
 import SearchBar from '../components/crud/SearchBar.vue';
 import FormDrawer from '../components/crud/FormDrawer.vue';
 import DataTablePage from '../components/crud/DataTablePage.vue';
 
 const message = useMessage();
 const dialog = useDialog();
+const { runWithFeedback, confirmAndRun } = useCrudActions({
+  message,
+  dialog,
+  mapErrorMessage: getMappedErrorMessage,
+});
 
-const loading = ref(false);
-const errorText = ref('');
 const roles = ref<RoleRow[]>([]);
 const saving = ref(false);
 
@@ -65,19 +70,21 @@ const menuEnabledOptions = computed(() =>
   menuOptions.value.filter((item) => item.status === 1),
 );
 
-const loadRoles = async () => {
-  errorText.value = '';
-  loading.value = true;
-  try {
-    const response = await getRolesMethod();
+const {
+  loading,
+  errorText,
+  run: loadRoles,
+} = useListQuery({
+  createInitialQuery: () => ({}),
+  request: () => getRolesMethod(),
+  onSuccess: (response) => {
     roles.value = response.data;
-  } catch (error) {
+  },
+  onError: (error) => {
     errorText.value = getMappedErrorMessage(error, '加载失败');
     roles.value = [];
-  } finally {
-    loading.value = false;
-  }
-};
+  },
+});
 
 const ensurePermissionOptions = async () => {
   if (permissionOptions.value.length > 0) return;
@@ -146,30 +153,26 @@ const submitRoleForm = async () => {
 
 const updateRoleStatus = async (row: RoleRow) => {
   const nextStatus = row.status === 1 ? 0 : 1;
-  try {
-    await updateRoleStatusMethod(row.id, nextStatus);
-    message.success(nextStatus === 1 ? '角色已启用' : '角色已禁用');
-    await loadRoles();
-  } catch (error) {
-    message.error(getMappedErrorMessage(error, '状态更新失败'));
-  }
+  await runWithFeedback({
+    execute: async () => {
+      await updateRoleStatusMethod(row.id, nextStatus);
+    },
+    successMessage: nextStatus === 1 ? '角色已启用' : '角色已禁用',
+    errorMessage: '状态更新失败',
+    onSuccess: loadRoles,
+  });
 };
 
 const deleteRole = (row: RoleRow) => {
-  dialog.warning({
+  confirmAndRun({
     title: '删除角色',
     content: `确定删除角色「${row.name}」吗？`,
-    positiveText: '删除',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        await deleteRoleMethod(row.id);
-        message.success('删除成功');
-        await loadRoles();
-      } catch (error) {
-        message.error(getMappedErrorMessage(error, '删除失败'));
-      }
+    successMessage: '删除成功',
+    errorMessage: '删除失败',
+    execute: async () => {
+      await deleteRoleMethod(row.id);
     },
+    onSuccess: loadRoles,
   });
 };
 

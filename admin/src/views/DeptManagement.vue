@@ -22,12 +22,18 @@ import {
   type DeptNode,
 } from '../api/modules/dept';
 import { getMappedErrorMessage } from '../api/error-map';
+import { useCrudActions } from '../composables/useCrudActions';
 import DataTablePage from '../components/crud/DataTablePage.vue';
 import FormDrawer from '../components/crud/FormDrawer.vue';
 import SearchBar from '../components/crud/SearchBar.vue';
 
 const message = useMessage();
 const dialog = useDialog();
+const { runWithFeedback, confirmAndRun } = useCrudActions({
+  message,
+  dialog,
+  mapErrorMessage: getMappedErrorMessage,
+});
 
 const loading = ref(false);
 const saving = ref(false);
@@ -162,30 +168,26 @@ const submitDeptForm = async () => {
 
 const toggleStatus = async (row: DeptNode) => {
   const nextStatus = row.status === 1 ? 0 : 1;
-  try {
-    await toggleDeptMethod(row.id, nextStatus);
-    message.success(nextStatus === 1 ? '部门已启用' : '部门已禁用');
-    await loadTree();
-  } catch (error) {
-    message.error(getMappedErrorMessage(error, '更新部门状态失败'));
-  }
+  await runWithFeedback({
+    execute: async () => {
+      await toggleDeptMethod(row.id, nextStatus);
+    },
+    successMessage: nextStatus === 1 ? '部门已启用' : '部门已禁用',
+    errorMessage: '更新部门状态失败',
+    onSuccess: loadTree,
+  });
 };
 
 const deleteDept = (row: DeptNode) => {
-  dialog.warning({
+  confirmAndRun({
     title: '删除部门',
     content: `确定删除部门「${row.name}」吗？`,
-    positiveText: '删除',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        await deleteDeptMethod(row.id);
-        message.success('删除成功');
-        await loadTree();
-      } catch (error) {
-        message.error(getMappedErrorMessage(error, '删除部门失败'));
-      }
+    successMessage: '删除成功',
+    errorMessage: '删除部门失败',
+    execute: async () => {
+      await deleteDeptMethod(row.id);
     },
+    onSuccess: loadTree,
   });
 };
 
