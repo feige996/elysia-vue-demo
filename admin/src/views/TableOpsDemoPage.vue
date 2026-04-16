@@ -8,6 +8,7 @@ import {
   NSpace,
   NTag,
   NText,
+  useDialog,
   useMessage,
   type DataTableColumns,
   type DataTableRowKey,
@@ -40,6 +41,7 @@ type ColumnId =
   | 'description'
   | 'actions';
 const message = useMessage();
+const dialog = useDialog();
 const COLUMN_PREFS_KEY = 'table-ops-demo:column-manager:v1';
 const loading = ref(false);
 const errorText = ref('');
@@ -51,6 +53,7 @@ const keyword = ref('');
 const ownerValue = ref<'all' | string>('all');
 const statusValue = ref<'all' | DemoStatus>('all');
 const sortValue = ref<'updatedDesc' | 'updatedAsc' | 'nameAsc'>('updatedDesc');
+const deleteConfirmMode = ref<'popover' | 'dialog'>('popover');
 
 const ownerOptions = [
   { label: '全部负责人', value: 'all' },
@@ -68,6 +71,10 @@ const sortOptions = [
   { label: '更新时间: 新 -> 旧', value: 'updatedDesc' },
   { label: '更新时间: 旧 -> 新', value: 'updatedAsc' },
   { label: '名称: A -> Z', value: 'nameAsc' },
+];
+const deleteConfirmModeOptions = [
+  { label: '删除确认: Popconfirm', value: 'popover' },
+  { label: '删除确认: Dialog', value: 'dialog' },
 ];
 
 const createRows = (): DemoRow[] =>
@@ -173,6 +180,20 @@ const removeRow = (row: DemoRow) => {
   message.success(`已删除 ${row.name}`);
 };
 
+const confirmRemoveRow = (row: DemoRow) => {
+  if (deleteConfirmMode.value === 'popover') {
+    removeRow(row);
+    return;
+  }
+  dialog.warning({
+    title: '删除演示项',
+    content: `确定删除「${row.name}」吗？`,
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: () => removeRow(row),
+  });
+};
+
 const batchToggle = () => {
   const idSet = new Set(checkedRowKeys.value.map((item) => Number(item)));
   rows.value = rows.value.map((row) =>
@@ -188,6 +209,21 @@ const batchDelete = () => {
   rows.value = rows.value.filter((row) => !idSet.has(row.id));
   message.success(`已删除 ${idSet.size} 条`);
   checkedRowKeys.value = [];
+};
+
+const confirmBatchDelete = () => {
+  if (deleteConfirmMode.value === 'popover') {
+    batchDelete();
+    return;
+  }
+  const count = checkedRowKeys.value.length;
+  dialog.warning({
+    title: '批量删除演示项',
+    content: `确定删除已选 ${count} 条吗？`,
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: () => batchDelete(),
+  });
 };
 
 const exportCurrentCsv = () => {
@@ -346,16 +382,28 @@ const columnRegistry: Record<ColumnId, DataTableColumns<DemoRow>[number]> = {
             h(
               NPopconfirm,
               {
-                onPositiveClick: () => removeRow(row),
+                disabled: deleteConfirmMode.value !== 'popover',
+                onPositiveClick: () => confirmRemoveRow(row),
               },
               {
                 trigger: () =>
                   h(
                     NButton,
-                    { size: 'small', type: 'error', ghost: true },
+                    {
+                      size: 'small',
+                      type: 'error',
+                      ghost: true,
+                      onClick:
+                        deleteConfirmMode.value === 'dialog'
+                          ? () => confirmRemoveRow(row)
+                          : undefined,
+                    },
                     { default: () => '删除' },
                   ),
-                default: () => '确认删除该行吗？',
+                default: () =>
+                  deleteConfirmMode.value === 'popover'
+                    ? '确认删除该行吗？'
+                    : '当前为 Dialog 模式',
               },
             ),
           ],
@@ -456,6 +504,11 @@ const rowKey = (row: DemoRow) => row.id;
           :options="sortOptions"
           style="width: 200px"
         />
+        <NSelect
+          v-model:value="deleteConfirmMode"
+          :options="deleteConfirmModeOptions"
+          style="width: 220px"
+        />
         <NButton type="primary" @click="page = 1">查询</NButton>
         <NButton quaternary @click="resetFilters">重置</NButton>
       </SearchBar>
@@ -476,11 +529,22 @@ const rowKey = (row: DemoRow) => row.id;
           批量启停
         </NButton>
         <NPopconfirm
-          :disabled="checkedRowKeys.length === 0"
-          @positive-click="batchDelete"
+          :disabled="
+            checkedRowKeys.length === 0 || deleteConfirmMode !== 'popover'
+          "
+          @positive-click="confirmBatchDelete"
         >
           <template #trigger>
-            <NButton type="error" ghost :disabled="checkedRowKeys.length === 0">
+            <NButton
+              type="error"
+              ghost
+              :disabled="checkedRowKeys.length === 0"
+              @click="
+                deleteConfirmMode === 'dialog'
+                  ? confirmBatchDelete()
+                  : undefined
+              "
+            >
               批量删除
             </NButton>
           </template>

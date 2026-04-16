@@ -4,9 +4,9 @@ import {
   NButton,
   NInput,
   NInputNumber,
-  NPopconfirm,
   NTag,
   NText,
+  useDialog,
   type DataTableColumns,
 } from 'naive-ui';
 import {
@@ -26,6 +26,7 @@ const enabled = ref(false);
 const ipInput = ref('');
 const reasonInput = ref('');
 const expiresInMinutesInput = ref<number | null>(60);
+const dialog = useDialog();
 
 const columns: DataTableColumns<IpBlacklistItem> = [
   { title: 'IP', key: 'ip', width: 180 },
@@ -56,21 +57,14 @@ const columns: DataTableColumns<IpBlacklistItem> = [
     width: 120,
     render: (row) =>
       h(
-        NPopconfirm,
+        NButton,
         {
-          onPositiveClick: async () => {
-            await deleteRule(row.ip);
-          },
+          type: 'error',
+          size: 'small',
+          ghost: true,
+          onClick: () => confirmDelete(row.ip),
         },
-        {
-          trigger: () =>
-            h(
-              NButton,
-              { type: 'error', size: 'small', ghost: true },
-              { default: () => '删除' },
-            ),
-          default: () => `确认删除 ${row.ip} ?`,
-        },
+        { default: () => '删除' },
       ),
   },
 ];
@@ -126,6 +120,18 @@ const deleteRule = async (ip: string) => {
   } finally {
     loading.value = false;
   }
+};
+
+const confirmDelete = (ip: string) => {
+  dialog.warning({
+    title: '删除黑名单规则',
+    content: `确定删除 IP「${ip}」吗？`,
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      await deleteRule(ip);
+    },
+  });
 };
 
 onMounted(() => {
