@@ -142,7 +142,6 @@ onMounted(() => {
     empty-description="暂无黑名单规则"
     :columns="columns"
     :data="list"
-    :table-props="{ striped: true, maxHeight: 560 }"
   >
     <template #toolbar-left>
       <div>

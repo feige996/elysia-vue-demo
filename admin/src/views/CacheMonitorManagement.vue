@@ -48,13 +48,13 @@ onMounted(() => {
 <template>
   <DataTablePage
     title="缓存监控"
+    table-layout="compact"
     :loading="loading"
     :error-text="errorText"
     :empty="namespaceRows.length === 0"
     empty-description="暂无缓存统计数据"
     :columns="columns"
     :data="namespaceRows"
-    :table-props="{ striped: true, maxHeight: 420 }"
   >
     <template #toolbar-left>
       <NText depth="3" v-if="cacheData">

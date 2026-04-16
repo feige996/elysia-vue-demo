@@ -508,7 +508,7 @@ onMounted(() => {
       :pagination="false"
       :table-props="{
         striped: true,
-        maxHeight: 'max(200px, min(380px, calc((100vh - 420px) / 3)))',
+        maxHeight: 'max(200px, min(380px, calc((100dvh - 480px) / 3)))',
       }"
     >
       <template #toolbar-left>
@@ -545,7 +545,7 @@ onMounted(() => {
       :pagination="false"
       :table-props="{
         striped: true,
-        maxHeight: 'max(200px, min(380px, calc((100vh - 420px) / 3)))',
+        maxHeight: 'max(200px, min(380px, calc((100dvh - 480px) / 3)))',
       }"
     >
       <template #toolbar-left>
@@ -577,7 +577,7 @@ onMounted(() => {
       :pagination="false"
       :table-props="{
         striped: true,
-        maxHeight: 'max(200px, min(380px, calc((100vh - 420px) / 3)))',
+        maxHeight: 'max(200px, min(380px, calc((100dvh - 480px) / 3)))',
       }"
     >
       <template #toolbar-left>

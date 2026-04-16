@@ -53,13 +53,13 @@ onMounted(() => {
 <template>
   <DataTablePage
     title="控制台首页"
+    table-layout="compact"
     :loading="loading"
     :error-text="errorText"
     :empty="trends.length === 0"
     empty-description="暂无趋势数据"
     :columns="columns"
     :data="trends"
-    :table-props="{ striped: true, maxHeight: 420 }"
   >
     <template #toolbar-right>
       <NButton type="primary" :loading="loading" @click="loadData"

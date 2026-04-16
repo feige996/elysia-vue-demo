@@ -64,11 +64,6 @@ const pagination = computed(() => ({
   },
 }));
 
-const tableProps = {
-  striped: true,
-  maxHeight: 560,
-};
-
 const readQueryString = (value: unknown) => {
   if (Array.isArray(value)) return value[0] ?? '';
   return typeof value === 'string' ? value : '';
@@ -259,7 +254,6 @@ const resetFilter = () => {
     :columns="columns"
     :data="rows"
     :pagination="pagination"
-    :table-props="tableProps"
   >
     <template #toolbar-extra>
       <div style="display: flex; gap: 8px; flex-wrap: wrap">

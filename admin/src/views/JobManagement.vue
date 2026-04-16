@@ -221,10 +221,6 @@ onMounted(() => {
     :columns="columns"
     :data="rows"
     :pagination="false"
-    :table-props="{
-      striped: true,
-      maxHeight: 'calc(100vh - 300px)',
-    }"
   >
     <template #toolbar-left>
       <SearchBar>

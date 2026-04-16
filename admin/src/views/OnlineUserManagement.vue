@@ -69,7 +69,6 @@ onMounted(() => {
     empty-description="暂无在线用户会话"
     :columns="columns"
     :data="rows"
-    :table-props="{ striped: true, maxHeight: 560 }"
   >
     <template #toolbar-left>
       <NText depth="3">{{ summaryText }}</NText>

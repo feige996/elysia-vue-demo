@@ -99,7 +99,6 @@ onMounted(() => {
     :columns="columns"
     :data="rows"
     :pagination="pagination"
-    :table-props="{ striped: true, maxHeight: 560 }"
   >
     <template #toolbar-left>
       <SearchBar>
