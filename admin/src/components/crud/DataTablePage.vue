@@ -23,6 +23,8 @@ type Props = {
   rowKey?: NonNullable<DataTableProps['rowKey']>;
   tableProps?: Partial<DataTableProps>;
   bordered?: boolean;
+  /** 是否自动在第一列展示序号（默认开启） */
+  showIndexColumn?: boolean;
   /**
    * fill：单表尽量占满主内容可视高度（默认）。
    * compact：表格下方还有大块内容（如仪表盘统计卡、缓存采样卡）时用较小 max-height。
@@ -38,6 +40,7 @@ const props = withDefaults(defineProps<Props>(), {
   pagination: false,
   bordered: false,
   tableLayout: 'fill',
+  showIndexColumn: true,
 });
 
 /** 为所有启用分页的表格统一补充总数摘要与快速跳转，各页仍可通过传入字段覆盖 */
@@ -80,6 +83,41 @@ const mergedTableProps = computed<Partial<DataTableProps>>(() => {
   }
   return out;
 });
+
+const hasBuiltInIndexColumn = computed(() =>
+  props.columns.some((column) => {
+    if (!column || typeof column !== 'object') return false;
+    const key = (column as { key?: unknown }).key;
+    return key === '__index' || key === 'index';
+  }),
+);
+
+const columnsWithSerial = computed<DataTableColumns<any>>(() => {
+  if (!props.showIndexColumn || hasBuiltInIndexColumn.value) {
+    return props.columns;
+  }
+  const indexColumn: DataTableColumns<any>[number] = {
+    title: '序号',
+    key: '__index',
+    width: 72,
+    align: 'center',
+    render: (_row: Record<string, unknown>, rowIndex: number) => {
+      if (props.pagination === false) {
+        return rowIndex + 1;
+      }
+      const currentPage = Number(props.pagination.page ?? 1);
+      const currentPageSize = Number(props.pagination.pageSize ?? 10);
+      const safePage =
+        Number.isFinite(currentPage) && currentPage > 0 ? currentPage : 1;
+      const safePageSize =
+        Number.isFinite(currentPageSize) && currentPageSize > 0
+          ? currentPageSize
+          : 10;
+      return (safePage - 1) * safePageSize + rowIndex + 1;
+    },
+  };
+  return [indexColumn, ...props.columns];
+});
 </script>
 
 <template>
@@ -107,7 +145,7 @@ const mergedTableProps = computed<Partial<DataTableProps>>(() => {
           :empty-description="props.emptyDescription"
         >
           <NDataTable
-            :columns="props.columns"
+            :columns="columnsWithSerial"
             :data="props.data"
             v-bind="mergedTableProps"
             :loading="props.loading"
