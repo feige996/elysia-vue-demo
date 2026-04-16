@@ -36,6 +36,7 @@ const IpBlacklistManagement = () =>
 const UserCenterPage = () => import('../views/UserCenterPage.vue');
 const StorageManagement = () => import('../views/StorageManagement.vue');
 const DashboardConsole = () => import('../views/DashboardConsole.vue');
+const TableOpsDemoPage = () => import('../views/TableOpsDemoPage.vue');
 
 const resolveMenuComponent = (menu: MenuTreeEntity) => {
   const componentKey = menu.component ?? '';
@@ -51,6 +52,7 @@ const resolveMenuComponent = (menu: MenuTreeEntity) => {
   if (componentKey === 'monitor/job/index') return JobManagement;
   if (componentKey === 'monitor/cache/index') return CacheMonitorManagement;
   if (componentKey === 'system/storage/index') return StorageManagement;
+  if (componentKey === 'system/table-ops-demo/index') return TableOpsDemoPage;
   if (componentKey === 'dashboard/console/index') return DashboardConsole;
   if (componentKey === 'security/ip-blacklist/index')
     return IpBlacklistManagement;
@@ -145,6 +147,10 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'system/user-center',
         component: UserCenterPage,
+      },
+      {
+        path: 'demo/table-ops',
+        component: TableOpsDemoPage,
       },
     ],
   },

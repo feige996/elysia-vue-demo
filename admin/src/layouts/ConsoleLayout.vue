@@ -37,7 +37,20 @@ const mapMenuTreeToOptions = (tree: MenuTreeEntity[]): MenuOption[] =>
         : undefined,
     }));
 
-const menuOptions = computed(() => mapMenuTreeToOptions(authStore.menuTree));
+const menuOptions = computed(() => {
+  const baseOptions = mapMenuTreeToOptions(authStore.menuTree);
+  const hasDemoMenu = baseOptions.some(
+    (item) => item.key === '/demo/table-ops',
+  );
+  if (hasDemoMenu) return baseOptions;
+  return [
+    ...baseOptions,
+    {
+      key: '/demo/table-ops',
+      label: '表格能力演示',
+    },
+  ];
+});
 const selectedMenuKey = computed<string | null>(() =>
   typeof route.path === 'string' ? route.path : null,
 );
