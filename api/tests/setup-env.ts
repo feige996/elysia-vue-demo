@@ -54,3 +54,6 @@ if (existsSync(envPath)) {
     process.env[key] = value;
   }
 }
+
+// Keep test behavior deterministic in CI when api/.env is absent.
+process.env.FEATURE_IP_BLACKLIST_ENABLED ??= 'true';
