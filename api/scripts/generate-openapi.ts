@@ -10,6 +10,8 @@ const ensureEnv = () => {
   process.env.PG_USER ??= 'postgres';
   process.env.PG_PASSWORD ??= 'postgres';
   process.env.PG_DATABASE ??= 'elysia_demo';
+  // Keep generated spec deterministic across local and CI.
+  process.env.FEATURE_MONITOR_ENABLED ??= 'true';
 };
 
 const generate = async () => {

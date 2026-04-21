@@ -22,6 +22,7 @@ jobs:
       JWT_SECRET: ci-jwt-secret
       JWT_REFRESH_EXPIRES_IN_SECONDS: 604800
       E2E_API_BASE_URL: http://127.0.0.1:3000
+      FEATURE_MONITOR_ENABLED: 'true'
     services:
       postgres:
         image: postgres:16-alpine
@@ -112,6 +113,7 @@ jobs:
           exit 1
 
       - name: Admin E2E (auth + write smoke)
+        if: github.event_name == 'push'
         run: bun run test:e2e:admin
 
       - name: Stop API
