@@ -15,10 +15,21 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          manualChunks: {
-            'vendor-vue': ['vue', 'vue-router', 'pinia'],
-            'vendor-ui': ['naive-ui'],
-            'vendor-eden': ['@elysiajs/eden'],
+          manualChunks(id) {
+            if (
+              id.includes('/node_modules/vue/') ||
+              id.includes('/node_modules/vue-router/') ||
+              id.includes('/node_modules/pinia/')
+            ) {
+              return 'vendor-vue';
+            }
+            if (id.includes('/node_modules/naive-ui/')) {
+              return 'vendor-ui';
+            }
+            if (id.includes('/node_modules/@elysiajs/eden/')) {
+              return 'vendor-eden';
+            }
+            return undefined;
           },
         },
       },
