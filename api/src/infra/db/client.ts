@@ -1,4 +1,4 @@
-import { count } from 'drizzle-orm';
+import { count, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { env } from '../../shared/config/env';
@@ -37,6 +37,14 @@ import {
 
 const sqlClient = postgres(env.DATABASE_URL, { prepare: false });
 export const db = drizzle(sqlClient);
+
+const reseedSerialId = async (tableName: string) => {
+  await db.execute(
+    sql.raw(
+      `SELECT setval(pg_get_serial_sequence('${tableName}', 'id'), COALESCE(MAX(id), 1), MAX(id) IS NOT NULL) FROM "${tableName}";`,
+    ),
+  );
+};
 
 export const seedDatabase = async () => {
   await checkDatabaseHealth();
@@ -131,6 +139,22 @@ export const seedDatabase = async () => {
     .insert(sysDeptsTable)
     .values(defaultSysDepts)
     .onConflictDoNothing({ target: sysDeptsTable.code });
+
+  // Ensure serial sequences continue after explicit seed IDs.
+  await reseedSerialId('users');
+  await reseedSerialId('articles');
+  await reseedSerialId('sys_users');
+  await reseedSerialId('sys_roles');
+  await reseedSerialId('sys_permissions');
+  await reseedSerialId('sys_user_roles');
+  await reseedSerialId('sys_role_permissions');
+  await reseedSerialId('sys_menus');
+  await reseedSerialId('sys_role_menus');
+  await reseedSerialId('sys_depts');
+  await reseedSerialId('sys_dict_types');
+  await reseedSerialId('sys_dict_items');
+  await reseedSerialId('sys_configs');
+  await reseedSerialId('sys_jobs');
 };
 
 export const checkDatabaseHealth = async () => {
