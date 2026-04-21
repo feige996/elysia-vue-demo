@@ -27,7 +27,7 @@
     "ali-oss": "^6.23.0",
     "cos-js-sdk-v5": "^1.10.1",
     "croner": "^10.0.1",
-    "drizzle-orm": "^0.44.6",
+    "drizzle-orm": "^0.45.2",
     "elysia": "^1.4.10",
     "elysia-di": "^1.0.7",
     "elysia-rate-limit": "^4.5.1",
