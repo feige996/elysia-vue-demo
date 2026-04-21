@@ -15,6 +15,13 @@
       "when": 1776077789477,
       "tag": "0001_futuristic_purple_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776768588817,
+      "tag": "0002_many_guardsmen",
+      "breakpoints": true
     }
   ]
 }
