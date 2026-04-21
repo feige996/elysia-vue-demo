@@ -1,5 +1,7 @@
-import OSS from 'ali-oss';
+import { createRequire } from 'node:module';
 import { IStorage } from './types';
+
+const require = createRequire(import.meta.url);
 
 export class OssStorage implements IStorage {
   private readonly client: any;
@@ -13,6 +15,9 @@ export class OssStorage implements IStorage {
     bucket: string;
     cdnUrl?: string;
   }) {
+    // Lazily load ali-oss to avoid module init side effects
+    // in environments that never use OSS storage (e.g. tests/CI).
+    const OSS = require('ali-oss');
     this.client = new OSS({
       region: options.region,
       accessKeyId: options.accessKeyId,
