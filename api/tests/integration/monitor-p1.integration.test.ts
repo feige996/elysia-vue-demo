@@ -122,7 +122,7 @@ describe('Monitor P1 integration', () => {
       'PUT',
       {
         type: 'local',
-        local: { baseDir: 'uploads', baseUrl: 'http://localhost:9000/uploads' },
+        local: { baseDir: 'uploads', baseUrl: 'http://localhost:3000/uploads' },
         oss: {},
         cos: {},
       },
@@ -135,7 +135,7 @@ describe('Monitor P1 integration', () => {
       'POST',
       {
         type: 'local',
-        local: { baseDir: 'uploads', baseUrl: 'http://localhost:9000/uploads' },
+        local: { baseDir: 'uploads', baseUrl: 'http://localhost:3000/uploads' },
         oss: {},
         cos: {},
       },

@@ -42,7 +42,7 @@ bun run dev
 
 默认地址：
 
-- API：`http://localhost:9000`
+- API：`http://localhost:3000`
 - Admin：`http://localhost:7000`
 - Web：`http://localhost:8000`
 
@@ -160,7 +160,7 @@ bun run --cwd api test:integration
 
 ### 4) 端口冲突怎么处理？
 
-- 默认端口：API `9000`、Admin `7000`、Web `8000`。
+- 默认端口：API `3000`、Admin `7000`、Web `8000`。
 - 若冲突，请按各子项目配置修改端口后重启。
 
 ## 文档索引

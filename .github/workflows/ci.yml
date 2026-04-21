@@ -16,12 +16,12 @@ jobs:
       PG_USER: postgres
       PG_PASSWORD: postgres
       PG_DATABASE: elysia_demo
-      API_PORT: 9000
+      API_PORT: 3000
       ADMIN_PORT: 7000
       WEB_PORT: 8000
       JWT_SECRET: ci-jwt-secret
       JWT_REFRESH_EXPIRES_IN_SECONDS: 604800
-      E2E_API_BASE_URL: http://127.0.0.1:9000
+      E2E_API_BASE_URL: http://127.0.0.1:3000
     services:
       postgres:
         image: postgres:16-alpine
@@ -102,7 +102,7 @@ jobs:
           bun run --cwd api start &
           echo $! > /tmp/api-ci.pid
           for i in $(seq 1 60); do
-            if curl -sf http://127.0.0.1:9000/ready >/dev/null; then
+            if curl -sf http://127.0.0.1:3000/ready >/dev/null; then
               echo "API ready"
               exit 0
             fi

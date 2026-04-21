@@ -3,7 +3,7 @@ const baseUrl =
     globalThis as {
       process?: { env?: Record<string, string | undefined> };
     }
-  ).process?.env?.E2E_API_BASE_URL || 'http://localhost:9000';
+  ).process?.env?.E2E_API_BASE_URL || 'http://localhost:3000';
 
 const assert = (condition: unknown, message: string) => {
   if (!condition) throw new Error(message);
