@@ -223,7 +223,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* 填满布局里 RouterView 宿主高度（由 ConsoleLayout flex 算出），不用 100dvh 以免与主内容槽不一致出现外层滚动条 */
+/* 填满布局里 RouterView 宿主高度（由 AdminLayout flex 算出），不用 100dvh 以免与主内容槽不一致出现外层滚动条 */
 .storage-page-root {
   flex: 1;
   min-height: 0;

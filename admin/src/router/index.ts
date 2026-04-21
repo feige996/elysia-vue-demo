@@ -14,7 +14,7 @@ const DYNAMIC_ROUTE_NAME_PREFIX = 'dynamic:';
 
 const dynamicRouteNames = new Set<string>();
 
-const ConsoleLayout = () => import('../layouts/ConsoleLayout.vue');
+const AdminLayout = () => import('../layouts/AdminLayout.vue');
 const Forbidden = () => import('../views/Forbidden.vue');
 const LoginPage = () => import('../views/LoginPage.vue');
 const RegisterPage = () => import('../views/RegisterPage.vue');
@@ -158,7 +158,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'root',
-    component: ConsoleLayout,
+    component: AdminLayout,
     children: [
       {
         path: '',
