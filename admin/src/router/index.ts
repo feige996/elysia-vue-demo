@@ -15,6 +15,8 @@ const DYNAMIC_ROUTE_NAME_PREFIX = 'dynamic:';
 const dynamicRouteNames = new Set<string>();
 
 const AdminLayout = () => import('../layouts/AdminLayout.vue');
+const AuthLayout = () => import('../layouts/AuthLayout.vue');
+const BlankLayout = () => import('../layouts/BlankLayout.vue');
 const Forbidden = () => import('../views/Forbidden.vue');
 const LoginPage = () => import('../views/LoginPage.vue');
 const RegisterPage = () => import('../views/RegisterPage.vue');
@@ -128,32 +130,39 @@ export const ensureAuthDynamicRoutes = (menuTree: MenuTreeEntity[]) => {
 
 const routes: RouteRecordRaw[] = [
   {
-    path: '/login',
-    component: LoginPage,
+    path: '/',
+    component: AuthLayout,
     meta: {
       public: true,
     },
+    children: [
+      {
+        path: '/login',
+        component: LoginPage,
+      },
+      {
+        path: '/register',
+        component: RegisterPage,
+      },
+      {
+        path: '/forgot-password',
+        component: ForgotPasswordPage,
+      },
+      {
+        path: '/reset-password',
+        component: ResetPasswordPage,
+      },
+    ],
   },
   {
-    path: '/register',
-    component: RegisterPage,
-    meta: {
-      public: true,
-    },
-  },
-  {
-    path: '/forgot-password',
-    component: ForgotPasswordPage,
-    meta: {
-      public: true,
-    },
-  },
-  {
-    path: '/reset-password',
-    component: ResetPasswordPage,
-    meta: {
-      public: true,
-    },
+    path: '/',
+    component: BlankLayout,
+    children: [
+      {
+        path: '/403',
+        component: Forbidden,
+      },
+    ],
   },
   {
     path: '/',
@@ -163,10 +172,6 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         redirect: '/login',
-      },
-      {
-        path: '403',
-        component: Forbidden,
       },
       {
         path: 'system/user-center',
