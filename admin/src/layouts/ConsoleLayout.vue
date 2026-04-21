@@ -13,6 +13,7 @@ import {
 } from 'naive-ui';
 import { useRoute, useRouter } from 'vue-router';
 import type { MenuTreeEntity } from '../../../api/src/shared/types/entities';
+import { DEMO_MENU_CHILD_KEYS, DEMO_MENU_CONFIG } from './config';
 import { useAuthStore } from '../store/auth';
 import { useUiStore } from '../store/ui';
 
@@ -25,10 +26,6 @@ const uiStore = useUiStore();
 const welcomeText = computed(() =>
   authStore.profile ? `欢迎你，${authStore.profile.name}` : '未登录',
 );
-
-const DEMO_PARENT_KEY = '/demo';
-const DEMO_DEFAULT_CHILD_KEY = '/demo/charts';
-const DEMO_RICH_TEXT_CHILD_KEY = '/demo/rich-text';
 
 const mapMenuTreeToOptions = (tree: MenuTreeEntity[]): MenuOption[] =>
   tree
@@ -80,26 +77,25 @@ const menuOptions = computed(() => {
   const baseOptions = mapMenuTreeToOptions(authStore.menuTree);
 
   // 如果后端已经配置了“示例页”父级，优先使用后端结构
-  if (hasOptionKeyDeep(baseOptions, DEMO_PARENT_KEY)) {
+  if (hasOptionKeyDeep(baseOptions, DEMO_MENU_CONFIG.parent.key)) {
     return baseOptions;
   }
 
   // 将 demo 子项从原位置剥离，统一归到“示例页”下
   const strippedOptions = removeKeysDeep(
     baseOptions,
-    new Set(['/demo/table-ops', '/demo/charts', DEMO_RICH_TEXT_CHILD_KEY]),
+    new Set(DEMO_MENU_CHILD_KEYS),
   );
 
   return [
     ...strippedOptions,
     {
-      key: DEMO_PARENT_KEY,
-      label: '示例页',
-      children: [
-        { key: '/demo/charts', label: '图表能力演示' },
-        { key: '/demo/table-ops', label: '表格能力演示' },
-        { key: DEMO_RICH_TEXT_CHILD_KEY, label: '富文本能力演示' },
-      ],
+      key: DEMO_MENU_CONFIG.parent.key,
+      label: DEMO_MENU_CONFIG.parent.label,
+      children: DEMO_MENU_CONFIG.children.map((item) => ({
+        key: item.key,
+        label: item.label,
+      })),
     },
   ];
 });
@@ -108,8 +104,8 @@ const selectedMenuKey = computed<string | null>(() =>
 );
 
 const onMenuSelect = (key: string) => {
-  if (key === DEMO_PARENT_KEY) {
-    void router.push(DEMO_DEFAULT_CHILD_KEY);
+  if (key === DEMO_MENU_CONFIG.parent.key) {
+    void router.push(DEMO_MENU_CONFIG.defaultChildKey);
     return;
   }
   void router.push(key);
