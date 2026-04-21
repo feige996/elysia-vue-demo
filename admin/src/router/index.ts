@@ -137,19 +137,23 @@ const routes: RouteRecordRaw[] = [
     },
     children: [
       {
-        path: '/login',
+        path: '',
+        redirect: '/login',
+      },
+      {
+        path: 'login',
         component: LoginPage,
       },
       {
-        path: '/register',
+        path: 'register',
         component: RegisterPage,
       },
       {
-        path: '/forgot-password',
+        path: 'forgot-password',
         component: ForgotPasswordPage,
       },
       {
-        path: '/reset-password',
+        path: 'reset-password',
         component: ResetPasswordPage,
       },
     ],
@@ -159,7 +163,7 @@ const routes: RouteRecordRaw[] = [
     component: BlankLayout,
     children: [
       {
-        path: '/403',
+        path: '403',
         component: Forbidden,
       },
     ],
@@ -169,10 +173,6 @@ const routes: RouteRecordRaw[] = [
     name: 'root',
     component: AdminLayout,
     children: [
-      {
-        path: '',
-        redirect: '/login',
-      },
       {
         path: 'system/user-center',
         component: UserCenterPage,
