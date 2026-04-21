@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "test": "bun test --preload ./tests/setup-env.ts",
     "test:unit": "bun test --preload ./tests/setup-env.ts tests/unit",
-    "test:integration": "bun test --preload ./tests/setup-env.ts tests/integration",
+    "test:integration": "bun test --max-concurrency=1 --preload ./tests/setup-env.ts tests/integration",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
