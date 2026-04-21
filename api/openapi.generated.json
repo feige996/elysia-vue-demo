@@ -48,6 +48,582 @@
         "operationId": "getReady"
       }
     },
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "用户注册",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "account",
+                  "password",
+                  "name"
+                ],
+                "properties": {
+                  "account": {
+                    "minLength": 3,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "password": {
+                    "minLength": 6,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "account",
+                  "password",
+                  "name"
+                ],
+                "properties": {
+                  "account": {
+                    "minLength": 3,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "password": {
+                    "minLength": 6,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "account",
+                  "password",
+                  "name"
+                ],
+                "properties": {
+                  "account": {
+                    "minLength": 3,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "password": {
+                    "minLength": 6,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Response for status 201",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "data"
+                  ],
+                  "properties": {
+                    "code": {
+                      "const": 0,
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "account",
+                        "name",
+                        "role"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "number"
+                        },
+                        "account": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "minLength": 1,
+                          "maxLength": 64,
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Response for status 400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Response for status 409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiAuthRegister"
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "忘记密码（生成重置令牌）",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "account",
+                  "channel"
+                ],
+                "properties": {
+                  "account": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "email",
+                      "sms"
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "account",
+                  "channel"
+                ],
+                "properties": {
+                  "account": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "email",
+                      "sms"
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "account",
+                  "channel"
+                ],
+                "properties": {
+                  "account": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "email",
+                      "sms"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "data"
+                  ],
+                  "properties": {
+                    "code": {
+                      "const": 0,
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "sent",
+                        "channel",
+                        "maskedTarget"
+                      ],
+                      "properties": {
+                        "sent": {
+                          "type": "boolean"
+                        },
+                        "channel": {
+                          "type": "string",
+                          "enum": [
+                            "email",
+                            "sms"
+                          ]
+                        },
+                        "maskedTarget": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Response for status 400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiAuthForgot-password"
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "重置密码",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "account",
+                  "channel",
+                  "verifyCode",
+                  "newPassword"
+                ],
+                "properties": {
+                  "account": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "email",
+                      "sms"
+                    ]
+                  },
+                  "verifyCode": {
+                    "minLength": 6,
+                    "maxLength": 6,
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "minLength": 6,
+                    "maxLength": 64,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "account",
+                  "channel",
+                  "verifyCode",
+                  "newPassword"
+                ],
+                "properties": {
+                  "account": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "email",
+                      "sms"
+                    ]
+                  },
+                  "verifyCode": {
+                    "minLength": 6,
+                    "maxLength": 6,
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "minLength": 6,
+                    "maxLength": 64,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "account",
+                  "channel",
+                  "verifyCode",
+                  "newPassword"
+                ],
+                "properties": {
+                  "account": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "email",
+                      "sms"
+                    ]
+                  },
+                  "verifyCode": {
+                    "minLength": 6,
+                    "maxLength": 6,
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "minLength": 6,
+                    "maxLength": 64,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "data"
+                  ],
+                  "properties": {
+                    "code": {
+                      "const": 0,
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "updated"
+                      ],
+                      "properties": {
+                        "updated": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Response for status 400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Response for status 401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiAuthReset-password"
+      }
+    },
     "/api/auth/login": {
       "post": {
         "tags": [
@@ -173,11 +749,9 @@
                               "type": "string"
                             },
                             "role": {
-                              "type": "string",
-                              "enum": [
-                                "admin",
-                                "editor"
-                              ]
+                              "minLength": 1,
+                              "maxLength": 64,
+                              "type": "string"
                             }
                           }
                         }
@@ -624,6 +1198,651 @@
         "operationId": "postApiAuthLogout"
       }
     },
+    "/api/auth/profile": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "获取当前用户信息",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "data"
+                  ],
+                  "properties": {
+                    "code": {
+                      "const": 0,
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "account",
+                        "name",
+                        "role",
+                        "email",
+                        "mobile",
+                        "avatarUrl"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "number"
+                        },
+                        "account": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "nullable": true,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "email": {
+                          "nullable": true,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "mobile": {
+                          "nullable": true,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "avatarUrl": {
+                          "nullable": true,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Response for status 401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Response for status 404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getApiAuthProfile"
+      },
+      "put": {
+        "tags": [
+          "User"
+        ],
+        "summary": "更新当前用户信息",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "email": {
+                    "anyOf": [
+                      {
+                        "format": "email",
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "mobile": {
+                    "anyOf": [
+                      {
+                        "maxLength": 32,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "avatarUrl": {
+                    "anyOf": [
+                      {
+                        "format": "uri",
+                        "maxLength": 512,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "email": {
+                    "anyOf": [
+                      {
+                        "format": "email",
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "mobile": {
+                    "anyOf": [
+                      {
+                        "maxLength": 32,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "avatarUrl": {
+                    "anyOf": [
+                      {
+                        "format": "uri",
+                        "maxLength": 512,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "email": {
+                    "anyOf": [
+                      {
+                        "format": "email",
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "mobile": {
+                    "anyOf": [
+                      {
+                        "maxLength": 32,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "avatarUrl": {
+                    "anyOf": [
+                      {
+                        "format": "uri",
+                        "maxLength": 512,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "data"
+                  ],
+                  "properties": {
+                    "code": {
+                      "const": 0,
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "account",
+                        "name",
+                        "role",
+                        "email",
+                        "mobile",
+                        "avatarUrl"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "number"
+                        },
+                        "account": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "nullable": true,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "email": {
+                          "nullable": true,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "mobile": {
+                          "nullable": true,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "avatarUrl": {
+                          "nullable": true,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Response for status 400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Response for status 401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "putApiAuthProfile"
+      }
+    },
+    "/api/auth/password": {
+      "put": {
+        "tags": [
+          "User"
+        ],
+        "summary": "修改当前用户密码",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ],
+                "properties": {
+                  "currentPassword": {
+                    "minLength": 6,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "minLength": 6,
+                    "maxLength": 64,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ],
+                "properties": {
+                  "currentPassword": {
+                    "minLength": 6,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "minLength": 6,
+                    "maxLength": 64,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ],
+                "properties": {
+                  "currentPassword": {
+                    "minLength": 6,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "minLength": 6,
+                    "maxLength": 64,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "data"
+                  ],
+                  "properties": {
+                    "code": {
+                      "const": 0,
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "updated"
+                      ],
+                      "properties": {
+                        "updated": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Response for status 400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Response for status 401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "putApiAuthPassword"
+      }
+    },
     "/api/users": {
       "get": {
         "tags": [
@@ -744,11 +1963,9 @@
                                 "type": "string"
                               },
                               "role": {
-                                "type": "string",
-                                "enum": [
-                                  "admin",
-                                  "editor"
-                                ]
+                                "minLength": 1,
+                                "maxLength": 64,
+                                "type": "string"
                               }
                             }
                           }
@@ -884,11 +2101,9 @@
                     "type": "string"
                   },
                   "role": {
-                    "type": "string",
-                    "enum": [
-                      "admin",
-                      "editor"
-                    ]
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
                   }
                 }
               }
@@ -913,11 +2128,9 @@
                     "type": "string"
                   },
                   "role": {
-                    "type": "string",
-                    "enum": [
-                      "admin",
-                      "editor"
-                    ]
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
                   }
                 }
               }
@@ -942,11 +2155,9 @@
                     "type": "string"
                   },
                   "role": {
-                    "type": "string",
-                    "enum": [
-                      "admin",
-                      "editor"
-                    ]
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
                   }
                 }
               }
@@ -996,11 +2207,9 @@
                           "type": "string"
                         },
                         "role": {
-                          "type": "string",
-                          "enum": [
-                            "admin",
-                            "editor"
-                          ]
+                          "minLength": 1,
+                          "maxLength": 64,
+                          "type": "string"
                         }
                       }
                     }
@@ -3447,11 +4656,9 @@
                             "type": "string"
                           },
                           "role": {
-                            "type": "string",
-                            "enum": [
-                              "admin",
-                              "editor"
-                            ]
+                            "minLength": 1,
+                            "maxLength": 64,
+                            "type": "string"
                           }
                         }
                       }
@@ -3568,11 +4775,9 @@
                     "type": "string"
                   },
                   "role": {
-                    "type": "string",
-                    "enum": [
-                      "admin",
-                      "editor"
-                    ]
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
                   }
                 }
               }
@@ -3592,11 +4797,9 @@
                     "type": "string"
                   },
                   "role": {
-                    "type": "string",
-                    "enum": [
-                      "admin",
-                      "editor"
-                    ]
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
                   }
                 }
               }
@@ -3616,11 +4819,9 @@
                     "type": "string"
                   },
                   "role": {
-                    "type": "string",
-                    "enum": [
-                      "admin",
-                      "editor"
-                    ]
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
                   }
                 }
               }
@@ -3670,11 +4871,9 @@
                           "type": "string"
                         },
                         "role": {
-                          "type": "string",
-                          "enum": [
-                            "admin",
-                            "editor"
-                          ]
+                          "minLength": 1,
+                          "maxLength": 64,
+                          "type": "string"
                         }
                       }
                     }
@@ -5245,6 +6444,2435 @@
         "operationId": "getApiDictsByCodeItems"
       }
     },
+    "/api/dict-types": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "查询字典类型列表",
+        "description": "需要管理员权限，返回全部未删除字典类型。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "getApiDict-types"
+      },
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "新增字典类型",
+        "description": "需要管理员权限，字典编码必须唯一。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "name"
+                ],
+                "properties": {
+                  "code": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "name"
+                ],
+                "properties": {
+                  "code": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "name"
+                ],
+                "properties": {
+                  "code": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Response for status 201",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "data"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "code",
+                        "name",
+                        "status",
+                        "remark"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "number"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "remark": {
+                          "nullable": true,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Response for status 400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Response for status 409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiDict-types"
+      }
+    },
+    "/api/dict-types/{id}": {
+      "put": {
+        "tags": [
+          "System"
+        ],
+        "summary": "编辑字典类型",
+        "description": "需要管理员权限，按 id 更新字典类型。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "name"
+                ],
+                "properties": {
+                  "code": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "name"
+                ],
+                "properties": {
+                  "code": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "name"
+                ],
+                "properties": {
+                  "code": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "data"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "code",
+                        "name",
+                        "status",
+                        "remark"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "number"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "remark": {
+                          "nullable": true,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Response for status 400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Response for status 404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Response for status 409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "putApiDict-typesById"
+      },
+      "delete": {
+        "tags": [
+          "System"
+        ],
+        "summary": "删除字典类型",
+        "description": "需要管理员权限，若存在字典项则拒绝删除。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Response for status 400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Response for status 404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Response for status 409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "deleteApiDict-typesById"
+      }
+    },
+    "/api/dict-types/{id}/toggle": {
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "切换字典类型状态",
+        "description": "需要管理员权限，status: 0 禁用, 1 启用。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiDict-typesByIdToggle"
+      }
+    },
+    "/api/dict-items": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "查询字典项列表",
+        "description": "需要管理员权限，可按字典类型过滤。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "dictTypeId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 1,
+                  "type": "number"
+                }
+              ]
+            }
+          }
+        ],
+        "operationId": "getApiDict-items"
+      },
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "新增字典项",
+        "description": "需要管理员权限，value 在同字典类型下唯一。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "dictTypeId",
+                  "label",
+                  "value"
+                ],
+                "properties": {
+                  "dictTypeId": {
+                    "minimum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "label": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "value": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "tagType": {
+                    "maxLength": 32,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "minimum": 0,
+                    "maximum": 9999,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 9999,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "isDefault": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "dictTypeId",
+                  "label",
+                  "value"
+                ],
+                "properties": {
+                  "dictTypeId": {
+                    "minimum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "label": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "value": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "tagType": {
+                    "maxLength": 32,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "minimum": 0,
+                    "maximum": 9999,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 9999,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "isDefault": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "dictTypeId",
+                  "label",
+                  "value"
+                ],
+                "properties": {
+                  "dictTypeId": {
+                    "minimum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "label": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "value": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "tagType": {
+                    "maxLength": 32,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "minimum": 0,
+                    "maximum": 9999,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 9999,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "isDefault": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Response for status 400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Response for status 404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Response for status 409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiDict-items"
+      }
+    },
+    "/api/dict-items/{id}": {
+      "put": {
+        "tags": [
+          "System"
+        ],
+        "summary": "编辑字典项",
+        "description": "需要管理员权限，按 id 更新字典项。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "dictTypeId",
+                  "label",
+                  "value"
+                ],
+                "properties": {
+                  "dictTypeId": {
+                    "minimum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "label": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "value": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "tagType": {
+                    "maxLength": 32,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "minimum": 0,
+                    "maximum": 9999,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 9999,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "isDefault": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "dictTypeId",
+                  "label",
+                  "value"
+                ],
+                "properties": {
+                  "dictTypeId": {
+                    "minimum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "label": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "value": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "tagType": {
+                    "maxLength": 32,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "minimum": 0,
+                    "maximum": 9999,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 9999,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "isDefault": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "dictTypeId",
+                  "label",
+                  "value"
+                ],
+                "properties": {
+                  "dictTypeId": {
+                    "minimum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "label": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "value": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "tagType": {
+                    "maxLength": 32,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "minimum": 0,
+                    "maximum": 9999,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 9999,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "isDefault": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Response for status 400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Response for status 404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Response for status 409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "putApiDict-itemsById"
+      },
+      "delete": {
+        "tags": [
+          "System"
+        ],
+        "summary": "删除字典项",
+        "description": "需要管理员权限，软删除字典项。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Response for status 400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Response for status 404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "deleteApiDict-itemsById"
+      }
+    },
+    "/api/dict-items/{id}/toggle": {
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "切换字典项状态",
+        "description": "需要管理员权限，status: 0 禁用, 1 启用。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiDict-itemsByIdToggle"
+      }
+    },
+    "/api/depts/tree": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "查询部门树",
+        "description": "需要管理员权限，返回部门树结构。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "getApiDeptsTree"
+      }
+    },
+    "/api/depts": {
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "新增部门",
+        "description": "需要管理员权限，部门编码全局唯一。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "code"
+                ],
+                "properties": {
+                  "parentId": {
+                    "minimum": 0,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "code": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "minimum": 0,
+                    "maximum": 9999,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 9999,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "leader": {
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "phone": {
+                    "maxLength": 32,
+                    "type": "string"
+                  },
+                  "email": {
+                    "maxLength": 128,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "code"
+                ],
+                "properties": {
+                  "parentId": {
+                    "minimum": 0,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "code": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "minimum": 0,
+                    "maximum": 9999,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 9999,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "leader": {
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "phone": {
+                    "maxLength": 32,
+                    "type": "string"
+                  },
+                  "email": {
+                    "maxLength": 128,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "code"
+                ],
+                "properties": {
+                  "parentId": {
+                    "minimum": 0,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "code": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "minimum": 0,
+                    "maximum": 9999,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 9999,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "leader": {
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "phone": {
+                    "maxLength": 32,
+                    "type": "string"
+                  },
+                  "email": {
+                    "maxLength": 128,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiDepts"
+      }
+    },
+    "/api/depts/{id}": {
+      "put": {
+        "tags": [
+          "System"
+        ],
+        "summary": "编辑部门",
+        "description": "需要管理员权限，支持更新父级、排序与负责人信息。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "code"
+                ],
+                "properties": {
+                  "parentId": {
+                    "minimum": 0,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "code": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "minimum": 0,
+                    "maximum": 9999,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 9999,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "leader": {
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "phone": {
+                    "maxLength": 32,
+                    "type": "string"
+                  },
+                  "email": {
+                    "maxLength": 128,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "code"
+                ],
+                "properties": {
+                  "parentId": {
+                    "minimum": 0,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "code": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "minimum": 0,
+                    "maximum": 9999,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 9999,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "leader": {
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "phone": {
+                    "maxLength": 32,
+                    "type": "string"
+                  },
+                  "email": {
+                    "maxLength": 128,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "code"
+                ],
+                "properties": {
+                  "parentId": {
+                    "minimum": 0,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "code": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "minimum": 0,
+                    "maximum": 9999,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 9999,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "leader": {
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "phone": {
+                    "maxLength": 32,
+                    "type": "string"
+                  },
+                  "email": {
+                    "maxLength": 128,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "putApiDeptsById"
+      },
+      "delete": {
+        "tags": [
+          "System"
+        ],
+        "summary": "删除部门",
+        "description": "需要管理员权限，存在子部门时拒绝删除。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "deleteApiDeptsById"
+      }
+    },
+    "/api/depts/{id}/toggle": {
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "切换部门状态",
+        "description": "需要管理员权限，status: 0 禁用, 1 启用。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiDeptsByIdToggle"
+      }
+    },
     "/api/configs/{key}": {
       "get": {
         "tags": [
@@ -5389,13 +9017,225 @@
         "operationId": "getApiConfigsByKey"
       }
     },
-    "/api/audit-logs": {
+    "/api/login-logs": {
       "get": {
         "tags": [
           "System"
         ],
-        "summary": "查询操作日志",
-        "description": "需要管理员权限，支持模块、账号、成功状态与时间范围筛选。",
+        "summary": "查询登录日志",
+        "description": "需要管理员权限，支持账号、IP、结果与时间范围筛选。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 1,
+                  "default": 1,
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 1,
+                  "maximum": 100,
+                  "default": 20,
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          {
+            "name": "account",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "requestIp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "success",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "maximum": 1,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 0,
+                  "maximum": 1,
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getApiLogin-logs"
+      }
+    },
+    "/api/api-catalog": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "查询 API 目录",
+        "description": "需要管理员权限，返回系统 API 权限点目录（只读）。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 1,
+                  "default": 1,
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 1,
+                  "maximum": 100,
+                  "default": 20,
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "module",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "maximum": 1,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 0,
+                  "maximum": 1,
+                  "type": "number"
+                }
+              ]
+            }
+          }
+        ],
+        "operationId": "getApiApi-catalog"
+      }
+    },
+    "/api/audit-logs/stats": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "查询操作日志聚合统计",
+        "description": "需要管理员权限，返回总量、成功失败和 Top 模块。",
         "security": [
           {
             "bearerAuth": []
@@ -5448,6 +9288,296 @@
           },
           {
             "name": "module",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "operatorUserId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 1,
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          {
+            "name": "operatorAccount",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "success",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "maximum": 1,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 0,
+                  "maximum": 1,
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getApiAudit-logsStats"
+      }
+    },
+    "/api/audit-logs/export": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "导出操作日志 CSV",
+        "description": "需要管理员权限，按当前筛选导出，最多导出最近匹配的 5000 条。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 1,
+                  "default": 1,
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 1,
+                  "maximum": 100,
+                  "default": 20,
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          {
+            "name": "module",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "operatorUserId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 1,
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          {
+            "name": "operatorAccount",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "success",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "maximum": 1,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 0,
+                  "maximum": 1,
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getApiAudit-logsExport"
+      }
+    },
+    "/api/audit-logs": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "查询操作日志",
+        "description": "需要管理员权限，支持模块、动作、账号、成功状态与时间范围筛选。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 1,
+                  "default": 1,
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 1,
+                  "maximum": 100,
+                  "default": 20,
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          {
+            "name": "module",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
             "in": "query",
             "required": false,
             "schema": {
@@ -5520,6 +9650,1158 @@
           }
         ],
         "operationId": "getApiAudit-logs"
+      }
+    },
+    "/api/monitor/dashboard/summary": {
+      "get": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "查询控制台摘要",
+        "description": "需要管理员权限，返回登录、在线、任务和缓存统计。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "getApiMonitorDashboardSummary"
+      }
+    },
+    "/api/monitor/dashboard/operation-trend": {
+      "get": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "查询操作趋势",
+        "description": "需要管理员权限，返回近 N 天操作日志成功/失败聚合。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "maximum": 30,
+              "default": 7,
+              "anyOf": [
+                {
+                  "format": "numeric",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 1,
+                  "maximum": 30,
+                  "default": 7,
+                  "type": "number"
+                }
+              ]
+            }
+          }
+        ],
+        "operationId": "getApiMonitorDashboardOperation-trend"
+      }
+    },
+    "/api/monitor/storage/config": {
+      "get": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "查询存储中心配置",
+        "description": "需要管理员权限，返回当前存储配置（敏感字段脱敏）。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "getApiMonitorStorageConfig"
+      },
+      "put": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "更新存储中心配置",
+        "description": "需要管理员权限，最小版仅保存配置到系统配置中心，运行时生效以重启后读取为准。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "local",
+                      "oss",
+                      "cos"
+                    ]
+                  },
+                  "local": {
+                    "type": "object",
+                    "properties": {
+                      "baseDir": {
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "baseUrl": {
+                        "minLength": 1,
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "oss": {
+                    "type": "object",
+                    "properties": {
+                      "region": {
+                        "maxLength": 64,
+                        "type": "string"
+                      },
+                      "accessKeyId": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "accessKeySecret": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "bucket": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "cdnUrl": {
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "cos": {
+                    "type": "object",
+                    "properties": {
+                      "secretId": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "secretKey": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "bucket": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "region": {
+                        "maxLength": 64,
+                        "type": "string"
+                      },
+                      "cdnUrl": {
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "local",
+                      "oss",
+                      "cos"
+                    ]
+                  },
+                  "local": {
+                    "type": "object",
+                    "properties": {
+                      "baseDir": {
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "baseUrl": {
+                        "minLength": 1,
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "oss": {
+                    "type": "object",
+                    "properties": {
+                      "region": {
+                        "maxLength": 64,
+                        "type": "string"
+                      },
+                      "accessKeyId": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "accessKeySecret": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "bucket": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "cdnUrl": {
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "cos": {
+                    "type": "object",
+                    "properties": {
+                      "secretId": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "secretKey": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "bucket": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "region": {
+                        "maxLength": 64,
+                        "type": "string"
+                      },
+                      "cdnUrl": {
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "local",
+                      "oss",
+                      "cos"
+                    ]
+                  },
+                  "local": {
+                    "type": "object",
+                    "properties": {
+                      "baseDir": {
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "baseUrl": {
+                        "minLength": 1,
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "oss": {
+                    "type": "object",
+                    "properties": {
+                      "region": {
+                        "maxLength": 64,
+                        "type": "string"
+                      },
+                      "accessKeyId": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "accessKeySecret": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "bucket": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "cdnUrl": {
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "cos": {
+                    "type": "object",
+                    "properties": {
+                      "secretId": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "secretKey": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "bucket": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "region": {
+                        "maxLength": 64,
+                        "type": "string"
+                      },
+                      "cdnUrl": {
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "putApiMonitorStorageConfig"
+      }
+    },
+    "/api/monitor/storage/test": {
+      "post": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "测试存储配置联通性",
+        "description": "需要管理员权限，local 检查目录可写；oss/cos 检查配置字段完整性。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "local",
+                      "oss",
+                      "cos"
+                    ]
+                  },
+                  "local": {
+                    "type": "object",
+                    "properties": {
+                      "baseDir": {
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "baseUrl": {
+                        "minLength": 1,
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "oss": {
+                    "type": "object",
+                    "properties": {
+                      "region": {
+                        "maxLength": 64,
+                        "type": "string"
+                      },
+                      "accessKeyId": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "accessKeySecret": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "bucket": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "cdnUrl": {
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "cos": {
+                    "type": "object",
+                    "properties": {
+                      "secretId": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "secretKey": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "bucket": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "region": {
+                        "maxLength": 64,
+                        "type": "string"
+                      },
+                      "cdnUrl": {
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "local",
+                      "oss",
+                      "cos"
+                    ]
+                  },
+                  "local": {
+                    "type": "object",
+                    "properties": {
+                      "baseDir": {
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "baseUrl": {
+                        "minLength": 1,
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "oss": {
+                    "type": "object",
+                    "properties": {
+                      "region": {
+                        "maxLength": 64,
+                        "type": "string"
+                      },
+                      "accessKeyId": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "accessKeySecret": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "bucket": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "cdnUrl": {
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "cos": {
+                    "type": "object",
+                    "properties": {
+                      "secretId": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "secretKey": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "bucket": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "region": {
+                        "maxLength": 64,
+                        "type": "string"
+                      },
+                      "cdnUrl": {
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "local",
+                      "oss",
+                      "cos"
+                    ]
+                  },
+                  "local": {
+                    "type": "object",
+                    "properties": {
+                      "baseDir": {
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "baseUrl": {
+                        "minLength": 1,
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "oss": {
+                    "type": "object",
+                    "properties": {
+                      "region": {
+                        "maxLength": 64,
+                        "type": "string"
+                      },
+                      "accessKeyId": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "accessKeySecret": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "bucket": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "cdnUrl": {
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "cos": {
+                    "type": "object",
+                    "properties": {
+                      "secretId": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "secretKey": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "bucket": {
+                        "maxLength": 128,
+                        "type": "string"
+                      },
+                      "region": {
+                        "maxLength": 64,
+                        "type": "string"
+                      },
+                      "cdnUrl": {
+                        "maxLength": 512,
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiMonitorStorageTest"
+      }
+    },
+    "/api/monitor/features": {
+      "get": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "查询当前功能开关状态",
+        "description": "需要管理员权限，返回后端 feature flags 的当前启用状态。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "getApiMonitorFeatures"
+      }
+    },
+    "/api/monitor/online": {
+      "get": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "查询在线会话列表",
+        "description": "需要管理员权限，返回最近活跃会话（内存态，默认 15 分钟无访问自动过期）。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "getApiMonitorOnline"
+      }
+    },
+    "/api/monitor/cache": {
+      "get": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "查询缓存总览",
+        "description": "需要管理员权限，返回 Redis 缓存总览与命名空间统计（只读）。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "getApiMonitorCache"
+      }
+    },
+    "/api/monitor/ip-blacklist": {
+      "get": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "查询 IP 黑名单",
+        "description": "需要管理员权限，返回当前黑名单规则（内存态）。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "getApiMonitorIp-blacklist"
+      },
+      "post": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "新增 IP 黑名单规则",
+        "description": "需要管理员权限，支持设置过期分钟数。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "postApiMonitorIp-blacklist"
+      },
+      "delete": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "删除 IP 黑名单规则",
+        "description": "需要管理员权限，按 ip 删除。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "deleteApiMonitorIp-blacklist"
+      }
+    },
+    "/api/monitor/jobs": {
+      "get": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "查询任务中心列表",
+        "description": "需要管理员权限，返回任务配置与最近执行状态。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "getApiMonitorJobs"
+      },
+      "post": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "新增任务配置",
+        "description": "需要管理员权限，name 唯一。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "cron"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "cron": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "args": {
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "cron"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "cron": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "args": {
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "cron"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "cron": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "args": {
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiMonitorJobs"
+      }
+    },
+    "/api/monitor/jobs/{id}": {
+      "put": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "编辑任务配置",
+        "description": "需要管理员权限，支持更新 cron/status。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "cron"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "cron": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "args": {
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "cron"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "cron": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "args": {
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "cron"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "cron": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "args": {
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "putApiMonitorJobsById"
+      }
+    },
+    "/api/monitor/jobs/{id}/toggle": {
+      "post": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "启停任务",
+        "description": "需要管理员权限，status: 0 禁用, 1 启用。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "minimum": 0,
+                    "maximum": 1,
+                    "anyOf": [
+                      {
+                        "format": "numeric",
+                        "default": 0,
+                        "type": "string"
+                      },
+                      {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiMonitorJobsByIdToggle"
+      }
+    },
+    "/api/monitor/jobs/{id}/run": {
+      "post": {
+        "tags": [
+          "Monitor"
+        ],
+        "summary": "手动触发任务执行",
+        "description": "需要管理员权限，最小版仅记录执行结果。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "postApiMonitorJobsByIdRun"
       }
     }
   },

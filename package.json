@@ -37,18 +37,6 @@
     "oxlint": "^1.60.0",
     "prettier": "^3.8.2"
   },
-  "lint-staged": {
-    "*.{ts,mts,cts,tsx,js,mjs,cjs}": [
-      "oxfmt --write",
-      "oxlint"
-    ],
-    "*.{json,jsonc}": "oxfmt --write",
-    "*.vue": [
-      "prettier --write",
-      "oxlint"
-    ],
-    "*.md": "prettier --write"
-  },
   "engines": {
     "bun": "1.3.11"
   }
