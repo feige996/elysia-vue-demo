@@ -4,5 +4,4 @@ dist
 **/dist
 coverage
 bun.lock
-api/openapi.generated.json
 api/drizzle

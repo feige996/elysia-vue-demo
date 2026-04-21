@@ -4,8 +4,7 @@
     "**/node_modules/**",
     "**/dist/**",
     "bun.lock",
-    "coverage/**",
-    "api/openapi.generated.json"
+    "coverage/**"
   ],
   "plugins": ["eslint", "typescript", "unicorn", "oxc"],
   "rules": {
