@@ -3,10 +3,15 @@ updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 10
+      interval: monthly
+    open-pull-requests-limit: 3
     groups:
-      dev-dependencies:
-        dependency-type: development
-        patterns:
-          - '*'
+      patch-and-minor-updates:
+        update-types:
+          - patch
+          - minor
+      major-updates:
+        update-types:
+          - major
+    ignore:
+      - dependency-name: '@types/*'
